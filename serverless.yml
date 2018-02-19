@@ -1,0 +1,48 @@
+service: project-service
+
+provider:
+  name: aws
+  runtime: nodejs6.10
+  environment:
+    MONGO_URI: ${file(./serverless.env.yml):dev.MONGO_URI}
+
+functions:
+  listProjects:
+    handler: handler.listProjects
+    events:
+      - http:
+          path: projects
+          method: get
+          cors: true
+
+  createProject:
+    handler: handler.createProject
+    events:
+      - http:
+          path: projects
+          method: post
+          cors: true
+
+  getProject:
+    handler: handler.getProject
+    events:
+      - http:
+          path: projects/{id}
+          method: get
+          cors: true
+
+  updateProject:
+    handler: handler.updateProject
+    events:
+      - http:
+          path: projects/{id}
+          method: put
+          cors: true
+
+  deleteProject:
+    handler: handler.deleteProject
+    events:
+      - http:
+          path: projects/{id}
+          method: delete
+          cors: true

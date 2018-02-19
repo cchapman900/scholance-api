@@ -1,0 +1,24 @@
+{
+  "name": "project-service",
+  "version": "1.0.0",
+  "description": "The Scholance API which serves all aspects related to projects. This may include projects themselves, submissions, but not asset creation (which is handled by the Asset service.",
+  "main": "handler.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "dependencies": {
+    "bluebird": "^3.5.0",
+    "mongoose": "^4.9.6",
+    "validator": "^7.0.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "ssh://git-codecommit.us-east-2.amazonaws.com/v1/repos/project-service"
+  },
+  "author": "Chris Chapman",
+  "license": "ISC"
+}
