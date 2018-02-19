@@ -11,12 +11,12 @@ info:
     email: chris@scholance.com
     url: http://chrischapman.co
 servers:
-  - url: https://api.scholance.com/v1/
+  - url: https://api.scholance.com/project-service/v1/
 paths:
   /projects:
     get:
-      description: |
-        Returns all projects with the listed parameters
+      summary: List Projects
+      description: List all projects with the given parameters
       tags:
         - Project
       operationId: listProjects
@@ -66,6 +66,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
     post:
+      summary: Create Project
       description: Creates a new project
       tags:
         - Project
@@ -106,6 +107,7 @@ paths:
           type: integer
           format: int64
     get:
+      summary: Get Project
       description: Returns a project based on a single ID
       tags:
         - Project
@@ -129,8 +131,41 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+    put:
+      summary: Update Project
+      description: Update an existing project
+      tags:
+        - Project
+      operationId: updateProject
+      requestBody:
+        description: Project to be updated
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewProject'
+      responses:
+        '200':
+          description: Project updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '400':
+          description: Invalid content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
     delete:
-      description: deletes a single project based on the ID supplied
+      summary: Delete Project
+      description: Deletes a single project based on the ID supplied
       tags:
         - Project
       operationId: deleteProject
@@ -173,8 +208,20 @@ components:
           example: "We need a cutting-edge new logo for our new business"
         fullDescription:
           type: string
+          example: |
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed pulvinar
+            euismod ipsum ut pharetra. Fusce non quam nec mi tincidunt ornare. In
+            gravida id ante in gravida. Nunc tempor dui tempus ultrices rutrum.
+            Curabitur ante dui, ultrices id condimentum ultricies, bibendum eget
+            erat. Morbi id condimentum ligula, in pulvinar neque. Curabitur lectus
+            diam, imperdiet ut neque eu, varius porta diam. Suspendisse id pellentesque
+            metus, sit amet ultricies risus. Nunc imperdiet volutpat lectus, ac viverra
+            magna tempus aliquam. Aliquam iaculis orci sed erat fringilla, et finibus
+            purus porta. Duis ultrices odio sit amet cursus blandit. Duis sit amet
+            purus ex. Ut auctor libero felis, eu tincidunt nisl finibus nec.
         category:
           type: string
+          example: Graphic Design
 
     Error:
       required:
