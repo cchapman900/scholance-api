@@ -1,0 +1,190 @@
+openapi: "3.0.0"
+info:
+  version: 0.0.1
+  title: Scholance Project Service API
+  description: |
+    The Scholance API which serves all aspects related to projects. This may include
+    projects themselves, submissions, but not asset creation (which is handled by the
+    Asset service.
+  contact:
+    name: Chris
+    email: chris@scholance.com
+    url: http://chrischapman.co
+servers:
+  - url: https://api.scholance.com/v1/
+paths:
+  /projects:
+    get:
+      description: |
+        Returns all projects with the listed parameters
+      tags:
+        - Project
+      operationId: listProjects
+      parameters:
+        - name: category
+          in: query
+          description: category to filter by
+          required: false
+          style: form
+          schema:
+            type: array
+            items:
+              type: string
+        - name: limit
+          in: query
+          description: maximum number of results to return
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: page
+          in: query
+          description: pagination index
+          required: false
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: A list of projects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Project'
+        '404':
+          description: No projects found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      description: Creates a new project
+      tags:
+        - Project
+      operationId: createProject
+      requestBody:
+        description: Project to be created
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewProject'
+      responses:
+        '201':
+          description: Project created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '400':
+          description: Invalid content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /projects/{id}:
+    parameters:
+      - name: id
+        in: path
+        description: ID of project to delete
+        required: true
+        schema:
+          type: integer
+          format: int64
+    get:
+      description: Returns a project based on a single ID
+      tags:
+        - Project
+      operationId: getProject
+      responses:
+        '200':
+          description: project response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '404':
+          description: Project not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      description: deletes a single project based on the ID supplied
+      tags:
+        - Project
+      operationId: deleteProject
+      responses:
+        '204':
+          description: pet deleted
+        '404':
+          description: Project not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    Project:
+      allOf:
+        - $ref: '#/components/schemas/NewProject'
+      properties:
+        _id:
+          type: string
+          format: ObjectId
+          example: '507f1f77bcf86cd799439011'
+
+    NewProject:
+      required:
+        - title
+        - summary
+      properties:
+        title:
+          type: string
+          example: "We need a logo"
+        summary:
+          type: string
+          example: "We need a cutting-edge new logo for our new business"
+        fullDescription:
+          type: string
+        category:
+          type: string
+
+    Error:
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          format: int32
+          example: 500
+        message:
+          type: string
+          example: "An unexpected error occured"
