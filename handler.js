@@ -3,33 +3,46 @@
 const mongoose = require('mongoose');
 const bluebird = require('bluebird');
 const validator = require('validator');
-const Project = require('./models/Project.js');
+const Project = require('./models/project.js');
 
 mongoose.Promise = bluebird;
 
 const mongoString = process.env.MONGO_URI; // MongoDB Url
 
 const createErrorResponse = (statusCode, message) => ({
-    statusCode: statusCode || 501,
-    headers: {'Content-Type': 'text/plain'},
-    body: message || 'Incorrect id',
+    statusCode: statusCode || 500,
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({'message': message}),
 });
 
+
+/**
+ * GET PROJECT
+ *
+ * @param event
+ * @param context
+ * @param callback
+ */
 module.exports.getProject = (event, context, callback) => {
-    const db = mongoose.connect(mongoString).connection;
+    mongoose.connect(mongoString);
+    const db = mongoose.connection;
     const id = event.pathParameters.id;
 
-    if (!validator.isAlphanumeric(id)) {
-        callback(null, createErrorResponse(400, 'Incorrect id'));
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        callback(null, createErrorResponse(400, 'Invalid ObjectId'));
         db.close();
         return;
     }
 
-    db.once('open', () => {
+    db.on('open', () => {
         Project
-            .find({_id: event.pathParameters.id})
+            .findById(event.pathParameters.id)
             .then((project) => {
-                callback(null, {statusCode: 200, body: JSON.stringify(project)});
+                if (!project) {
+                    callback(null, createErrorResponse(404, 'Project not found'));
+                } else {
+                    callback(null, {statusCode: 200, body: JSON.stringify(project)});
+                }
             })
             .catch((err) => {
                 callback(null, createErrorResponse(err.statusCode, err.message));
@@ -42,8 +55,16 @@ module.exports.getProject = (event, context, callback) => {
 };
 
 
+/**
+ * LIST PROJECTS
+ *
+ * @param event
+ * @param context
+ * @param callback
+ */
 module.exports.listProjects = (event, context, callback) => {
-    const db = mongoose.connect(mongoString).connection;
+    mongoose.connect(mongoString);
+    const db = mongoose.connection;
 
     db.once('open', () => {
         Project
@@ -62,20 +83,40 @@ module.exports.listProjects = (event, context, callback) => {
 };
 
 
+/**
+ * CREATE PROJECT
+ *
+ * @param event
+ * @param context
+ * @param callback
+ */
 module.exports.createProject = (event, context, callback) => {
-    let db = {};
+    mongoose.connect(mongoString);
+    const db = mongoose.connection;
     let data = {};
     let errs = {};
     let project = {};
     const mongooseId = '_id';
 
-    db = mongoose.connect(mongoString).connection;
-
     data = JSON.parse(event.body);
+
+    // Check to make sure the poster is a Business user
+    if (data.liaison.userType !== 'business') {
+        callback(null, createErrorResponse(403, 'You must be a business user to post a project'));
+    }
 
     project = new Project({
         title: data.title,
         summary: data.summary,
+        liaison: {
+            id: data.liaison.id,
+            name: data.liaison.name,
+            userType: data.liaison.userType,
+        },
+        organization: {
+            _id: data.organization._id,
+            name: data.organization.name
+        },
         fullDescription: data.fullDescription,
         category: data.category
     });
@@ -105,71 +146,121 @@ module.exports.createProject = (event, context, callback) => {
     });
 };
 
-module.exports.deleteProject = (event, context, callback) => {
-    const db = mongoose.connect(mongoString).connection;
-    const id = event.pathParameters.id;
 
-    if (!validator.isAlphanumeric(id)) {
-        callback(null, createErrorResponse(400, 'Incorrect id'));
+/**
+ * UPDATE PROJECT
+ *
+ * @param event
+ * @param context
+ * @param callback
+ */
+module.exports.updateProject = (event, context, callback) => {
+    mongoose.connect(mongoString);
+    let db = mongoose.connection;
+    let id = event.pathParameters.id;
+    let data = {};
+    data = JSON.parse(event.body);
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        callback(null, createErrorResponse(400, 'Invalid ObjectId'));
+        db.close();
+        return;
+    }
+
+    db.on('open', () => {
+        Project
+            .findById(event.pathParameters.id)
+            .then((project) => {
+                if (!project) {
+                    db.close();
+                    callback(null, createErrorResponse(404, 'Project not found'));
+                } else if (data.liaison.id !== project.liaison.id) {
+                    db.close();
+                    callback(null, createErrorResponse(403, 'Insufficient privileges'));
+                } else {
+                    project.update({
+                        title: data.title,
+                        summary: data.summary,
+                        liaison: {
+                            id: data.liaison.id,
+                            name: data.liaison.name,
+                            userType: data.liaison.userType,
+                        },
+                        organization: {
+                            _id: data.organization._id,
+                            name: data.organization.name
+                        },
+                        fullDescription: data.fullDescription,
+                        category: data.category
+                    })
+                        .then(() => {
+                            callback(null, {statusCode: 200, body: JSON.stringify(project)});
+                        })
+                        .catch((err) => {
+                            callback(null, createErrorResponse(err.statusCode, err.message));
+                        })
+                        .finally(() => {
+                            // Close db connection or node event loop won't exit , and lambda will timeout
+                            db.close();
+                        });
+                }
+            })
+            .catch((err) => {
+                db.close();
+                callback(null, createErrorResponse(err.statusCode, err.message));
+            })
+
+    });
+};
+
+
+/**
+ * DELETE PROJECT
+ *
+ * @param event
+ * @param context
+ * @param callback
+ */
+module.exports.deleteProject = (event, context, callback) => {
+    mongoose.connect(mongoString);
+    const db = mongoose.connection;
+    const id = event.pathParameters.id;
+    let data = {};
+    data = JSON.parse(event.body);
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        callback(null, createErrorResponse(400, 'Invalid ObjectId'));
         db.close();
         return;
     }
 
     db.once('open', () => {
         Project
-            .remove({_id: event.pathParameters.id})
-            .then(() => {
-                callback(null, {statusCode: 204, body: JSON.stringify('Ok')});
+            .findById(event.pathParameters.id)
+            .then((project) => {
+                if (!project) {
+                    db.close();
+                    callback(null, createErrorResponse(404, 'Project not found'));
+                } else if (data.liaison.id !== project.liaison.id) {
+                    db.close();
+                    callback(null, createErrorResponse(403, 'Insufficient privileges'));
+                } else {
+                    project
+                        .remove({_id: event.pathParameters.id})
+                        .then(() => {
+                            callback(null, {statusCode: 204});
+                        })
+                        .catch((err) => {
+                            callback(null, createErrorResponse(err.statusCode, err.message));
+                        })
+                        .finally(() => {
+                            db.close();
+                        });
+                }
             })
             .catch((err) => {
                 callback(null, createErrorResponse(err.statusCode, err.message));
-            })
-            .finally(() => {
                 db.close();
-            });
-    });
-};
-
-module.exports.updateProject = (event, context, callback) => {
-    const db = mongoose.connect(mongoString).connection;
-    const data = JSON.parse(event.body);
-    const id = event.pathParameters.id;
-    let errs = {};
-    let project = {};
-
-    if (!validator.isAlphanumeric(id)) {
-        callback(null, createErrorResponse(400, 'Incorrect id'));
-        db.close();
-        return;
-    }
-
-    project = new Project({
-        _id: id,
-        title: data.title,
-        summary: data.summary,
-        fullDescription: data.fullDescription,
-        category: data.category
-    });
-
-    errs = project.validateSync();
-
-    if (errs) {
-        callback(null, createErrorResponse(400, 'Incorrect parameter'));
-        db.close();
-        return;
-    }
-
-    db.once('open', () => {
-        // Project.save() could be used too
-        Project.findByIdAndUpdate(id, project)
-            .then(() => {
-                callback(null, {statusCode: 200, body: JSON.stringify('Ok')});
             })
-            .catch((err) => {
-                callback(err, createErrorResponse(err.statusCode, err.message));
-            })
-            .finally(() => {
-                db.close();
-            });
     });
 };
