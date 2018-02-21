@@ -1,0 +1,131 @@
+{
+	"info": {
+		"name": "Project Service",
+		"_postman_id": "2a031a79-d4e1-1133-31d6-76391e36feba",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "List Projects",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "{{domain}}/projects",
+					"host": [
+						"{{domain}}"
+					],
+					"path": [
+						"projects"
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Get Project",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "{{domain}}/projects/5a7aa97ed467a70001a386fa",
+					"host": [
+						"{{domain}}"
+					],
+					"path": [
+						"projects",
+						"5a7aa97ed467a70001a386fa"
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Create Project",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"title\": \"We need a logo\",\n  \"summary\": \"We need a cutting-edge new logo for our new business\",\n  \"fullDescription\": \"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed pulvinar  euismod ipsum ut pharetra. Fusce non quam nec mi tincidunt ornare. In  gravida id ante in gravida. Nunc tempor dui tempus ultrices rutrum.  Curabitur ante dui, ultrices id condimentum ultricies, bibendum eget  erat. Morbi id condimentum ligula, in pulvinar neque. Curabitur lectus  diam, imperdiet ut neque eu, varius porta diam. Suspendisse id pellentesque  metus, sit amet ultricies risus. Nunc imperdiet volutpat lectus, ac viverra  magna tempus aliquam. Aliquam iaculis orci sed erat fringilla, et finibus  purus porta. Duis ultrices odio sit amet cursus blandit. Duis sit amet  purus ex. Ut auctor libero felis, eu tincidunt nisl finibus nec.\",\n  \"category\": \"Graphic Design\"\n}"
+				},
+				"url": {
+					"raw": "{{domain}}/projects",
+					"host": [
+						"{{domain}}"
+					],
+					"path": [
+						"projects"
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Update Project",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"title\": \"We need a logo\",\n  \"summary\": \"We need a cutting-edge new logo for our new business\",\n  \"fullDescription\": \"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed pulvinar  euismod ipsum ut pharetra. Fusce non quam nec mi tincidunt ornare. In  gravida id ante in gravida. Nunc tempor dui tempus ultrices rutrum.  Curabitur ante dui, ultrices id condimentum ultricies, bibendum eget  erat. Morbi id condimentum ligula, in pulvinar neque. Curabitur lectus  diam, imperdiet ut neque eu, varius porta diam. Suspendisse id pellentesque  metus, sit amet ultricies risus. Nunc imperdiet volutpat lectus, ac viverra  magna tempus aliquam. Aliquam iaculis orci sed erat fringilla, et finibus  purus porta. Duis ultrices odio sit amet cursus blandit. Duis sit amet  purus ex. Ut auctor libero felis, eu tincidunt nisl finibus nec.\",\n  \"category\": \"Graphic Design\"\n}"
+				},
+				"url": {
+					"raw": "{{domain}}/projects",
+					"host": [
+						"{{domain}}"
+					],
+					"path": [
+						"projects"
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Project",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{domain}}/projects/5a8a6e072131fe0001e9bf00",
+					"host": [
+						"{{domain}}"
+					],
+					"path": [
+						"projects",
+						"5a8a6e072131fe0001e9bf00"
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		}
+	]
+}
