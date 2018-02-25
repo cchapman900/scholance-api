@@ -27,7 +27,7 @@ functions:
     handler: handler.getProject
     events:
       - http:
-          path: projects/{id}
+          path: projects/{project_id}
           method: get
           cors: true
 
@@ -35,7 +35,7 @@ functions:
     handler: handler.updateProject
     events:
       - http:
-          path: projects/{id}
+          path: projects/{project_id}
           method: put
           cors: true
 
@@ -43,6 +43,6 @@ functions:
     handler: handler.deleteProject
     events:
       - http:
-          path: projects/{id}
+          path: projects/{project_id}
           method: delete
           cors: true

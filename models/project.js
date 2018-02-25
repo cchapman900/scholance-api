@@ -3,10 +3,6 @@ const Schema = mongoose.Schema;
 const validator = require('validator');
 
 const userSchema = new Schema({
-    id: {
-        type: String,
-        required: true
-    },
     name: {
         type: String,
         required: true
@@ -19,10 +15,6 @@ const userSchema = new Schema({
 });
 
 const organizationSchema = new Schema({
-    _id: {
-        type: String,
-        required: true
-    },
     name: {
         type: String,
         required: true

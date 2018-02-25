@@ -8,124 +8,437 @@
 	"item": [
 		{
 			"name": "List Projects",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"body": {},
-				"url": {
-					"raw": "{{domain}}/projects",
-					"host": [
-						"{{domain}}"
+			"description": "",
+			"item": [
+				{
+					"name": "List Projects (success)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "89ae439f-181c-4fd6-a649-bab229d16427",
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								]
+							}
+						}
 					],
-					"path": [
-						"projects"
-					]
-				},
-				"description": ""
-			},
-			"response": []
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"url": {
+							"raw": "{{domain}}/projects",
+							"host": [
+								"{{domain}}"
+							],
+							"path": [
+								"projects"
+							]
+						},
+						"description": null
+					},
+					"response": []
+				}
+			]
 		},
 		{
 			"name": "Get Project",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"body": {},
-				"url": {
-					"raw": "{{domain}}/projects/5a7aa97ed467a70001a386fa",
-					"host": [
-						"{{domain}}"
+			"description": "",
+			"item": [
+				{
+					"name": "Get Project (success)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "e06b143c-a05c-46a7-8571-6f7318d6c6c9",
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Your test name\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.title).to.eql('TEST PROJECT');",
+									"});",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								]
+							}
+						}
 					],
-					"path": [
-						"projects",
-						"5a7aa97ed467a70001a386fa"
-					]
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"url": {
+							"raw": "{{domain}}/projects/{{permanent_project_id}}",
+							"host": [
+								"{{domain}}"
+							],
+							"path": [
+								"projects",
+								"{{permanent_project_id}}"
+							]
+						},
+						"description": null
+					},
+					"response": []
 				},
-				"description": ""
-			},
-			"response": []
+				{
+					"name": "Get Project (404)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "98917b0c-0fd4-4122-857b-6aaf59cff831",
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 404\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"url": {
+							"raw": "{{domain}}/projects/5a8cf88b111306000174c626",
+							"host": [
+								"{{domain}}"
+							],
+							"path": [
+								"projects",
+								"5a8cf88b111306000174c626"
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				}
+			]
 		},
 		{
 			"name": "Create Project",
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n  \"title\": \"We need a logo\",\n  \"summary\": \"We need a cutting-edge new logo for our new business\",\n  \"fullDescription\": \"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed pulvinar  euismod ipsum ut pharetra. Fusce non quam nec mi tincidunt ornare. In  gravida id ante in gravida. Nunc tempor dui tempus ultrices rutrum.  Curabitur ante dui, ultrices id condimentum ultricies, bibendum eget  erat. Morbi id condimentum ligula, in pulvinar neque. Curabitur lectus  diam, imperdiet ut neque eu, varius porta diam. Suspendisse id pellentesque  metus, sit amet ultricies risus. Nunc imperdiet volutpat lectus, ac viverra  magna tempus aliquam. Aliquam iaculis orci sed erat fringilla, et finibus  purus porta. Duis ultrices odio sit amet cursus blandit. Duis sit amet  purus ex. Ut auctor libero felis, eu tincidunt nisl finibus nec.\",\n  \"category\": \"Graphic Design\"\n}"
-				},
-				"url": {
-					"raw": "{{domain}}/projects",
-					"host": [
-						"{{domain}}"
+			"description": "",
+			"item": [
+				{
+					"name": "Create Project (success)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "27bacc82-e482-482f-965b-923e1338896d",
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.environment.set(\"temp_project_id\", pm.response.json().id);"
+								]
+							}
+						}
 					],
-					"path": [
-						"projects"
-					]
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"TEST PROJECT\",\n  \"summary\": \"We need a cutting-edge new logo for our new business\",\n  \"liaison\": {\n    \"_id\": \"59e5852830b8f53496f8e8ec\",\n    \"name\": \"John Doe\",\n    \"userType\": \"business\"\n  },\n  \"organization\": {\n    \"_id\": \"507f1f77bcf86cd799439011\",\n    \"name\": \"Acme Inc.\"\n  },\n  \"category\": \"Graphic Design\",\n  \"fullDescription\": \"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed pulvinar  euismod ipsum ut pharetra. Fusce non quam nec mi tincidunt ornare. In  gravida id ante in gravida. Nunc tempor dui tempus ultrices rutrum.  Curabitur ante dui, ultrices id condimentum ultricies, bibendum eget  erat. Morbi id condimentum ligula, in pulvinar neque. Curabitur lectus  diam, imperdiet ut neque eu, varius porta diam. Suspendisse id pellentesque  metus, sit amet ultricies risus. Nunc imperdiet volutpat lectus, ac viverra  magna tempus aliquam. Aliquam iaculis orci sed erat fringilla, et finibus  purus porta. Duis ultrices odio sit amet cursus blandit. Duis sit amet  purus ex. Ut auctor libero felis, eu tincidunt nisl finibus nec.\"\n}"
+						},
+						"url": {
+							"raw": "{{domain}}/projects",
+							"host": [
+								"{{domain}}"
+							],
+							"path": [
+								"projects"
+							]
+						},
+						"description": null
+					},
+					"response": []
 				},
-				"description": ""
-			},
-			"response": []
+				{
+					"name": "Create Project (as student)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "e750d9e8-d6c0-444c-8062-746230d92076",
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 403\", function () {",
+									"    pm.response.to.have.status(403);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"TEST PROJECT\",\n  \"summary\": \"We need a cutting-edge new logo for our new business\",\n  \"liaison\": {\n    \"_id\": \"59e5852830b8f53496f8e8ec\",\n    \"name\": \"John Doe\",\n    \"userType\": \"student\"\n  },\n  \"organization\": {\n    \"_id\": \"507f1f77bcf86cd799439011\",\n    \"name\": \"Acme Inc.\"\n  },\n  \"category\": \"Graphic Design\",\n  \"fullDescription\": \"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed pulvinar  euismod ipsum ut pharetra. Fusce non quam nec mi tincidunt ornare. In  gravida id ante in gravida. Nunc tempor dui tempus ultrices rutrum.  Curabitur ante dui, ultrices id condimentum ultricies, bibendum eget  erat. Morbi id condimentum ligula, in pulvinar neque. Curabitur lectus  diam, imperdiet ut neque eu, varius porta diam. Suspendisse id pellentesque  metus, sit amet ultricies risus. Nunc imperdiet volutpat lectus, ac viverra  magna tempus aliquam. Aliquam iaculis orci sed erat fringilla, et finibus  purus porta. Duis ultrices odio sit amet cursus blandit. Duis sit amet  purus ex. Ut auctor libero felis, eu tincidunt nisl finibus nec.\"\n}"
+						},
+						"url": {
+							"raw": "{{domain}}/projects",
+							"host": [
+								"{{domain}}"
+							],
+							"path": [
+								"projects"
+							]
+						},
+						"description": null
+					},
+					"response": []
+				}
+			]
 		},
 		{
 			"name": "Update Project",
-			"request": {
-				"method": "PUT",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n  \"title\": \"We need a logo\",\n  \"summary\": \"We need a cutting-edge new logo for our new business\",\n  \"fullDescription\": \"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed pulvinar  euismod ipsum ut pharetra. Fusce non quam nec mi tincidunt ornare. In  gravida id ante in gravida. Nunc tempor dui tempus ultrices rutrum.  Curabitur ante dui, ultrices id condimentum ultricies, bibendum eget  erat. Morbi id condimentum ligula, in pulvinar neque. Curabitur lectus  diam, imperdiet ut neque eu, varius porta diam. Suspendisse id pellentesque  metus, sit amet ultricies risus. Nunc imperdiet volutpat lectus, ac viverra  magna tempus aliquam. Aliquam iaculis orci sed erat fringilla, et finibus  purus porta. Duis ultrices odio sit amet cursus blandit. Duis sit amet  purus ex. Ut auctor libero felis, eu tincidunt nisl finibus nec.\",\n  \"category\": \"Graphic Design\"\n}"
-				},
-				"url": {
-					"raw": "{{domain}}/projects",
-					"host": [
-						"{{domain}}"
+			"description": "",
+			"item": [
+				{
+					"name": "Update Project (success)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "2a068452-ab8e-4448-9892-301098748ab1",
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								]
+							}
+						}
 					],
-					"path": [
-						"projects"
-					]
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"TEST PROJECT\",\n  \"summary\": \"We need a cutting-edge new logo for our new business\",\n  \"liaison\": {\n    \"_id\": \"59e5852830b8f53496f8e8ec\",\n    \"name\": \"John Doe\",\n    \"userType\": \"business\"\n  },\n  \"organization\": {\n    \"_id\": \"507f1f77bcf86cd799439011\",\n    \"name\": \"Acme Inc.\"\n  },\n  \"category\": \"Graphic Design\",\n  \"fullDescription\": \"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed pulvinar  euismod ipsum ut pharetra. Fusce non quam nec mi tincidunt ornare. In  gravida id ante in gravida. Nunc tempor dui tempus ultrices rutrum.  Curabitur ante dui, ultrices id condimentum ultricies, bibendum eget  erat. Morbi id condimentum ligula, in pulvinar neque. Curabitur lectus  diam, imperdiet ut neque eu, varius porta diam. Suspendisse id pellentesque  metus, sit amet ultricies risus. Nunc imperdiet volutpat lectus, ac viverra  magna tempus aliquam. Aliquam iaculis orci sed erat fringilla, et finibus  purus porta. Duis ultrices odio sit amet cursus blandit. Duis sit amet  purus ex. Ut auctor libero felis, eu tincidunt nisl finibus nec.\"\n}"
+						},
+						"url": {
+							"raw": "{{domain}}/projects/{{permanent_project_id}}",
+							"host": [
+								"{{domain}}"
+							],
+							"path": [
+								"projects",
+								"{{permanent_project_id}}"
+							]
+						},
+						"description": ""
+					},
+					"response": []
 				},
-				"description": ""
-			},
-			"response": []
+				{
+					"name": "Update Project (different userId)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "845f313b-9862-49ae-8de6-35ae421b4d70",
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 403\", function () {",
+									"    pm.response.to.have.status(403);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"TEST PROJECT\",\n  \"summary\": \"We need a cutting-edge new logo for our new business\",\n  \"liaison\": {\n    \"_id\": \"59e5852830b8f53496f8e8eb\",\n    \"name\": \"John Doe\",\n    \"userType\": \"business\"\n  },\n  \"organization\": {\n    \"_id\": \"507f1f77bcf86cd799439011\",\n    \"name\": \"Acme Inc.\"\n  },\n  \"category\": \"Graphic Design\",\n  \"fullDescription\": \"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed pulvinar  euismod ipsum ut pharetra. Fusce non quam nec mi tincidunt ornare. In  gravida id ante in gravida. Nunc tempor dui tempus ultrices rutrum.  Curabitur ante dui, ultrices id condimentum ultricies, bibendum eget  erat. Morbi id condimentum ligula, in pulvinar neque. Curabitur lectus  diam, imperdiet ut neque eu, varius porta diam. Suspendisse id pellentesque  metus, sit amet ultricies risus. Nunc imperdiet volutpat lectus, ac viverra  magna tempus aliquam. Aliquam iaculis orci sed erat fringilla, et finibus  purus porta. Duis ultrices odio sit amet cursus blandit. Duis sit amet  purus ex. Ut auctor libero felis, eu tincidunt nisl finibus nec.\"\n}"
+						},
+						"url": {
+							"raw": "{{domain}}/projects/{{permanent_project_id}}",
+							"host": [
+								"{{domain}}"
+							],
+							"path": [
+								"projects",
+								"{{permanent_project_id}}"
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				}
+			]
 		},
 		{
 			"name": "Delete Project",
-			"request": {
-				"method": "DELETE",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": ""
-				},
-				"url": {
-					"raw": "{{domain}}/projects/5a8a6e072131fe0001e9bf00",
-					"host": [
-						"{{domain}}"
+			"description": "",
+			"item": [
+				{
+					"name": "Delete Project (success)",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "2dc87b4a-81f0-467b-a066-6345b71ad1ee",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "16213e4a-d067-4556-bd8a-6315fe5925f9",
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 204\", function () {",
+									"    pm.response.to.have.status(204);",
+									"});"
+								]
+							}
+						}
 					],
-					"path": [
-						"projects",
-						"5a8a6e072131fe0001e9bf00"
-					]
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"liaison\": {\n    \"_id\": \"59e5852830b8f53496f8e8ec\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{domain}}/projects/{{temp_project_id}}",
+							"host": [
+								"{{domain}}"
+							],
+							"path": [
+								"projects",
+								"{{temp_project_id}}"
+							]
+						},
+						"description": null
+					},
+					"response": []
 				},
-				"description": ""
-			},
-			"response": []
+				{
+					"name": "Delete Project (404)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "7fd0fd79-331f-410d-97e2-798f6699b3d1",
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 404\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"liaison\": {\n    \"_id\": \"59e5852830b8f53496f8e8ec\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{domain}}/projects/5a8a6e072131fe0001e9bf00",
+							"host": [
+								"{{domain}}"
+							],
+							"path": [
+								"projects",
+								"5a8a6e072131fe0001e9bf00"
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "c5a13a56-b80d-4cec-bc5f-af465c55d19a",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "64b011b5-6e9e-46f8-ad6a-09313b4a92ff",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"id": "403e0975-d59e-4033-8aaa-de2b5dc47e9d",
+			"key": "permanent_project_id",
+			"value": "5a9239d1ce4730000179ce16",
+			"type": "text"
+		},
+		{
+			"id": "c0c64234-c7cd-466b-80cd-331a0c830876",
+			"key": "temp_project_id",
+			"value": "5a9239d1ce4730000179ce16",
+			"type": "text"
 		}
 	]
 }

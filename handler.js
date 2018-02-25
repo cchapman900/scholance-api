@@ -26,17 +26,18 @@ const createErrorResponse = (statusCode, message) => ({
 module.exports.getProject = (event, context, callback) => {
     mongoose.connect(mongoString);
     const db = mongoose.connection;
-    const id = event.pathParameters.id;
+    const project_id = event.pathParameters.project_id;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!mongoose.Types.ObjectId.isValid(project_id)) {
         callback(null, createErrorResponse(400, 'Invalid ObjectId'));
         db.close();
         return;
     }
 
+    db.on('error', () => {callback(null, createErrorResponse(503, 'There was an error connecting to the database'))});
     db.on('open', () => {
         Project
-            .findById(event.pathParameters.id)
+            .findById(project_id)
             .then((project) => {
                 if (!project) {
                     callback(null, createErrorResponse(404, 'Project not found'));
@@ -66,6 +67,7 @@ module.exports.listProjects = (event, context, callback) => {
     mongoose.connect(mongoString);
     const db = mongoose.connection;
 
+    db.on('error', () => {callback(null, createErrorResponse(503, 'There was an error connecting to the database'))});
     db.once('open', () => {
         Project
             .find()
@@ -96,7 +98,6 @@ module.exports.createProject = (event, context, callback) => {
     let data = {};
     let errs = {};
     let project = {};
-    const mongooseId = '_id';
 
     data = JSON.parse(event.body);
 
@@ -109,7 +110,7 @@ module.exports.createProject = (event, context, callback) => {
         title: data.title,
         summary: data.summary,
         liaison: {
-            id: data.liaison.id,
+            _id: data.liaison._id,
             name: data.liaison.name,
             userType: data.liaison.userType,
         },
@@ -130,12 +131,12 @@ module.exports.createProject = (event, context, callback) => {
         return;
     }
 
-
+    db.on('error', () => {callback(null, createErrorResponse(503, 'There was an error connecting to the database'))});
     db.once('open', () => {
         project
             .save()
             .then(() => {
-                callback(null, {statusCode: 200, body: JSON.stringify({id: project[mongooseId]})});
+                callback(null, {statusCode: 201, body: JSON.stringify({id: project._id})});
             })
             .catch((err) => {
                 callback(null, createErrorResponse(err.statusCode, err.message));
@@ -157,32 +158,33 @@ module.exports.createProject = (event, context, callback) => {
 module.exports.updateProject = (event, context, callback) => {
     mongoose.connect(mongoString);
     let db = mongoose.connection;
-    let id = event.pathParameters.id;
+    let project_id = event.pathParameters.project_id;
     let data = {};
     data = JSON.parse(event.body);
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!mongoose.Types.ObjectId.isValid(project_id)) {
         callback(null, createErrorResponse(400, 'Invalid ObjectId'));
         db.close();
         return;
     }
 
-    db.on('open', () => {
+    db.on('error', () => {callback(null, createErrorResponse(503, 'There was an error connecting to the database'))});
+    db.once('open', () => {
         Project
-            .findById(event.pathParameters.id)
+            .findById(project_id)
             .then((project) => {
                 if (!project) {
-                    db.close();
                     callback(null, createErrorResponse(404, 'Project not found'));
-                } else if (data.liaison.id !== project.liaison.id) {
                     db.close();
+                } else if (data.liaison._id != project.liaison._id) {
                     callback(null, createErrorResponse(403, 'Insufficient privileges'));
+                    db.close();
                 } else {
                     project.update({
                         title: data.title,
                         summary: data.summary,
                         liaison: {
-                            id: data.liaison.id,
+                            _id: data.liaison._id,
                             name: data.liaison.name,
                             userType: data.liaison.userType,
                         },
@@ -195,19 +197,17 @@ module.exports.updateProject = (event, context, callback) => {
                     })
                         .then(() => {
                             callback(null, {statusCode: 200, body: JSON.stringify(project)});
+                            db.close();
                         })
                         .catch((err) => {
                             callback(null, createErrorResponse(err.statusCode, err.message));
-                        })
-                        .finally(() => {
-                            // Close db connection or node event loop won't exit , and lambda will timeout
                             db.close();
-                        });
+                        })
                 }
             })
             .catch((err) => {
-                db.close();
                 callback(null, createErrorResponse(err.statusCode, err.message));
+                db.close();
             })
 
     });
@@ -224,38 +224,41 @@ module.exports.updateProject = (event, context, callback) => {
 module.exports.deleteProject = (event, context, callback) => {
     mongoose.connect(mongoString);
     const db = mongoose.connection;
-    const id = event.pathParameters.id;
+    const project_id = event.pathParameters.project_id;
     let data = {};
     data = JSON.parse(event.body);
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!mongoose.Types.ObjectId.isValid(project_id)) {
         callback(null, createErrorResponse(400, 'Invalid ObjectId'));
         db.close();
         return;
     }
 
-    db.once('open', () => {
+    db.on('error', () => {
+        callback(null, createErrorResponse(503, 'There was an error connecting to the database'));
+        db.close();
+    });
+    db.on('open', () => {
         Project
-            .findById(event.pathParameters.id)
+            .findById(project_id)
             .then((project) => {
                 if (!project) {
-                    db.close();
                     callback(null, createErrorResponse(404, 'Project not found'));
-                } else if (data.liaison.id !== project.liaison.id) {
                     db.close();
+                } else if (data.liaison._id != project.liaison._id) {
                     callback(null, createErrorResponse(403, 'Insufficient privileges'));
+                    db.close();
                 } else {
                     project
-                        .remove({_id: event.pathParameters.id})
+                        .remove({_id: project_id})
                         .then(() => {
                             callback(null, {statusCode: 204});
+                            db.close();
                         })
                         .catch((err) => {
                             callback(null, createErrorResponse(err.statusCode, err.message));
-                        })
-                        .finally(() => {
                             db.close();
-                        });
+                        })
                 }
             })
             .catch((err) => {
