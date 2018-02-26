@@ -46,3 +46,19 @@ functions:
           path: projects/{project_id}
           method: delete
           cors: true
+
+  projectSignup:
+    handler: handler.projectSignup
+    events:
+      - http:
+          path: projects/{project_id}/registration
+          method: post
+          cors: true
+
+  projectSignoff:
+    handler: handler.projectSignoff
+    events:
+      - http:
+          path: projects/{project_id}/registration
+          method: delete
+          cors: true

@@ -45,6 +45,9 @@ const projectModel = mongoose.model('Project', {
     category: {
         type: String,
     },
+    registrants: [{
+        type: userSchema
+    }]
 });
 
 module.exports = projectModel;

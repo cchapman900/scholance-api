@@ -168,7 +168,10 @@ module.exports.updateProject = (event, context, callback) => {
         return;
     }
 
-    db.on('error', () => {callback(null, createErrorResponse(503, 'There was an error connecting to the database'))});
+    db.on('error', () => {
+        callback(null, createErrorResponse(503, 'There was an error connecting to the database'));
+        db.close();
+    });
     db.once('open', () => {
         Project
             .findById(project_id)
@@ -235,7 +238,7 @@ module.exports.deleteProject = (event, context, callback) => {
     }
 
     db.on('error', () => {
-        callback(null, createErrorResponse(503, 'There was an error connecting to the database'));
+        callback(null, createErrorResponse(503, 'There was an error connecting to the database'))
         db.close();
     });
     db.on('open', () => {
@@ -264,6 +267,121 @@ module.exports.deleteProject = (event, context, callback) => {
             .catch((err) => {
                 callback(null, createErrorResponse(err.statusCode, err.message));
                 db.close();
+            })
+    });
+};
+
+
+/**
+ * PROJECT SIGNUP
+ *
+ * @param event
+ * @param context
+ * @param callback
+ */
+module.exports.projectSignup = (event, context, callback) => {
+    mongoose.connect(mongoString);
+    let db = mongoose.connection;
+    let project_id = event.pathParameters.project_id;
+    let data = {};
+    data = JSON.parse(event.body);
+
+    if (!mongoose.Types.ObjectId.isValid(project_id)) {
+        db.close();
+        callback(null, createErrorResponse(400, 'Invalid ObjectId'));
+        return;
+    }
+
+    db.on('error', () => {
+        db.close();
+        callback(null, createErrorResponse(503, 'There was an error connecting to the database'));
+    });
+    db.once('open', () => {
+        Project
+            .findById(project_id)
+            .then((project) => {
+                if (!project) {
+                    db.close();
+                    callback(null, createErrorResponse(404, 'Project not found'));
+                } else if (data.userType !== 'student') {
+                    db.close();
+                    callback(null, createErrorResponse(403, 'You must be a student to sign up for a project'));
+                } else if (project.registrants.some(e => e._id == data._id)) {
+                    db.close();
+                    callback(null, createErrorResponse(409, 'You are already signed up for this project'));
+                } else {
+                    project.update({
+                        $push: {'registrants': {_id: data._id, name: data.name, userType: data.userType}}
+                    })
+                        .then(() => {
+                            db.close();
+                            callback(null, {statusCode: 204});
+                        })
+                        .catch((err) => {
+                            db.close();
+                            callback(null, createErrorResponse(err.statusCode, err.message));
+                        })
+                }
+            })
+            .catch((err) => {
+                db.close();
+                callback(null, createErrorResponse(err.statusCode, err.message));
+            })
+    });
+};
+
+
+/**
+ * PROJECT SIGNOFF
+ *
+ * @param event
+ * @param context
+ * @param callback
+ */
+module.exports.projectSignoff = (event, context, callback) => {
+    mongoose.connect(mongoString);
+    let db = mongoose.connection;
+    let project_id = event.pathParameters.project_id;
+    let data = {};
+    data = JSON.parse(event.body);
+
+    if (!mongoose.Types.ObjectId.isValid(project_id)) {
+        db.close();
+        callback(null, createErrorResponse(400, 'Invalid ObjectId'));
+        return;
+    }
+
+    db.on('error', () => {
+        db.close();
+        callback(null, createErrorResponse(503, 'There was an error connecting to the database'));
+    });
+    db.once('open', () => {
+        Project
+            .findById(project_id)
+            .then((project) => {
+                if (!project) {
+                    db.close();
+                    callback(null, createErrorResponse(404, 'Project not found'));
+                } else if (!project.registrants.some(e => e._id == data._id)) {
+                    db.close();
+                    callback(null, createErrorResponse(404, 'You are not currently signed up for this project'));
+                } else {
+                    project.update({
+                        $pull: {'registrants': {_id: data._id}}
+                    })
+                        .then(() => {
+                            db.close();
+                            callback(null, {statusCode: 204});
+                        })
+                        .catch((err) => {
+                            db.close();
+                            callback(null, createErrorResponse(err.statusCode, err.message));
+                        })
+                }
+            })
+            .catch((err) => {
+                db.close();
+                callback(null, createErrorResponse(err.statusCode, err.message));
             })
     });
 };

@@ -5,7 +5,7 @@ info:
   description: |
     The Scholance API which serves all aspects related to projects. This may include
     projects themselves, submissions, but not asset creation (which is handled by the
-    Asset service.
+    Asset service).
   contact:
     name: Chris
     email: chris@scholance.com
@@ -21,6 +21,20 @@ paths:
         - Project
       operationId: listProjects
       parameters:
+        - name: _limit
+          in: query
+          description: maximum number of results to return
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: _page
+          in: query
+          description: pagination index
+          required: false
+          schema:
+            type: integer
+            format: int32
         - name: category
           in: query
           description: category to filter by
@@ -30,20 +44,6 @@ paths:
             type: array
             items:
               type: string
-        - name: limit
-          in: query
-          description: maximum number of results to return
-          required: false
-          schema:
-            type: integer
-            format: int32
-        - name: page
-          in: query
-          description: pagination index
-          required: false
-          schema:
-            type: integer
-            format: int32
       responses:
         '200':
           description: A list of projects
@@ -91,21 +91,34 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '401':
+          description: Not logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Invalid user type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         default:
           description: unexpected error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /projects/{id}:
+  /projects/{project_id}:
     parameters:
-      - name: id
+      - name: project_id
         in: path
         description: ID of project to delete
         required: true
         schema:
-          type: integer
-          format: int64
+          type: string
+          format: ObjectId
+          example: "507f1f77bcf86cd799439011"
     get:
       summary: Get Project
       description: Returns a project based on a single ID
@@ -157,6 +170,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '401':
+          description: Not logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Insufficient permisions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         default:
           description: unexpected error
           content:
@@ -169,9 +194,123 @@ paths:
       tags:
         - Project
       operationId: deleteProject
+      requestBody:
+        description: >-
+          Student to be added to project. Should eventually Put this in a header object
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
       responses:
         '204':
-          description: pet deleted
+          description: Project deleted
+        '401':
+          description: Not logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Project not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /projects/{project_id}/registration:
+    parameters:
+      - name: project_id
+        in: path
+        description: ID of project to delete
+        required: true
+        schema:
+          type: string
+          format: ObjectId
+          example: "507f1f77bcf86cd799439011"
+    put:
+      summary: Sign up for a project
+      description: Add student to project workers
+      tags:
+        - Project
+      operationId: projectSignup
+      requestBody:
+        description: Student to be added to project
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: Successful signup
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '400':
+          description: Invalid content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Not logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Insufficient permisions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      summary: Unregister from project
+      description: Unregisters a Student from a Project
+      tags:
+        - Project
+      operationId: projectSignoff
+      requestBody:
+        description: Student to be added to project
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '204':
+          description: Successful signoff
+        '401':
+          description: Not logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '404':
           description: Project not found
           content:
@@ -194,11 +333,14 @@ components:
           type: string
           format: ObjectId
           example: '507f1f77bcf86cd799439011'
+        registrants:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+      required:
+        - _id
 
     NewProject:
-      required:
-        - title
-        - summary
       properties:
         title:
           type: string
@@ -206,9 +348,16 @@ components:
         summary:
           type: string
           example: "We need a cutting-edge new logo for our new business"
+        liaison:
+          $ref: '#/components/schemas/User'
+        organization:
+          $ref: '#/components/schemas/Organization'
+        category:
+          type: string
+          example: Graphic Design
         fullDescription:
           type: string
-          example: |
+          example: >-
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed pulvinar
             euismod ipsum ut pharetra. Fusce non quam nec mi tincidunt ornare. In
             gravida id ante in gravida. Nunc tempor dui tempus ultrices rutrum.
@@ -219,19 +368,55 @@ components:
             magna tempus aliquam. Aliquam iaculis orci sed erat fringilla, et finibus
             purus porta. Duis ultrices odio sit amet cursus blandit. Duis sit amet
             purus ex. Ut auctor libero felis, eu tincidunt nisl finibus nec.
-        category:
+      required:
+        - title
+        - summary
+        - liaison
+        - organization
+
+    User:
+      properties:
+        _id:
           type: string
-          example: Graphic Design
+          example: '59e5852830b8f53496f8e8ec'
+        name:
+          type: string
+          example: 'John Doe'
+        userType:
+          type: string
+          enum:
+            - student
+            - business
+      required:
+        - _id
+        - name
+        - userType
+
+    BusinessUser:
+      allOf:
+        - $ref: '#/components/schemas/User'
+
+    Organization:
+      properties:
+        _id:
+          type: string
+          format: ObjectId
+          example: '507f1f77bcf86cd799439011'
+        name:
+          type: string
+          example: "Acme Inc."
+      required:
+        - _id
+        - name
 
     Error:
       required:
-        - code
         - message
       properties:
-        code:
-          type: integer
-          format: int32
-          example: 500
         message:
           type: string
           example: "An unexpected error occured"
+        code:
+          type: integer
+          format: int32
+          example: 1000
