@@ -2,6 +2,8 @@
 
 const mongoose = require('mongoose');
 const bluebird = require('bluebird');
+const AWS = require('aws-sdk');
+const s3 = new AWS.S3();
 const validator = require('validator');
 const Project = require('./models/project.js');
 
@@ -136,7 +138,25 @@ module.exports.createProject = (event, context, callback) => {
         project
             .save()
             .then(() => {
-                callback(null, {statusCode: 201, body: JSON.stringify({id: project._id})});
+                s3.putObject(
+                    {
+                        Bucket: 'scholance-projects',
+                        Key: project._id.toString() + '/'
+                    }, function(err, data) {
+                        if (err) {
+                        console.log(err);
+                        callback(null, createErrorResponse(503, 'There was an error creating the S3 bucket'));
+                    }
+                    else{
+                        console.log(data);
+                        callback(null, {statusCode: 201, body: JSON.stringify({id: project._id})});
+                    }
+                    /*
+                    data = {
+                     Location: "http://examplebucket.s3.amazonaws.com/"
+                    }
+                    */
+                    });
             })
             .catch((err) => {
                 callback(null, createErrorResponse(err.statusCode, err.message));
