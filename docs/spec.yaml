@@ -113,7 +113,7 @@ paths:
     parameters:
       - name: project_id
         in: path
-        description: ID of project to delete
+        description: ID of project
         required: true
         schema:
           type: string
@@ -229,6 +229,135 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /projects/{project_id}/supplemental-resources:
+    parameters:
+      - name: project_id
+        in: path
+        description: ID of project
+        required: true
+        schema:
+          type: string
+          format: ObjectId
+          example: "507f1f77bcf86cd799439011"
+    post:
+      summary: Add supplemental resource
+      description: Add a supplemental resource to a project
+      tags:
+        - Project
+        - Asset
+      operationId: createSupplementalResource
+      requestBody:
+        description: Resource to be added
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Asset'
+      responses:
+        '201':
+          description: Asset created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '400':
+          description: Invalid content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Not logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Insufficient permisions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /projects/{project_id}/supplemental-resources/{asset_id}:
+    parameters:
+      - name: project_id
+        in: path
+        description: ID of project
+        required: true
+        schema:
+          type: string
+          format: ObjectId
+          example: "507f1f77bcf86cd799439011"
+      - name: asset_id
+        in: path
+        description: ID of asset
+        required: true
+        schema:
+          type: string
+          format: ObjectId
+          example: "507f1f77bcf86cd799439011"
+    get:
+      summary: Get Supplemental Resource
+      description: >-
+        Returns a single Supplemental Resource from a Project. Actually, this might actually need to
+        be the actual file content
+      tags:
+        - Project
+        - Asset
+      operationId: getSupplementalResource
+      responses:
+        '200':
+          description: resource response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Asset'
+        '404':
+          description: Project not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      summary: Delete Supplemental Resource
+      description: Delete a supplemental resource
+      tags:
+        - Project
+        - Asset
+      operationId: deleteSupplementalResource
+      responses:
+        '204':
+          description: Resource deleted
+        '401':
+          description: Not logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Insufficient permisions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /projects/{project_id}/registration:
     parameters:
       - name: project_id
@@ -333,6 +462,10 @@ components:
           type: string
           format: ObjectId
           example: '507f1f77bcf86cd799439011'
+        supplementalResources:
+          type: array
+          items:
+            $ref: '#/components/schemas/Asset'
         registrants:
           type: array
           items:
@@ -408,6 +541,21 @@ components:
       required:
         - _id
         - name
+
+    Asset:
+      description: >-
+        A photo, video, link or text object to be used as a submission or supplemental resource
+      properties:
+        _id:
+          type: string
+          format: ObjectId
+          example: '507f1f77bcf86cd799439011'
+        name:
+          type: string
+          example: "Our Logo"
+        uri:
+          type: string
+          example: s3://bucket-name/path/
 
     Error:
       required:
