@@ -452,6 +452,93 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /projects/{project_id}/submission:
+    parameters:
+      - name: project_id
+        in: path
+        description: ID of project to delete
+        required: true
+        schema:
+          type: string
+          format: ObjectId
+          example: "507f1f77bcf86cd799439011"
+    put:
+      summary: Submit or resubmit to a project
+      description: Submit or resubmit completed work to a project
+      tags:
+        - Submission
+      operationId: projectSubmission
+      requestBody:
+        description: Completed work
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Submission'
+      responses:
+        '200':
+          description: Successful submission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Submission'
+        '400':
+          description: Invalid content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Not logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Insufficient permisions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      summary: Delete a submission
+      description: Removes a submission from a project
+      tags:
+        - Submission
+      operationId: projectUnsubmit
+      responses:
+        '204':
+          description: Successful signoff
+        '401':
+          description: Not logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Project not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 components:
   schemas:
     Project:
@@ -542,9 +629,28 @@ components:
         - _id
         - name
 
+    Submission:
+      description: >-
+        A Student submission to a project
+      properties:
+        commentary:
+          type: string
+          example: >-
+            Mumblecore bicycle rights neutra locavore forage keffiyeh tumblr four loko pinterest
+            asymmetrical farm-to-table tote bag craft beer sartorial. Fam man braid banh mi, try-hard
+            cliche hell of letterpress. Taiyaki iPhone yr, wolf vinyl hammock pitchfork organic
+            flexitarian yuccie next level meggings fanny pack whatever.
+        assets:
+          type: array
+          items:
+            $ref: '#/components/schemas/Asset'
     Asset:
       description: >-
         A photo, video, link or text object to be used as a submission or supplemental resource
+      required:
+        - _id
+        - name
+        - assetType
       properties:
         _id:
           type: string
@@ -553,6 +659,14 @@ components:
         name:
           type: string
           example: "Our Logo"
+        assetType:
+          type: string
+          example: 'image'
+          enum:
+            - 'image'
+            - 'link'
+            - 'video'
+            - 'text'
         uri:
           type: string
           example: s3://bucket-name/path/
