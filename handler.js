@@ -326,7 +326,7 @@ module.exports.projectSignup = (event, context, callback) => {
                 } else if (data.userType !== 'student') {
                     db.close();
                     callback(null, createErrorResponse(403, 'You must be a student to sign up for a project'));
-                } else if (project.registrants.some(e => e._id == data._id)) {
+                } else if (project.registrants.some(element => element._id == data._id)) {
                     db.close();
                     callback(null, createErrorResponse(409, 'You are already signed up for this project'));
                 } else {
@@ -334,6 +334,25 @@ module.exports.projectSignup = (event, context, callback) => {
                         $push: {'registrants': {_id: data._id, name: data.name, userType: data.userType}}
                     })
                         .then(() => {
+                            s3.putObject(
+                                {
+                                    Bucket: 'scholance-users',
+                                    Key: data._id + '/projects/' + project._id.toString() + '/'
+                                }, function(err, data) {
+                                    if (err) {
+                                        console.log(err);
+                                        callback(null, createErrorResponse(503, 'There was an error creating the S3 bucket'));
+                                    }
+                                    else{
+                                        console.log(data);
+                                        callback(null, {statusCode: 201, body: JSON.stringify({id: project._id})});
+                                    }
+                                    /*
+                                    data = {
+                                     Location: "http://examplebucket.s3.amazonaws.com/"
+                                    }
+                                    */
+                                });
                             db.close();
                             callback(null, {statusCode: 204});
                         })
