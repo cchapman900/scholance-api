@@ -252,6 +252,61 @@ paths:
         content:
           application/json:
             schema:
+              $ref: '#/components/schemas/AssetFileUpload'
+      responses:
+        '201':
+          description: Asset created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '400':
+          description: Invalid content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Not logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Insufficient permisions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /projects/{project_id}/supplemental-resources/file:
+    parameters:
+      - name: project_id
+        in: path
+        description: ID of project
+        required: true
+        schema:
+          type: string
+          format: ObjectId
+          example: "507f1f77bcf86cd799439011"
+    post:
+      summary: Add supplemental resource
+      description: Add a supplemental resource to a project
+      tags:
+        - Project
+        - Asset
+      operationId: createSupplementalResourceFile
+      requestBody:
+        description: Resource to be added
+        required: true
+        content:
+          application/json:
+            schema:
               $ref: '#/components/schemas/Asset'
       responses:
         '201':
@@ -452,11 +507,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /projects/{project_id}/submission:
+  /projects/{project_id}/submissions:
     parameters:
       - name: project_id
         in: path
-        description: ID of project to delete
+        description: ID of project
         required: true
         schema:
           type: string
@@ -539,6 +594,192 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /projects/{project_id}/submissions/{user_id}/assets:
+    parameters:
+      - name: project_id
+        in: path
+        description: ID of project
+        required: true
+        schema:
+          type: string
+          format: ObjectId
+          example: "507f1f77bcf86cd799439011"
+      - name: user_id
+        in: path
+        description: ID of the user, and subsequently the submission_id
+        required: true
+        schema:
+          type: string
+          format: ObjectId
+          example: "507f1f77bcf86cd799439011"
+    post:
+      summary: Create an Asset in a Submission
+      description: Creates a non-file Asset (text, link, etc) to be included in a Submission
+      tags:
+        - Submission
+        - Asset
+      operationId: createSubmissionAsset
+      requestBody:
+        description: Asset
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Asset'
+      responses:
+        '201':
+          description: Successful submission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Asset'
+        '400':
+          description: Invalid content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Not logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Insufficient permisions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /projects/{project_id}/submissions/{user_id}/assets/file:
+    parameters:
+      - name: project_id
+        in: path
+        description: ID of project
+        required: true
+        schema:
+          type: string
+          format: ObjectId
+          example: "507f1f77bcf86cd799439011"
+      - name: user_id
+        in: path
+        description: ID of the user, and subsequently the submission_id
+        required: true
+        schema:
+          type: string
+          format: ObjectId
+          example: "507f1f77bcf86cd799439011"
+    post:
+      summary: UPLOAD SUBMISSION ASSET FILE
+      description: Creates a file Asset (image) to be included in a Submission
+      tags:
+        - Submission
+        - Asset
+      operationId: createSubmissionFileAsset
+      requestBody:
+        description: Asset
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AssetFileUpload'
+      responses:
+        '201':
+          description: Successful submission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Asset'
+        '400':
+          description: Invalid content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Not logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Insufficient permisions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /projects/{project_id}/submissions/{user_id}/assets/{asset_id}:
+    parameters:
+      - name: project_id
+        in: path
+        description: ID of project to delete
+        required: true
+        schema:
+          type: string
+          format: ObjectId
+          example: "507f1f77bcf86cd799439011"
+      - name: user_id
+        in: path
+        description: ID of the user, and subsequently the submission_id
+        required: true
+        schema:
+          type: string
+          format: ObjectId
+          example: "507f1f77bcf86cd799439011"
+      - name: asset_id
+        in: path
+        description: ID of asset
+        required: true
+        schema:
+          type: string
+          format: ObjectId
+          example: "507f1f77bcf86cd799439011"
+    delete:
+      summary: Delete an Asset from a Submission
+      description: Removes an Asset from a project submission
+      tags:
+        - Submission
+        - Asset
+      operationId: projectUnsubmit
+      responses:
+        '204':
+          description: Successful signoff
+        '401':
+          description: Not logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Project not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 components:
   schemas:
     Project:
@@ -556,7 +797,11 @@ components:
         registrants:
           type: array
           items:
-            $ref: '#/components/schemas/User'
+            properties:
+              user:
+                $ref: '#/components/schemas/User'
+              submission:
+                $ref: '#/components/schemas/Submission'
       required:
         - _id
 
@@ -612,6 +857,10 @@ components:
         - name
         - userType
 
+    StudentUser:
+      allOf:
+        - $ref: '#/components/schemas/User'
+
     BusinessUser:
       allOf:
         - $ref: '#/components/schemas/User'
@@ -644,18 +893,17 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Asset'
-    Asset:
+        status:
+          type: string
+          example: 'submitted'
+
+    NewAsset:
       description: >-
-        A photo, video, link or text object to be used as a submission or supplemental resource
+        A photo, video, link or text object as used in a submission or supplemental resource
       required:
-        - _id
         - name
         - assetType
       properties:
-        _id:
-          type: string
-          format: ObjectId
-          example: '507f1f77bcf86cd799439011'
         name:
           type: string
           example: "Our Logo"
@@ -670,6 +918,36 @@ components:
         uri:
           type: string
           example: s3://bucket-name/path/
+        text:
+          type: string
+          example: >-
+            Mumblecore bicycle rights neutra locavore forage keffiyeh tumblr four loko pinterest
+            asymmetrical farm-to-table tote bag craft beer sartorial. Fam man braid banh mi, try-hard
+            cliche hell of letterpress. Taiyaki iPhone yr, wolf vinyl hammock pitchfork organic
+            flexitarian yuccie next level meggings fanny pack whatever.
+
+    Asset:
+      allOf:
+        - $ref: '#/components/schemas/NewAsset'
+      required:
+        - _id
+      properties:
+        _id:
+          type: string
+          format: ObjectId
+          example: '507f1f77bcf86cd799439011'
+
+    AssetFileUpload:
+      required:
+        - name
+        - file
+      properties:
+        name:
+          type: string
+        file:
+          type: string
+          format: base64encoded
+          example: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAFhAJ/wlseKgAAAABJRU5ErkJggg=="
 
     Error:
       required:

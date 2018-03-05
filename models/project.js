@@ -21,6 +21,35 @@ const organizationSchema = new Schema({
     }
 });
 
+const assetSchema = new Schema({
+    name: {
+        type: String,
+        required: true
+    },
+    assetType: {
+        type: String,
+        required: true
+    },
+    uri: {
+        type: String
+    },
+    text: {
+        type: String
+    }
+});
+
+const submissionSchema = new Schema({
+    commentary: {
+        type: String
+    },
+    assets: [{
+        type: assetSchema
+    }],
+    submissionStatus: {
+        type: String
+    }
+});
+
 
 const projectModel = mongoose.model('Project', {
     title: {
@@ -45,8 +74,16 @@ const projectModel = mongoose.model('Project', {
     category: {
         type: String,
     },
+    supplementalResources: [{
+       type: assetSchema
+    }],
     registrants: [{
-        type: userSchema
+        user: {
+            type: userSchema
+        },
+        submission: {
+            type: submissionSchema
+        }
     }]
 });
 

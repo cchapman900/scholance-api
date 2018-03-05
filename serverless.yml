@@ -1,10 +1,18 @@
 service: project-service
 
+custom:
+  projectsBucket: dev-scholance-projects
+
 provider:
   name: aws
   runtime: nodejs6.10
   environment:
     MONGO_URI: ${file(./serverless.env.yml):dev.MONGO_URI}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:*
+      Resource: "*"
 
 functions:
   listProjects:
@@ -61,4 +69,20 @@ functions:
       - http:
           path: projects/{project_id}/registration
           method: delete
+          cors: true
+
+  createSupplementalResourceFile:
+    handler: handler.createSupplementalResourceFile
+    events:
+      - http:
+          path: projects/{project_id}/supplemental-resources/file
+          method: post
+          cors: true
+
+  createSubmissionAssetFile:
+    handler: handler.createSubmissionAssetFile
+    events:
+      - http:
+          path: projects/{project_id}/submissions/{user_id}/assets/file
+          method: post
           cors: true
