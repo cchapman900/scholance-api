@@ -1,11 +1,10 @@
 openapi: "3.0.0"
 info:
-  version: 0.0.1
+  version: 0.1.0
   title: Scholance Project Service API
   description: |
     The Scholance API which serves all aspects related to projects. This may include
-    projects themselves, submissions, but not asset creation (which is handled by the
-    Asset service).
+    projects themselves, submissions and assets
   contact:
     name: Chris
     email: chris@scholance.com
@@ -413,101 +412,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /projects/{project_id}/registration:
-    parameters:
-      - name: project_id
-        in: path
-        description: ID of project to delete
-        required: true
-        schema:
-          type: string
-          format: ObjectId
-          example: "507f1f77bcf86cd799439011"
-    put:
-      summary: Sign up for a project
-      description: Add student to project workers
-      tags:
-        - Project
-      operationId: projectSignup
-      requestBody:
-        description: Student to be added to project
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/User'
-      responses:
-        '200':
-          description: Successful signup
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Project'
-        '400':
-          description: Invalid content
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '401':
-          description: Not logged in
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '403':
-          description: Insufficient permisions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-    delete:
-      summary: Unregister from project
-      description: Unregisters a Student from a Project
-      tags:
-        - Project
-      operationId: projectSignoff
-      requestBody:
-        description: Student to be added to project
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/User'
-      responses:
-        '204':
-          description: Successful signoff
-        '401':
-          description: Not logged in
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '403':
-          description: Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '404':
-          description: Project not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-  /projects/{project_id}/submissions:
+  /projects/{project_id}/entries:
     parameters:
       - name: project_id
         in: path
@@ -517,11 +422,51 @@ paths:
           type: string
           format: ObjectId
           example: "507f1f77bcf86cd799439011"
+    post:
+      summary: Sign up for a project
+      description: Submit or resubmit completed work to a project
+      tags:
+        - Entry
+      operationId: projectSignup
+      requestBody:
+        description: Completed work
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Student'
+      responses:
+        '204':
+          description: Successful signup
+        '400':
+          description: Invalid content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Not logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Insufficient permisions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
     put:
       summary: Submit or resubmit to a project
       description: Submit or resubmit completed work to a project
       tags:
-        - Submission
+        - Entry
       operationId: projectSubmission
       requestBody:
         description: Completed work
@@ -529,14 +474,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Submission'
+              $ref: '#/components/schemas/Entry'
       responses:
         '200':
           description: Successful submission
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Submission'
+                $ref: '#/components/schemas/Entry'
         '400':
           description: Invalid content
           content:
@@ -562,14 +507,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
     delete:
-      summary: Delete a submission
-      description: Removes a submission from a project
+      summary: Project Signoff
+      description: Sign off of a project
       tags:
-        - Submission
-      operationId: projectUnsubmit
+        - Entry
+      operationId: projectSignoff
       responses:
         '204':
-          description: Successful signoff
+          description: Sucessful signoff
         '401':
           description: Not logged in
           content:
@@ -577,13 +522,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '403':
-          description: Insufficient permissions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '404':
-          description: Project not found
+          description: Insufficient permisions
           content:
             application/json:
               schema:
@@ -594,7 +533,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /projects/{project_id}/submissions/{user_id}/assets:
+  /projects/{project_id}/entries/{user_id}/assets:
     parameters:
       - name: project_id
         in: path
@@ -606,19 +545,19 @@ paths:
           example: "507f1f77bcf86cd799439011"
       - name: user_id
         in: path
-        description: ID of the user, and subsequently the submission_id
+        description: ID of the user, and subsequently the entry_id
         required: true
         schema:
           type: string
           format: ObjectId
           example: "507f1f77bcf86cd799439011"
     post:
-      summary: Create an Asset in a Submission
-      description: Creates a non-file Asset (text, link, etc) to be included in a Submission
+      summary: Create an Asset in an Entry
+      description: Creates a non-file Asset (text, link, etc) to be included in a Entry
       tags:
-        - Submission
+        - Entry
         - Asset
-      operationId: createSubmissionAsset
+      operationId: createEntryAsset
       requestBody:
         description: Asset
         required: true
@@ -628,7 +567,7 @@ paths:
               $ref: '#/components/schemas/Asset'
       responses:
         '201':
-          description: Successful submission
+          description: Successfully created
           content:
             application/json:
               schema:
@@ -657,7 +596,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /projects/{project_id}/submissions/{user_id}/assets/file:
+  /projects/{project_id}/entries/{user_id}/assets/file:
     parameters:
       - name: project_id
         in: path
@@ -669,19 +608,19 @@ paths:
           example: "507f1f77bcf86cd799439011"
       - name: user_id
         in: path
-        description: ID of the user, and subsequently the submission_id
+        description: ID of the user, and subsequently the entry_id
         required: true
         schema:
           type: string
           format: ObjectId
           example: "507f1f77bcf86cd799439011"
     post:
-      summary: UPLOAD SUBMISSION ASSET FILE
-      description: Creates a file Asset (image) to be included in a Submission
+      summary: Upload an Entry Asset file
+      description: Creates a file Asset (image) to be included in an Entry
       tags:
-        - Submission
+        - Entry
         - Asset
-      operationId: createSubmissionFileAsset
+      operationId: createEntryAssetFile
       requestBody:
         description: Asset
         required: true
@@ -691,7 +630,7 @@ paths:
               $ref: '#/components/schemas/AssetFileUpload'
       responses:
         '201':
-          description: Successful submission
+          description: Successful upload
           content:
             application/json:
               schema:
@@ -720,7 +659,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /projects/{project_id}/submissions/{user_id}/assets/{asset_id}:
+  /projects/{project_id}/entries/{user_id}/assets/{asset_id}:
     parameters:
       - name: project_id
         in: path
@@ -732,7 +671,7 @@ paths:
           example: "507f1f77bcf86cd799439011"
       - name: user_id
         in: path
-        description: ID of the user, and subsequently the submission_id
+        description: ID of the user, and subsequently the entry_id
         required: true
         schema:
           type: string
@@ -747,10 +686,10 @@ paths:
           format: ObjectId
           example: "507f1f77bcf86cd799439011"
     delete:
-      summary: Delete an Asset from a Submission
-      description: Removes an Asset from a project submission
+      summary: Delete an Asset from an Entry
+      description: Removes an Asset from a project entry
       tags:
-        - Submission
+        - Entry
         - Asset
       operationId: projectUnsubmit
       responses:
@@ -794,14 +733,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Asset'
-        registrants:
+        entries:
           type: array
           items:
-            properties:
-              user:
-                $ref: '#/components/schemas/User'
-              submission:
-                $ref: '#/components/schemas/Submission'
+            $ref: '#/components/schemas/Entry'
       required:
         - _id
 
@@ -857,11 +792,11 @@ components:
         - name
         - userType
 
-    StudentUser:
+    Student:
       allOf:
         - $ref: '#/components/schemas/User'
 
-    BusinessUser:
+    Liaison:
       allOf:
         - $ref: '#/components/schemas/User'
 
@@ -878,10 +813,13 @@ components:
         - _id
         - name
 
-    Submission:
+    Entry:
       description: >-
-        A Student submission to a project
+        A Student entry to a project. This is created when a Student signs up and serves as a
+        container for the Assets that will be submitted upon submission
       properties:
+        student:
+          $ref: '#/components/schemas/Student'
         commentary:
           type: string
           example: >-
@@ -899,7 +837,7 @@ components:
 
     NewAsset:
       description: >-
-        A photo, video, link or text object as used in a submission or supplemental resource
+        A photo, video, link or text object as used in a project entry or supplemental resource
       required:
         - name
         - assetType
