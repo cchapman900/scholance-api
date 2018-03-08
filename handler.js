@@ -112,11 +112,7 @@ module.exports.createProject = (event, context, callback) => {
     project = new Project({
         title: data.title,
         summary: data.summary,
-        liaison: {
-            _id: data.liaison._id,
-            name: data.liaison.name,
-            userType: data.liaison.userType,
-        },
+        liaison: data.liaison._id,
         organization: {
             _id: data.organization._id,
             name: data.organization.name
@@ -200,18 +196,14 @@ module.exports.updateProject = (event, context, callback) => {
                 if (!project) {
                     callback(null, createErrorResponse(404, 'Project not found'));
                     db.close();
-                } else if (data.liaison._id != project.liaison._id) {
+                } else if (data.liaison._id != project.liaison) {
                     callback(null, createErrorResponse(403, 'Insufficient privileges'));
                     db.close();
                 } else {
                     project.update({
                         title: data.title,
                         summary: data.summary,
-                        liaison: {
-                            _id: data.liaison._id,
-                            name: data.liaison.name,
-                            userType: data.liaison.userType,
-                        },
+                        liaison: data.liaison._id,
                         organization: {
                             _id: data.organization._id,
                             name: data.organization.name
@@ -269,7 +261,7 @@ module.exports.deleteProject = (event, context, callback) => {
                 if (!project) {
                     callback(null, createErrorResponse(404, 'Project not found'));
                     db.close();
-                } else if (data.liaison._id != project.liaison._id) {
+                } else if (data.liaison._id != project.liaison) {
                     callback(null, createErrorResponse(403, 'Insufficient privileges'));
                     db.close();
                 } else {
@@ -303,20 +295,20 @@ module.exports.deleteProject = (event, context, callback) => {
 module.exports.projectSignup = (event, context, callback) => {
     mongoose.connect(mongoString);
     let db = mongoose.connection;
-    let project_id = event.pathParameters.project_id;
-    let data = {};
-    data = JSON.parse(event.body);
+    db.on('error', () => {
+        db.close();
+        callback(null, createErrorResponse(503, 'There was an error connecting to the database'));
+    });
 
+    let project_id = event.pathParameters.project_id;
     if (!mongoose.Types.ObjectId.isValid(project_id)) {
         db.close();
         callback(null, createErrorResponse(400, 'Invalid ObjectId'));
         return;
     }
 
-    db.on('error', () => {
-        db.close();
-        callback(null, createErrorResponse(503, 'There was an error connecting to the database'));
-    });
+    let data = JSON.parse(event.body);
+
     db.once('open', () => {
         Project
             .findById(project_id)
@@ -327,12 +319,12 @@ module.exports.projectSignup = (event, context, callback) => {
                 } else if (data.userType !== 'student') {
                     db.close();
                     callback(null, createErrorResponse(403, 'You must be a student to sign up for a project'));
-                } else if (project.registrants.some(element => element._id == data._id)) {
+                } else if (project.entries.some(element => element.student == data._id)) {
                     db.close();
                     callback(null, createErrorResponse(409, 'You are already signed up for this project'));
                 } else {
                     project.update({
-                        $push: {'registrants': {_id: data._id, name: data.name, userType: data.userType}}
+                        $push: {'entries': {student: data._id}}
                     })
                         .then(() => {
                             s3.putObject(
@@ -381,20 +373,19 @@ module.exports.projectSignup = (event, context, callback) => {
 module.exports.projectSignoff = (event, context, callback) => {
     mongoose.connect(mongoString);
     let db = mongoose.connection;
-    let project_id = event.pathParameters.project_id;
-    let data = {};
-    data = JSON.parse(event.body);
+    db.on('error', () => {
+        db.close();
+        callback(null, createErrorResponse(503, 'There was an error connecting to the database'));
+    });
 
+    let project_id = event.pathParameters.project_id;
     if (!mongoose.Types.ObjectId.isValid(project_id)) {
         db.close();
         callback(null, createErrorResponse(400, 'Invalid ObjectId'));
         return;
     }
 
-    db.on('error', () => {
-        db.close();
-        callback(null, createErrorResponse(503, 'There was an error connecting to the database'));
-    });
+    let data = JSON.parse(event.body);
     db.once('open', () => {
         Project
             .findById(project_id)
@@ -402,12 +393,12 @@ module.exports.projectSignoff = (event, context, callback) => {
                 if (!project) {
                     db.close();
                     callback(null, createErrorResponse(404, 'Project not found'));
-                } else if (!project.registrants.some(e => e._id == data._id)) {
+                } else if (!project.entries.some(e => e.student == data._id)) {
                     db.close();
                     callback(null, createErrorResponse(404, 'You are not currently signed up for this project'));
                 } else {
                     project.update({
-                        $pull: {'registrants': {_id: data._id}}
+                        $pull: {'entries': {student: data._id}}
                     })
                         .then(() => {
                             db.close();
@@ -523,7 +514,7 @@ module.exports.createSupplementalResourceFile = (event, context, callback) => {
  * @param context
  * @param callback
  */
-module.exports.createSubmissionAssetFile = (event, context, callback) => {
+module.exports.createEntryAssetFile = (event, context, callback) => {
     let project_id = event.pathParameters.project_id;
     let user_id = event.pathParameters.project_id;
 

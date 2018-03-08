@@ -59,7 +59,7 @@ functions:
     handler: handler.projectSignup
     events:
       - http:
-          path: projects/{project_id}/registration
+          path: projects/{project_id}/entries
           method: post
           cors: true
 
@@ -67,7 +67,7 @@ functions:
     handler: handler.projectSignoff
     events:
       - http:
-          path: projects/{project_id}/registration
+          path: projects/{project_id}/entries
           method: delete
           cors: true
 
@@ -79,10 +79,10 @@ functions:
           method: post
           cors: true
 
-  createSubmissionAssetFile:
-    handler: handler.createSubmissionAssetFile
+  createEntryAssetFile:
+    handler: handler.createEntryAssetFile
     events:
       - http:
-          path: projects/{project_id}/submissions/{user_id}/assets/file
+          path: projects/{project_id}/entries/{user_id}/assets/file
           method: post
           cors: true

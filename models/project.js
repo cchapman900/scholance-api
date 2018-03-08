@@ -1,18 +1,8 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const validator = require('validator');
+const User = require('./user');
 
-const userSchema = new Schema({
-    name: {
-        type: String,
-        required: true
-    },
-    userType: {
-        type: String,
-        required: true,
-        enum: ['student', 'business']
-    }
-});
 
 const organizationSchema = new Schema({
     name: {
@@ -38,7 +28,12 @@ const assetSchema = new Schema({
     }
 });
 
-const submissionSchema = new Schema({
+const entrySchema = new Schema({
+    student: {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
     commentary: {
         type: String
     },
@@ -61,7 +56,8 @@ const projectModel = mongoose.model('Project', {
         required: true,
     },
     liaison: {
-        type: userSchema,
+        type: Schema.Types.ObjectId,
+        ref: 'User',
         required: true
     },
     organization: {
@@ -77,13 +73,8 @@ const projectModel = mongoose.model('Project', {
     supplementalResources: [{
        type: assetSchema
     }],
-    registrants: [{
-        user: {
-            type: userSchema
-        },
-        submission: {
-            type: submissionSchema
-        }
+    entries: [{
+        type: entrySchema
     }]
 });
 
