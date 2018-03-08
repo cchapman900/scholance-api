@@ -79,8 +79,8 @@ functions:
           method: post
           cors: true
 
-  createSubmissionAssetFile:
-    handler: handler.createSubmissionAssetFile
+  createEntryAssetFile:
+    handler: handler.createEntryAssetFile
     events:
       - http:
           path: projects/{project_id}/entries/{user_id}/assets/file

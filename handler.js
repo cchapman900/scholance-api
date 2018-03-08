@@ -514,7 +514,7 @@ module.exports.createSupplementalResourceFile = (event, context, callback) => {
  * @param context
  * @param callback
  */
-module.exports.createSubmissionAssetFile = (event, context, callback) => {
+module.exports.createEntryAssetFile = (event, context, callback) => {
     let project_id = event.pathParameters.project_id;
     let user_id = event.pathParameters.project_id;
 
