@@ -83,6 +83,6 @@ functions:
     handler: handler.createEntryAssetFile
     events:
       - http:
-          path: projects/{project_id}/entries/{user_id}/assets/file
+          path: projects/{project_id}/entries/{user_id}/assets
           method: post
           cors: true
