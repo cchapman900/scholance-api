@@ -94,3 +94,11 @@ functions:
           path: projects/{project_id}/entries/{user_id}/assets/file
           method: post
           cors: true
+
+  deleteEntryAsset:
+    handler: handler.deleteEntryAsset
+    events:
+      - http:
+          path: projects/{project_id}/entries/{user_id}/assets/{asset_id}
+          method: delete
+          cors: true

@@ -588,9 +588,9 @@ module.exports.createEntryAssetFile = (event, context, callback) => {
                         let entryIndex = project.entries.findIndex( entry => entry.student == user_id);
                         project.entries[entryIndex].assets.push(newAsset);
                         project.save()
-                            .then(() => {
+                            .then((newProject) => {
                                 db.close();
-                                callback(null, {statusCode: 201, body: JSON.stringify({asset: newAsset})});
+                                callback(null, {statusCode: 201, body: JSON.stringify(newProject.entries[entryIndex].assets.slice(-1)[0])});
                             })
                             .catch((err) => {
                                 db.close();
@@ -662,9 +662,91 @@ module.exports.createEntryAsset = (event, context, callback) => {
                     let entryIndex = project.entries.findIndex( entry => entry.student == user_id);
                     project.entries[entryIndex].assets.push(newAsset);
                     project.save()
-                        .then(() => {
+                        .then((newProject) => {
                             db.close();
-                            callback(null, {statusCode: 201, body: JSON.stringify({asset: newAsset})});
+                            callback(null, {statusCode: 201, body: JSON.stringify(newProject.entries[entryIndex].assets.slice(-1)[0])});
+                        })
+                        .catch((err) => {
+                            db.close();
+                            callback(null, createErrorResponse(err.statusCode, err.message));
+                        });
+                }
+            })
+            .catch((err) => {
+                db.close();
+                callback(null, createErrorResponse(err.statusCode, err.message));
+            })
+    });
+};
+
+
+/**
+ * DELETE ENTRY ASSET
+ *
+ * @param event
+ * @param context
+ * @param callback
+ */
+module.exports.deleteEntryAsset = (event, context, callback) => {
+    let project_id = event.pathParameters.project_id;
+    let user_id = event.pathParameters.user_id;
+    let asset_id = event.pathParameters.asset_id;
+
+    if (!mongoose.Types.ObjectId.isValid(project_id)
+        || !mongoose.Types.ObjectId.isValid(user_id)
+        || !mongoose.Types.ObjectId.isValid(asset_id)
+    ) {
+        db.close();
+        callback(null, createErrorResponse(400, 'Invalid ObjectId'));
+        return;
+    }
+
+    let data = JSON.parse(event.body);
+
+    mongoose.connect(mongoString);
+    let db = mongoose.connection;
+    db.on('error', () => {
+        db.close();
+        callback(null, createErrorResponse(503, 'There was an error connecting to the database'));
+    });
+
+    db.once('open', () => {
+        Project
+            .findById(project_id)
+            .then((project) => {
+                if (!project) {
+                    db.close();
+                    callback(null, createErrorResponse(404, 'Project not found'));
+                } else if (!project.entries.some(entry => entry.student == user_id)) {
+                    db.close();
+                    callback(null, createErrorResponse(404, 'User is not signed up for this project'));
+                } else {
+                    let entryIndex = project.entries.findIndex( entry => entry.student == user_id);
+                    let entry = project.entries[entryIndex];
+                    let assetIndex = entry.assets.findIndex( asset => asset._id == asset_id);
+                    let asset = project.entries[entryIndex].assets.splice(assetIndex, 1);
+                    project.save()
+                        .then(() => {
+                            if (asset.assetType === 'image') {
+                                let bucketName = 'dev-scholance-projects';
+
+                                let params = {
+                                    Bucket: bucketName,
+                                    Key: asset.uri
+                                };
+
+                                console.log('738');
+
+                                s3.deleteObject(params, function(err, data) {
+                                    if (err) {
+                                        callback(null, createErrorResponse(500, 'Could not delete file from S3'));
+                                    }
+                                    callback(null, {statusCode: 204});
+                                });
+                            } else {
+                                callback(null, {statusCode: 204});
+                            }
+                            db.close();
                         })
                         .catch((err) => {
                             db.close();
