@@ -79,10 +79,18 @@ functions:
           method: post
           cors: true
 
+  createEntryAsset:
+    handler: handler.createEntryAsset
+    events:
+      - http:
+          path: projects/{project_id}/entries/{user_id}/assets
+          method: post
+          cors: true
+
   createEntryAssetFile:
     handler: handler.createEntryAssetFile
     events:
       - http:
-          path: projects/{project_id}/entries/{user_id}/assets
+          path: projects/{project_id}/entries/{user_id}/assets/file
           method: post
           cors: true

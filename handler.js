@@ -586,10 +586,7 @@ module.exports.createEntryAssetFile = (event, context, callback) => {
                             uri: fileLink
                         };
                         let entryIndex = project.entries.findIndex( entry => entry.student == user_id);
-                        let entry = project.entries[entryIndex];
-                        let updateString = 'entries.'+entryIndex;
                         project.entries[entryIndex].assets.push(newAsset);
-                        console.log(updateString);
                         project.save()
                             .then(() => {
                                 db.close();
@@ -607,4 +604,77 @@ module.exports.createEntryAssetFile = (event, context, callback) => {
                 })
         });
     })
+};
+
+
+/**
+ * UPLOAD ENTRY ASSET
+ *
+ * @param event
+ * @param context
+ * @param callback
+ */
+module.exports.createEntryAsset = (event, context, callback) => {
+    let project_id = event.pathParameters.project_id;
+    let user_id = event.pathParameters.user_id;
+
+    if (!mongoose.Types.ObjectId.isValid(project_id) || !mongoose.Types.ObjectId.isValid(user_id)) {
+        db.close();
+        callback(null, createErrorResponse(400, 'Invalid ObjectId'));
+        return;
+    }
+
+    let data = JSON.parse(event.body);
+    //get the request
+
+    let newAsset = {
+        name: data.name,
+        assetType: data.assetType
+    };
+
+    if (data.uri) {
+        newAsset.uri = data.uri;
+    }
+
+    if (data.text) {
+        newAsset.text = data.text;
+    }
+
+
+    mongoose.connect(mongoString);
+    let db = mongoose.connection;
+    db.on('error', () => {
+        db.close();
+        callback(null, createErrorResponse(503, 'There was an error connecting to the database'));
+    });
+
+    db.once('open', () => {
+        Project
+            .findById(project_id)
+            .then((project) => {
+                if (!project) {
+                    db.close();
+                    callback(null, createErrorResponse(404, 'Project not found'));
+                } else if (!project.entries.some(entry => entry.student == user_id)) {
+                    db.close();
+                    callback(null, createErrorResponse(404, 'User is not signed up for this project'));
+                } else {
+                    let entryIndex = project.entries.findIndex( entry => entry.student == user_id);
+                    project.entries[entryIndex].assets.push(newAsset);
+                    project.save()
+                        .then(() => {
+                            db.close();
+                            callback(null, {statusCode: 201, body: JSON.stringify({asset: newAsset})});
+                        })
+                        .catch((err) => {
+                            db.close();
+                            callback(null, createErrorResponse(err.statusCode, err.message));
+                        });
+                }
+            })
+            .catch((err) => {
+                db.close();
+                callback(null, createErrorResponse(err.statusCode, err.message));
+            })
+    });
 };
