@@ -449,6 +449,7 @@ module.exports.createSupplementalResourceFile = (event, context, callback) => {
     }
 
     let fileExt = fileMime.ext;
+    let assetType = fileMime.mime.split('/')[0];
 
     let bucketName = 'dev-scholance-projects';
     let filePath = project_id + '/supplemental-resources/';
@@ -485,7 +486,7 @@ module.exports.createSupplementalResourceFile = (event, context, callback) => {
                         callback(null, createErrorResponse(404, 'Project not found'));
                     } else {
                         project.update({
-                            $push: {'supplementalResources': {name: fileName, assetType: 'image', uri: fileLink}} // TODO: fix assetType
+                            $push: {'supplementalResources': {name: fileName, assetType: assetType, uri: fileLink}}
                         })
                             .then(() => {
                                 db.close();
@@ -508,7 +509,7 @@ module.exports.createSupplementalResourceFile = (event, context, callback) => {
 
 
 /**
- * UPLOAD SUBMISSION ASSET FILE
+ * UPLOAD ENTRY ASSET FILE
  *
  * @param event
  * @param context
@@ -516,7 +517,7 @@ module.exports.createSupplementalResourceFile = (event, context, callback) => {
  */
 module.exports.createEntryAssetFile = (event, context, callback) => {
     let project_id = event.pathParameters.project_id;
-    let user_id = event.pathParameters.project_id;
+    let user_id = event.pathParameters.user_id;
 
     if (!mongoose.Types.ObjectId.isValid(project_id) || !mongoose.Types.ObjectId.isValid(user_id)) {
         db.close();
@@ -540,10 +541,11 @@ module.exports.createEntryAssetFile = (event, context, callback) => {
     }
 
     let fileExt = fileMime.ext;
+    let assetType = fileMime.mime.split('/')[0];
 
     let bucketName = 'dev-scholance-projects';
 
-    let filePath = project_id + '/submissions/' + user_id + '/assets/';
+    let filePath = project_id + '/entries/' + user_id + '/assets/';
     let fileName = name + '.' + fileExt;
     let fileFullName = filePath + fileName;
 
@@ -559,9 +561,50 @@ module.exports.createEntryAssetFile = (event, context, callback) => {
         if (err) {
             callback(null, createErrorResponse(500, 'Could not upload to S3'));
         }
-        // if the file object is uploaded successfully to s3 then you can get your full url
-        callback(null, {statusCode: 201, body: JSON.stringify({'File URL': fileLink})});
 
-        // TODO: Add to Submission
+        mongoose.connect(mongoString);
+        let db = mongoose.connection;
+        db.on('error', () => {
+            db.close();
+            callback(null, createErrorResponse(503, 'There was an error connecting to the database'));
+        });
+
+        db.once('open', () => {
+            Project
+                .findById(project_id)
+                .then((project) => {
+                    if (!project) {
+                        db.close();
+                        callback(null, createErrorResponse(404, 'Project not found'));
+                    } else if (!project.entries.some(entry => entry.student == user_id)) {
+                        db.close();
+                        callback(null, createErrorResponse(404, 'User is not signed up for this project'));
+                    } else {
+                        let newAsset = {
+                            name: name,
+                            assetType: assetType,
+                            uri: fileLink
+                        };
+                        let entryIndex = project.entries.findIndex( entry => entry.student == user_id);
+                        let entry = project.entries[entryIndex];
+                        let updateString = 'entries.'+entryIndex;
+                        project.entries[entryIndex].assets.push(newAsset);
+                        console.log(updateString);
+                        project.save()
+                            .then(() => {
+                                db.close();
+                                callback(null, {statusCode: 201, body: JSON.stringify({asset: newAsset})});
+                            })
+                            .catch((err) => {
+                                db.close();
+                                callback(null, createErrorResponse(err.statusCode, err.message));
+                            });
+                    }
+                })
+                .catch((err) => {
+                    db.close();
+                    callback(null, createErrorResponse(err.statusCode, err.message));
+                })
+        });
     })
 };
