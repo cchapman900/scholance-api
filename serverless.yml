@@ -8,6 +8,7 @@ provider:
   runtime: nodejs6.10
   environment:
     MONGO_URI: ${file(./serverless.env.yml):dev.MONGO_URI}
+    AUTH_URI: ${file(./serverless.env.yml):dev.AUTH_URI}
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -31,7 +32,7 @@ functions:
           method: post
           cors: true
           authorizer:
-            arn: arn:aws:lambda:us-east-1:813194155820:function:jwtRsaCustomAuthorizer
+            arn: ${file(./serverless.env.yml):dev.AUTH_URI}
             resultTtlInSeconds: 3600
             identitySource: method.request.header.Authorization
             identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
@@ -51,6 +52,11 @@ functions:
           path: projects/{project_id}
           method: put
           cors: true
+          authorizer:
+            arn: ${file(./serverless.env.yml):dev.AUTH_URI}
+            resultTtlInSeconds: 3600
+            identitySource: method.request.header.Authorization
+            identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
 
   deleteProject:
     handler: handler.deleteProject
@@ -59,6 +65,11 @@ functions:
           path: projects/{project_id}
           method: delete
           cors: true
+          authorizer:
+            arn: ${file(./serverless.env.yml):dev.AUTH_URI}
+            resultTtlInSeconds: 3600
+            identitySource: method.request.header.Authorization
+            identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
 
   projectSignup:
     handler: handler.projectSignup
@@ -67,6 +78,11 @@ functions:
           path: projects/{project_id}/entries
           method: post
           cors: true
+          authorizer:
+            arn: ${file(./serverless.env.yml):dev.AUTH_URI}
+            resultTtlInSeconds: 3600
+            identitySource: method.request.header.Authorization
+            identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
 
   projectSignoff:
     handler: handler.projectSignoff
@@ -75,6 +91,11 @@ functions:
           path: projects/{project_id}/entries/{user_id}
           method: delete
           cors: true
+          authorizer:
+            arn: ${file(./serverless.env.yml):dev.AUTH_URI}
+            resultTtlInSeconds: 3600
+            identitySource: method.request.header.Authorization
+            identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
 
   createSupplementalResourceFile:
     handler: handler.createSupplementalResourceFile
@@ -83,6 +104,11 @@ functions:
           path: projects/{project_id}/supplemental-resources/file
           method: post
           cors: true
+          authorizer:
+            arn: ${file(./serverless.env.yml):dev.AUTH_URI}
+            resultTtlInSeconds: 3600
+            identitySource: method.request.header.Authorization
+            identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
 
   createEntryAsset:
     handler: handler.createEntryAsset
@@ -91,6 +117,11 @@ functions:
           path: projects/{project_id}/entries/{user_id}/assets
           method: post
           cors: true
+          authorizer:
+            arn: ${file(./serverless.env.yml):dev.AUTH_URI}
+            resultTtlInSeconds: 3600
+            identitySource: method.request.header.Authorization
+            identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
 
   createEntryAssetFile:
     handler: handler.createEntryAssetFile
@@ -99,6 +130,11 @@ functions:
           path: projects/{project_id}/entries/{user_id}/assets/file
           method: post
           cors: true
+          authorizer:
+            arn: ${file(./serverless.env.yml):dev.AUTH_URI}
+            resultTtlInSeconds: 3600
+            identitySource: method.request.header.Authorization
+            identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
 
   deleteEntryAsset:
     handler: handler.deleteEntryAsset
@@ -107,3 +143,8 @@ functions:
           path: projects/{project_id}/entries/{user_id}/assets/{asset_id}
           method: delete
           cors: true
+          authorizer:
+            arn: ${file(./serverless.env.yml):dev.AUTH_URI}
+            resultTtlInSeconds: 3600
+            identitySource: method.request.header.Authorization
+            identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$

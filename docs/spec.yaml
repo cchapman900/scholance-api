@@ -10,7 +10,7 @@ info:
     email: chris@scholance.com
     url: http://chrischapman.co
 servers:
-  - url: https://api.scholance.com/project-service/v1/
+  - url: https://api.scholance.com/projects/v1/
 paths:
   /projects:
     get:
@@ -70,6 +70,8 @@ paths:
       tags:
         - Project
       operationId: createProject
+      security:
+        - Auth0AccessToken: []
       requestBody:
         description: Project to be created
         required: true
@@ -149,6 +151,8 @@ paths:
       tags:
         - Project
       operationId: updateProject
+      security:
+        - Auth0AccessToken: []
       requestBody:
         description: Project to be updated
         required: true
@@ -193,6 +197,8 @@ paths:
       tags:
         - Project
       operationId: deleteProject
+      security:
+        - Auth0AccessToken: []
       responses:
         '204':
           description: Project deleted
@@ -234,9 +240,10 @@ paths:
       summary: Add supplemental resource
       description: Add a supplemental resource to a project
       tags:
-        - Project
         - Asset
       operationId: createSupplementalResource
+      security:
+        - Auth0AccessToken: []
       requestBody:
         description: Resource to be added
         required: true
@@ -289,9 +296,10 @@ paths:
       summary: Add supplemental resource
       description: Add a supplemental resource to a project
       tags:
-        - Project
         - Asset
       operationId: createSupplementalResourceFile
+      security:
+        - Auth0AccessToken: []
       requestBody:
         description: Resource to be added
         required: true
@@ -354,9 +362,10 @@ paths:
         Returns a single Supplemental Resource from a Project. Actually, this might actually need to
         be the actual file content
       tags:
-        - Project
         - Asset
       operationId: getSupplementalResource
+      security:
+        - Auth0AccessToken: []
       responses:
         '200':
           description: resource response
@@ -380,9 +389,10 @@ paths:
       summary: Delete Supplemental Resource
       description: Delete a supplemental resource
       tags:
-        - Project
         - Asset
       operationId: deleteSupplementalResource
+      security:
+        - Auth0AccessToken: []
       responses:
         '204':
           description: Resource deleted
@@ -420,6 +430,8 @@ paths:
       tags:
         - Entry
       operationId: projectSignup
+      security:
+        - Auth0AccessToken: [manage:entry]
       requestBody:
         description: Completed work
         required: true
@@ -464,12 +476,22 @@ paths:
           type: string
           format: ObjectId
           example: "507f1f77bcf86cd799439011"
+      - name: user_id
+        in: path
+        description: ID of user
+        required: true
+        schema:
+          type: string
+          format: ObjectId
+          example: "507f1f77bcf86cd799439011"
     put:
       summary: Submit or resubmit to a project
       description: Submit or resubmit completed work to a project
       tags:
         - Entry
       operationId: projectSubmission
+      security:
+        - Auth0AccessToken: []
       requestBody:
         description: Completed work
         required: true
@@ -514,6 +536,8 @@ paths:
       tags:
         - Entry
       operationId: projectSignoff
+      security:
+        - Auth0AccessToken: []
       responses:
         '204':
           description: Sucessful signoff
@@ -560,6 +584,8 @@ paths:
         - Entry
         - Asset
       operationId: createEntryAsset
+      security:
+        - Auth0AccessToken: []
       requestBody:
         description: Asset
         required: true
@@ -623,6 +649,8 @@ paths:
         - Entry
         - Asset
       operationId: createEntryAssetFile
+      security:
+        - Auth0AccessToken: []
       requestBody:
         description: Asset
         required: true
@@ -693,7 +721,9 @@ paths:
       tags:
         - Entry
         - Asset
-      operationId: projectUnsubmit
+      operationId: deleteEntryAsset
+      security:
+        - Auth0AccessToken: []
       responses:
         '204':
           description: Successful signoff
@@ -777,6 +807,10 @@ components:
         - summary
 
     User:
+      required:
+        - _id
+        - name
+        - userType
       properties:
         _id:
           type: string
@@ -806,10 +840,6 @@ components:
               enum:
                 - active
                 - suspended
-      required:
-        - _id
-        - name
-        - userType
 
     Student:
       allOf:
@@ -906,10 +936,17 @@ components:
           format: base64encoded
           example: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAFhAJ/wlseKgAAAABJRU5ErkJggg=="
 
+    AccessTokenEncoded:
+      type: string
+      description: See AccessTokenDecoded for the content that exists in this
+      example: >-
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.XbPfbIHMI6arZ3Y922BhjWgQzWXcXNrz0ogtVhfEd2o"
+
     AccessToken:
       description: >-
         This is a JWT that is passed in the Authorization header from a successful login
-        through Auth0
+        through Auth0.
+        This is actually passed in an encoded string format.
       properties:
         iss:
           description: "issuer: string or array of strings of valid values for the iss field"
@@ -960,27 +997,43 @@ components:
           properties:
             iss:
               description: >-
-                Issuer Identifier for the Issuer of the response. The iss value is a case sensitive URL using the https scheme that contains scheme, host, and optionally, port number and path components and no query or fragment components.
+                Issuer Identifier for the Issuer of the response. The iss value is a case sensitive
+                URL using the https scheme that contains scheme, host, and optionally, port number
+                and path components and no query or fragment components.
               type: string
               example: 'https://scholance.auth0.com/'
             sub:
               description: >-
-                Subject Identifier. A locally unique and never reassigned identifier within the Issuer for the End-User, which is intended to be consumed by the Client, e.g., 24400320 or AItOawmwtWwcT0k51BayewNvutrJUqsvl6qs7A4. It MUST NOT exceed 255 ASCII characters in length. The sub value is a case sensitive string.
+                Subject Identifier. A locally unique and never reassigned identifier within the
+                Issuer for the End-User, which is intended to be consumed by the Client, e.g.,
+                24400320 or AItOawmwtWwcT0k51BayewNvutrJUqsvl6qs7A4. It MUST NOT exceed 255
+                ASCII characters in length. The sub value is a case sensitive string.
               type: string
               example: auth0|59e5852860b8f53896e8e8ec
             aud:
               description: >-
-                Audience(s) that this ID Token is intended for. It MUST contain the OAuth 2.0 client_id of the Relying Party as an audience value. It MAY also contain identifiers for other audiences. In the general case, the aud value is an array of case sensitive strings. In the common special case when there is one audience, the aud value MAY be a single case sensitive string.
+                Audience(s) that this ID Token is intended for. It MUST contain the OAuth 2.0
+                client_id of the Relying Party as an audience value. It MAY also contain identifiers
+                for other audiences. In the general case, the aud value is an array of case sensitive
+                strings. In the common special case when there is one audience, the aud value MAY
+                be a single case sensitive string.
               type: string
               example: zwLwultk9tCRKQ5aM02AopBIhoF18sT8
             iat:
               description: >-
-                Time at which the JWT was issued. Its value is a JSON number representing the number of seconds from 1970-01-01T0:0:0Z as measured in UTC until the date/time.
+                Time at which the JWT was issued. Its value is a JSON number representing the
+                number of seconds from 1970-01-01T0:0:0Z as measured in UTC until the date/time.
               type: string
               example: 1521084611
             exp:
               description: >-
-                Expiration time on or after which the ID Token MUST NOT be accepted for processing. The processing of this parameter requires that the current date/time MUST be before the expiration date/time listed in the value. Implementers MAY provide for some small leeway, usually no more than a few minutes, to account for clock skew. Its value is a JSON number representing the number of seconds from 1970-01-01T0:0:0Z as measured in UTC until the date/time. See RFC 3339 [RFC3339] for details regarding date/times in general and UTC in particular.
+                Expiration time on or after which the ID Token MUST NOT be accepted for processing.
+                The processing of this parameter requires that the current date/time MUST be before
+                the expiration date/time listed in the value. Implementers MAY provide for some
+                small leeway, usually no more than a few minutes, to account for clock skew. Its
+                value is a JSON number representing the number of seconds from 1970-01-01T0:0:0Z
+                as measured in UTC until the date/time. See RFC 3339 [RFC3339] for details regarding
+                date/times in general and UTC in particular.
               type: string
               example: 1521120611
             user_id:
@@ -1020,3 +1073,7 @@ components:
           type: integer
           format: int32
           example: 1000
+  securitySchemes:
+    Auth0AccessToken:
+      type: http
+      scheme: bearer
