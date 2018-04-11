@@ -815,9 +815,6 @@ components:
         _id:
           type: string
           example: '59e5852830b8f53496f8e8ec'
-        auth0_id:
-          type: string
-          example: 'auth0|59e5852860b8f53896e8e8ec'
         name:
           type: string
           example: 'John Doe'
@@ -829,6 +826,10 @@ components:
         email:
           type: string
           example: johndoe@example.com
+        projects:
+          type: array
+          items:
+            $ref: '#/components/schemas/Project'
         meta:
           properties:
             created:

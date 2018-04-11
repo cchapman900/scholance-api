@@ -7,14 +7,27 @@ const s3 = new AWS.S3();
 const fileType = require('file-type');
 const validator = require('validator');
 const Project = require('./models/project.js');
+const User = require('./models/user.js');
 
 mongoose.Promise = bluebird;
 
 const mongoString = process.env.MONGO_URI; // MongoDB Url
 
+const createSuccessResponse = (statusCode, body) => ({
+    statusCode: statusCode || 200,
+    headers: {
+        'Access-Control-Allow-Origin' : '*',
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body),
+});
+
 const createErrorResponse = (statusCode, message) => ({
     statusCode: statusCode || 500,
-    headers: {'Content-Type': 'application/json'},
+    headers: {
+        'Access-Control-Allow-Origin' : '*',
+        'Content-Type': 'application/json'
+    },
     body: JSON.stringify({'message': message}),
 });
 
@@ -45,7 +58,7 @@ module.exports.getProject = (event, context, callback) => {
                 if (!project) {
                     callback(null, createErrorResponse(404, 'Project not found'));
                 } else {
-                    callback(null, {statusCode: 200, body: JSON.stringify(project)});
+                    callback(null, createSuccessResponse(200, project));
                 }
             })
             .catch((err) => {
@@ -75,7 +88,7 @@ module.exports.listProjects = (event, context, callback) => {
         Project
             .find()
             .then((projects) => {
-                callback(null, {statusCode: 200, body: JSON.stringify(projects)});
+                callback(null, createSuccessResponse(200, projects));
             })
             .catch((err) => {
                 callback(null, createErrorResponse(err.statusCode, err.message));
@@ -149,6 +162,9 @@ module.exports.createProject = (event, context, callback) => {
     db.once('open', () => {
         project
             .save()
+            .then((project) => {
+                User.findByIdAndUpdate(authenticatedUserId, {$push: {'projects': project._id}}, {'upsert': true}).exec()  // TODO: Take upsert out of this. Doesn't seem safe
+            })
             .then(() => {
                 s3.putObject(
                     {
@@ -161,7 +177,7 @@ module.exports.createProject = (event, context, callback) => {
                     }
                     else{
                         console.log(data);
-                        callback(null, {statusCode: 201, body: JSON.stringify({id: project._id})});
+                        callback(null, createSuccessResponse(201, {id: project._id}));
                     }
                     /*
                     data = {
@@ -499,8 +515,11 @@ module.exports.projectSignup = (event, context, callback) => {
                     callback(null, createErrorResponse(409, 'You are already signed up for this project'));
                 } else {
                     project.update({
-                        $push: {'entries': {student: data._id}}
+                        $push: {'entries': {student: authenticatedUserId}}
                     })
+                        .then(() => {
+                            User.findByIdAndUpdate(authenticatedUserId, {$push: {'projects': project_id}}, {'upsert': true}).exec()  // TODO: Take upsert out of this. Doesn't seem safe
+                        })
                         .then(() => {
                             s3.putObject(
                                 {
