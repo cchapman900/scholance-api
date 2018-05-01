@@ -387,7 +387,8 @@ module.exports.createSupplementalResourceFile = (event, context, callback) => {
     let data = JSON.parse(event.body);
     //get the request
     let name = data.name;
-    let base64String = data.file;
+    let file = data.file;
+    let base64String = file.replace('data:image/png;base64,', ''); // TODO: Clean this up
     if (!name || !base64String) {
         callback(null, createErrorResponse(400, 'Invalid input'));
     }
@@ -524,15 +525,14 @@ module.exports.projectSignup = (event, context, callback) => {
                             s3.putObject(
                                 {
                                     Bucket: 'scholance-users',
-                                    Key: data._id + '/projects/' + project._id.toString() + '/'
+                                    Key: authenticatedUserId + '/projects/' + project._id.toString() + '/'
                                 }, function(err, data) {
                                     if (err) {
                                         console.log(err);
                                         callback(null, createErrorResponse(503, 'There was an error creating the S3 bucket'));
                                     }
                                     else{
-                                        console.log(data);
-                                        callback(null, {statusCode: 201, body: JSON.stringify({id: project._id})});
+                                        callback(null, createSuccessResponse(201, {id: project._id}));
                                     }
                                     /*
                                     data = {
@@ -540,12 +540,15 @@ module.exports.projectSignup = (event, context, callback) => {
                                     }
                                     */
                                 });
-                            db.close();
+                            // db.close();
                             callback(null, {statusCode: 204});
                         })
                         .catch((err) => {
-                            db.close();
+                            // db.close();
                             callback(null, createErrorResponse(err.statusCode, err.message));
+                        })
+                        .finally(() => {
+                            db.close();
                         })
                 }
             })
@@ -566,6 +569,9 @@ module.exports.projectSignup = (event, context, callback) => {
  */
 module.exports.projectSignoff = (event, context, callback) => {
     // Authenticated user information
+
+    // callback(null, {statusCode: 200, body: JSON.stringify(event)});
+
     const principalId = event.requestContext.authorizer.principalId;
     const auth = principalId.split("|");
     const authenticationProvider = auth[0];
@@ -579,7 +585,7 @@ module.exports.projectSignoff = (event, context, callback) => {
     const scope = event.requestContext.authorizer.scope;
     const scopes = scope.split(" ");
     if (!scopes.includes("manage:entry")) {
-        callback(null, createErrorResponse(403, 'You must be a student to sign off of a project'));
+        callback(null, createErrorResponse(403, 'You must be a student to sign up for a project'));
     }
 
     mongoose.connect(mongoString);
@@ -612,8 +618,9 @@ module.exports.projectSignoff = (event, context, callback) => {
                         $pull: {'entries': {student: authenticatedUserId}}
                     })
                         .then(() => {
+                            User.findByIdAndUpdate(authenticatedUserId, {$pop: {'projects': project_id}}).exec();
                             db.close();
-                            callback(null, {statusCode: 204});
+                            callback(null, createSuccessResponse(204));
                         })
                         .catch((err) => {
                             db.close();
@@ -644,10 +651,8 @@ module.exports.createEntryAssetFile = (event, context, callback) => {
     let authenticatedUserId = auth[1];
     if (authenticationProvider !== 'auth0') {
         callback(null, createErrorResponse(401, 'No Auth0 authentication found'));
-        db.close();
     } else if (authenticatedUserId != event.pathParameters.user_id) {
         callback(null, createErrorResponse(403, 'You do not have access to this project entry'));
-        db.close();
     }
 
     // Authorize the authenticated user's scopes
@@ -657,6 +662,7 @@ module.exports.createEntryAssetFile = (event, context, callback) => {
         callback(null, createErrorResponse(403, 'You must be a student to manage a project entry'));
     }
 
+    let user_id = event.pathParameters.user_id;
     let project_id = event.pathParameters.project_id;
 
     if (!mongoose.Types.ObjectId.isValid(project_id)) {
@@ -668,7 +674,8 @@ module.exports.createEntryAssetFile = (event, context, callback) => {
     let data = JSON.parse(event.body);
     //get the request
     let name = data.name;
-    let base64String = data.file;
+    let file = data.file;
+    let base64String = file.replace('data:image/png;base64,', ''); // TODO: Clean this up
     if (!name || !base64String) {
         callback(null, createErrorResponse(400, 'Invalid input'));
     }
@@ -730,7 +737,7 @@ module.exports.createEntryAssetFile = (event, context, callback) => {
                         project.save()
                             .then((newProject) => {
                                 db.close();
-                                callback(null, {statusCode: 201, body: JSON.stringify(newProject.entries[entryIndex].assets.slice(-1)[0])});
+                                callback(null, createSuccessResponse(201, newProject.entries[entryIndex].assets.slice(-1)[0]));
                             })
                             .catch((err) => {
                                 db.close();
@@ -823,7 +830,7 @@ module.exports.createEntryAsset = (event, context, callback) => {
                     project.save()
                         .then((newProject) => {
                             db.close();
-                            callback(null, {statusCode: 201, body: JSON.stringify(newProject.entries[entryIndex].assets.slice(-1)[0])});
+                            callback(null, createSuccessResponse(201, newProject.entries[entryIndex].assets.slice(-1)[0]));
                         })
                         .catch((err) => {
                             db.close();
