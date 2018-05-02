@@ -110,6 +110,19 @@ functions:
             identitySource: method.request.header.Authorization
             identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
 
+  getEntry:
+    handler: handler.getEntry
+    events:
+      - http:
+          path: projects/{project_id}/entries/{user_id}
+          method: get
+          cors: true
+          authorizer:
+            arn: ${file(./serverless.env.yml):dev.AUTH_URI}
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
+
   createEntryAsset:
     handler: handler.createEntryAsset
     events:

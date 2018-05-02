@@ -464,6 +464,78 @@ module.exports.createSupplementalResourceFile = (event, context, callback) => {
 
 
 /**
+ * GET ENTRY
+ *
+ * @param event
+ * @param context
+ * @param callback
+ */
+module.exports.getEntry = (event, context, callback) => {
+    // Authenticated user information
+    const principalId = event.requestContext.authorizer.principalId;
+    const auth = principalId.split("|");
+    const authenticationProvider = auth[0];
+    let authenticatedUserId = auth[1];
+    if (authenticationProvider !== 'auth0') {
+        callback(null, createErrorResponse(401, 'No Auth0 authentication found'));
+        db.close();
+    }
+
+    // Authorize the authenticated user's scopes
+    const scope = event.requestContext.authorizer.scope;
+    const scopes = scope.split(" ");
+    if (!scopes.includes("manage:entry")) {
+        callback(null, createErrorResponse(403, 'You must be a student to sign up for a project'));
+    }
+
+    mongoose.connect(mongoString);
+    let db = mongoose.connection;
+    db.on('error', () => {
+        db.close();
+        callback(null, createErrorResponse(503, 'There was an error connecting to the database'));
+    });
+
+    let project_id = event.pathParameters.project_id;
+    if (!mongoose.Types.ObjectId.isValid(project_id)) {
+        db.close();
+        callback(null, createErrorResponse(400, 'Invalid ObjectId'));
+        return;
+    }
+
+    let user_id = event.pathParameters.user_id;
+    if (!mongoose.Types.ObjectId.isValid(user_id)) {
+        db.close();
+        callback(null, createErrorResponse(400, 'Invalid ObjectId'));
+        return;
+    }
+
+    db.once('open', () => {
+        Project
+            .findById(project_id)
+            .then((project) => {
+                if (!project) {
+                    db.close();
+                    callback(null, createErrorResponse(404, 'Project not found'));
+                } else {
+                    const entry = project.entries.find(entry => entry.student == user_id);
+                    if (entry) {
+                        callback(null, createSuccessResponse(200, entry));
+                    } else {
+                        callback(null, createErrorResponse(404, 'Entry not found'));
+                    }
+                }
+            })
+            .catch((err) => {
+                callback(null, createErrorResponse(err.statusCode, err.message));
+            })
+            .finally(() => {
+                db.close();
+            })
+    });
+};
+
+
+/**
  * PROJECT SIGNUP
  *
  * @param event
@@ -674,8 +746,9 @@ module.exports.createEntryAssetFile = (event, context, callback) => {
     let data = JSON.parse(event.body);
     //get the request
     let name = data.name;
-    let file = data.file;
-    let base64String = file.replace('data:image/png;base64,', ''); // TODO: Clean this up
+    let file = data.file.split(';');
+    console.log(file);
+    let base64String = file[1].replace('base64,', ''); // TODO: Clean this up
     if (!name || !base64String) {
         callback(null, createErrorResponse(400, 'Invalid input'));
     }
@@ -878,15 +951,13 @@ module.exports.deleteEntryAsset = (event, context, callback) => {
     let asset_id = event.pathParameters.asset_id;
 
     if (!mongoose.Types.ObjectId.isValid(project_id)
-        || !mongoose.Types.ObjectId.isValid(user_id)
+        || !mongoose.Types.ObjectId.isValid(authenticatedUserId)
         || !mongoose.Types.ObjectId.isValid(asset_id)
     ) {
         db.close();
         callback(null, createErrorResponse(400, 'Invalid ObjectId'));
         return;
     }
-
-    let data = JSON.parse(event.body);
 
     mongoose.connect(mongoString);
     let db = mongoose.connection;
@@ -926,10 +997,10 @@ module.exports.deleteEntryAsset = (event, context, callback) => {
                                     if (err) {
                                         callback(null, createErrorResponse(500, 'Could not delete file from S3'));
                                     }
-                                    callback(null, {statusCode: 204});
+                                    callback(null, createSuccessResponse(204));
                                 });
                             } else {
-                                callback(null, {statusCode: 204});
+                                callback(null, createSuccessResponse(204));
                             }
                             db.close();
                         })

@@ -484,6 +484,45 @@ paths:
           type: string
           format: ObjectId
           example: "507f1f77bcf86cd799439011"
+    get:
+      summary: Get entry
+      description: Get a specific entry to a project
+      tags:
+        - Entry
+      operationId: getEntry
+      security:
+        - Auth0AccessToken: []
+      responses:
+        '200':
+          description: Successful submission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Entry'
+        '401':
+          description: Not logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Insufficient permisions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Entry not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
     put:
       summary: Submit or resubmit to a project
       description: Submit or resubmit completed work to a project
