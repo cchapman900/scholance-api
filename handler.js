@@ -261,7 +261,7 @@ module.exports.updateProject = (event, context, callback) => {
                         category: data.category
                     })
                         .then(() => {
-                            callback(null, {statusCode: 200, body: JSON.stringify(project)});
+                            callback(null, createSuccessResponse(200, project));
                             db.close();
                         })
                         .catch((err) => {
@@ -335,7 +335,7 @@ module.exports.deleteProject = (event, context, callback) => {
                     project
                         .remove({_id: project_id})
                         .then(() => {
-                            callback(null, {statusCode: 204});
+                            callback(null, createSuccessResponse(204));
                             db.close();
                         })
                         .catch((err) => {
@@ -401,7 +401,7 @@ module.exports.createSupplementalResourceFile = (event, context, callback) => {
     }
 
     let fileExt = fileMime.ext;
-    let assetType = fileMime.mime.split('/')[0];
+    let mediaType = fileMime.mime.split('/')[0];
 
     let bucketName = 'dev-scholance-projects';
     let filePath = project_id + '/supplemental-resources/';
@@ -440,12 +440,13 @@ module.exports.createSupplementalResourceFile = (event, context, callback) => {
                         callback(null, createErrorResponse(403, 'You cannot add a resource to a project that is not your own'));
                         db.close();
                     } else {
+                        const asset = {name: name, mediaType: mediaType, uri: fileLink};
                         project.update({
-                            $push: {'supplementalResources': {name: fileName, assetType: assetType, uri: fileLink}}
+                            $push: {'supplementalResources': asset}
                         })
                             .then(() => {
                                 db.close();
-                                callback(null, {statusCode: 201, body: JSON.stringify({'File URL': fileLink})});
+                                callback(null, createSuccessResponse(201, asset));
                             })
                             .catch((err) => {
                                 db.close();
@@ -460,6 +461,100 @@ module.exports.createSupplementalResourceFile = (event, context, callback) => {
         });
         ////
     })
+};
+
+
+/**
+ * DELETE SUPPLEMENTAL RESOURCE ASSET
+ *
+ * @param event
+ * @param context
+ * @param callback
+ */
+module.exports.deleteSupplementalResource = (event, context, callback) => {
+    // Authenticated user information
+    const principalId = event.requestContext.authorizer.principalId;
+    const auth = principalId.split("|");
+    const authenticationProvider = auth[0];
+    let authenticatedUserId = auth[1];
+    if (authenticationProvider !== 'auth0') {
+        callback(null, createErrorResponse(401, 'No Auth0 authentication found'));
+        db.close();
+    }
+
+    // Authorize the authenticated user's scopes
+    const scope = event.requestContext.authorizer.scope;
+    const scopes = scope.split(" ");
+    if (!scopes.includes("manage:project")) {
+        callback(null, createErrorResponse(403, 'You must be a business user to manage a supplemental resource'));
+    }
+
+    let project_id = event.pathParameters.project_id;
+    let asset_id = event.pathParameters.asset_id;
+
+    if (!mongoose.Types.ObjectId.isValid(project_id)
+        || !mongoose.Types.ObjectId.isValid(authenticatedUserId)
+        || !mongoose.Types.ObjectId.isValid(asset_id)
+    ) {
+        db.close();
+        callback(null, createErrorResponse(400, 'Invalid ObjectId'));
+        return;
+    }
+
+    mongoose.connect(mongoString);
+    let db = mongoose.connection;
+    db.on('error', () => {
+        db.close();
+        callback(null, createErrorResponse(503, 'There was an error connecting to the database'));
+    });
+
+    db.once('open', () => {
+        Project
+            .findById(project_id)
+            .then((project) => {
+                if (!project) {
+                    db.close();
+                    callback(null, createErrorResponse(404, 'Project not found'));
+                } else if (project.liaison != authenticatedUserId) {
+                    db.close();
+                    callback(null, createErrorResponse(404, 'Liaison does not have access to this project'));
+                } else {
+                    let assetIndex = project.supplementalResources.findIndex( asset => asset._id == asset_id);
+                    let asset = project.supplementalResources.splice(assetIndex, 1);
+                    project.save()
+                        .then(() => {
+                            if (asset.mediaType === 'image') {
+                                let bucketName = 'dev-scholance-projects';
+
+                                let params = {
+                                    Bucket: bucketName,
+                                    Key: asset.uri
+                                };
+
+                                console.log('738');
+
+                                s3.deleteObject(params, function(err, data) {
+                                    if (err) {
+                                        callback(null, createErrorResponse(500, 'Could not delete file from S3'));
+                                    }
+                                    callback(null, createSuccessResponse(204));
+                                });
+                            } else {
+                                callback(null, createSuccessResponse(204));
+                            }
+                            db.close();
+                        })
+                        .catch((err) => {
+                            db.close();
+                            callback(null, createErrorResponse(err.statusCode, err.message));
+                        });
+                }
+            })
+            .catch((err) => {
+                db.close();
+                callback(null, createErrorResponse(err.statusCode, err.message));
+            })
+    });
 };
 
 
@@ -650,7 +745,8 @@ module.exports.projectSignoff = (event, context, callback) => {
     let authenticatedUserId = auth[1];
     if (authenticationProvider !== 'auth0') {
         callback(null, createErrorResponse(401, 'No Auth0 authentication found'));
-        db.close();
+    } else if (authenticatedUserId != event.pathParameters.user_id) {
+        callback(null, createErrorResponse(403, 'Student ID does not match authenticated user'));
     }
 
     // Authorize the authenticated user's scopes
@@ -761,7 +857,7 @@ module.exports.createEntryAssetFile = (event, context, callback) => {
     }
 
     let fileExt = fileMime.ext;
-    let assetType = fileMime.mime.split('/')[0];
+    let mediaType = fileMime.mime.split('/')[0];
 
     let bucketName = 'dev-scholance-projects';
 
@@ -800,9 +896,10 @@ module.exports.createEntryAssetFile = (event, context, callback) => {
                         db.close();
                         callback(null, createErrorResponse(404, 'User is not signed up for this project'));
                     } else {
+                        console.log(mediaType);
                         let newAsset = {
                             name: name,
-                            assetType: assetType,
+                            mediaType: mediaType,
                             uri: fileLink
                         };
                         let entryIndex = project.entries.findIndex( entry => entry.student == authenticatedUserId);
@@ -810,7 +907,7 @@ module.exports.createEntryAssetFile = (event, context, callback) => {
                         project.save()
                             .then((newProject) => {
                                 db.close();
-                                callback(null, createSuccessResponse(201, newProject.entries[entryIndex].assets.slice(-1)[0]));
+                                callback(null, createSuccessResponse(201, newAsset));
                             })
                             .catch((err) => {
                                 db.close();
@@ -868,7 +965,7 @@ module.exports.createEntryAsset = (event, context, callback) => {
 
     let newAsset = {
         name: data.name,
-        assetType: data.assetType
+        mediaType: data.mediaType
     };
 
     if (data.uri) {
@@ -983,7 +1080,7 @@ module.exports.deleteEntryAsset = (event, context, callback) => {
                     let asset = project.entries[entryIndex].assets.splice(assetIndex, 1);
                     project.save()
                         .then(() => {
-                            if (asset.assetType === 'image') {
+                            if (asset.mediaType === 'image') {
                                 let bucketName = 'dev-scholance-projects';
 
                                 let params = {

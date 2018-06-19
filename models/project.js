@@ -15,7 +15,7 @@ const assetSchema = new Schema({
         type: String,
         required: true
     },
-    assetType: {
+    mediaType: {
         type: String,
         required: true
     },

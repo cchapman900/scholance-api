@@ -226,62 +226,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /projects/{project_id}/supplemental-resources:
-    parameters:
-      - name: project_id
-        in: path
-        description: ID of project
-        required: true
-        schema:
-          type: string
-          format: ObjectId
-          example: "507f1f77bcf86cd799439011"
-    post:
-      summary: Add supplemental resource
-      description: Add a supplemental resource to a project
-      tags:
-        - Asset
-      operationId: createSupplementalResource
-      security:
-        - Auth0AccessToken: []
-      requestBody:
-        description: Resource to be added
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AssetFileUpload'
-      responses:
-        '201':
-          description: Asset created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Project'
-        '400':
-          description: Invalid content
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '401':
-          description: Not logged in
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '403':
-          description: Insufficient permisions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
   /projects/{project_id}/supplemental-resources/file:
     parameters:
       - name: project_id
@@ -432,13 +376,6 @@ paths:
       operationId: projectSignup
       security:
         - Auth0AccessToken: [manage:entry]
-      requestBody:
-        description: Completed work
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Student'
       responses:
         '204':
           description: Successful signup
@@ -906,6 +843,8 @@ components:
       description: >-
         A Student entry to a project. This is created when a Student signs up and serves as a
         container for the Assets that will be submitted upon submission
+      required:
+        - student
       properties:
         student:
           $ref: '#/components/schemas/Student'
@@ -930,11 +869,18 @@ components:
       required:
         - name
         - assetType
+        - mediaType
       properties:
         name:
           type: string
           example: "Our Logo"
         assetType:
+          type: string
+          example: 'entry'
+          enum:
+            - 'entry'
+            - 'supplementalResource'
+        mediaType:
           type: string
           example: 'image'
           enum:
