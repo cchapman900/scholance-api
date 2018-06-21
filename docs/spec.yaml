@@ -868,18 +868,11 @@ components:
         A photo, video, link or text object as used in a project entry or supplemental resource
       required:
         - name
-        - assetType
         - mediaType
       properties:
         name:
           type: string
           example: "Our Logo"
-        assetType:
-          type: string
-          example: 'entry'
-          enum:
-            - 'entry'
-            - 'supplementalResource'
         mediaType:
           type: string
           example: 'image'

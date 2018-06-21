@@ -97,6 +97,19 @@ functions:
             identitySource: method.request.header.Authorization
             identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
 
+  createSupplementalResource:
+    handler: handler.createSupplementalResource
+    events:
+      - http:
+          path: projects/{project_id}/supplemental-resources
+          method: post
+          cors: true
+          authorizer:
+            arn: ${file(./serverless.env.yml):dev.AUTH_URI}
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
+
   createSupplementalResourceFile:
     handler: handler.createSupplementalResourceFile
     events:
