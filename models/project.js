@@ -10,6 +10,17 @@ const organizationSchema = new Schema({
     }
 });
 
+const messageSchema = new Schema({
+    author: {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    text: {
+        type: String
+    }
+});
+
 const assetSchema = new Schema({
     name: {
         type: String,
@@ -41,7 +52,10 @@ const entrySchema = new Schema({
     }],
     submissionStatus: {
         type: String
-    }
+    },
+    comments: [{
+        type: messageSchema
+    }]
 });
 
 
@@ -74,6 +88,9 @@ const projectModel = mongoose.model('Project', {
     }],
     entries: [{
         type: entrySchema
+    }],
+    comments: [{
+        type: messageSchema
     }]
 });
 

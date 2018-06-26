@@ -16,6 +16,11 @@ provider:
       Resource: "*"
 
 functions:
+
+  #########
+  # PROJECT
+  #########
+
   listProjects:
     handler: handler.listProjects
     events:
@@ -71,31 +76,9 @@ functions:
             identitySource: method.request.header.Authorization
             identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
 
-  projectSignup:
-    handler: handler.projectSignup
-    events:
-      - http:
-          path: projects/{project_id}/entries
-          method: post
-          cors: true
-          authorizer:
-            arn: ${file(./serverless.env.yml):dev.AUTH_URI}
-            resultTtlInSeconds: 0
-            identitySource: method.request.header.Authorization
-            identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
-
-  projectSignoff:
-    handler: handler.projectSignoff
-    events:
-      - http:
-          path: projects/{project_id}/entries/{user_id}
-          method: delete
-          cors: true
-          authorizer:
-            arn: ${file(./serverless.env.yml):dev.AUTH_URI}
-            resultTtlInSeconds: 0
-            identitySource: method.request.header.Authorization
-            identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
+  ########################
+  # SUPPLEMENTAL RESOURCES
+  ########################
 
   createSupplementalResource:
     handler: handler.createSupplementalResource
@@ -128,6 +111,36 @@ functions:
     events:
       - http:
           path: projects/{project_id}/supplemental-resources/{asset_id}
+          method: delete
+          cors: true
+          authorizer:
+            arn: ${file(./serverless.env.yml):dev.AUTH_URI}
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
+
+  ######################
+  # ENTRY & ENTRY ASSETS
+  ######################
+
+  projectSignup:
+    handler: handler.projectSignup
+    events:
+      - http:
+          path: projects/{project_id}/entries
+          method: post
+          cors: true
+          authorizer:
+            arn: ${file(./serverless.env.yml):dev.AUTH_URI}
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
+
+  projectSignoff:
+    handler: handler.projectSignoff
+    events:
+      - http:
+          path: projects/{project_id}/entries/{user_id}
           method: delete
           cors: true
           authorizer:
@@ -181,6 +194,32 @@ functions:
       - http:
           path: projects/{project_id}/entries/{user_id}/assets/{asset_id}
           method: delete
+          cors: true
+          authorizer:
+            arn: ${file(./serverless.env.yml):dev.AUTH_URI}
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
+
+  createEntryComment:
+    handler: handler.createEntryComment
+    events:
+      - http:
+          path: projects/{project_id}/entries/{user_id}/comments
+          method: post
+          cors: true
+          authorizer:
+            arn: ${file(./serverless.env.yml):dev.AUTH_URI}
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
+
+  deleteEntryComment:
+    handler: handler.deleteEntryComment
+    events:
+      - http:
+          path: projects/{project_id}/entries/{user_id}/comments/{comment_id}
+          method: post
           cors: true
           authorizer:
             arn: ${file(./serverless.env.yml):dev.AUTH_URI}

@@ -31,6 +31,9 @@ const createErrorResponse = (statusCode, message) => ({
     body: JSON.stringify({'message': message}),
 });
 
+/*************************
+ * PROJECTS
+ *************************/
 
 /**
  * GET PROJECT
@@ -352,6 +355,10 @@ module.exports.deleteProject = (event, context, callback) => {
 };
 
 
+/*************************
+ * SUPPLEMENTAL RESOURCE
+ *************************/
+
 /**
  * UPLOAD SUPPLEMENTAL RESOURCE
  *
@@ -399,6 +406,8 @@ module.exports.createSupplementalResource = (event, context, callback) => {
         newAsset.text = data.text;
     }
 
+    // TODO: If it is a link, add "http" if needed
+
     mongoose.connect(mongoString);
     let db = mongoose.connection;
     db.on('error', () => {
@@ -422,7 +431,7 @@ module.exports.createSupplementalResource = (event, context, callback) => {
                     })
                         .then(() => {
                             db.close();
-                            callback(null, createSuccessResponse(201, asset));
+                            callback(null, createSuccessResponse(201, newAsset));
                         })
                         .catch((err) => {
                             db.close();
@@ -642,6 +651,11 @@ module.exports.deleteSupplementalResource = (event, context, callback) => {
             })
     });
 };
+
+
+/*************************
+ * ENTRY
+ *************************/
 
 
 /**
@@ -891,6 +905,251 @@ module.exports.projectSignoff = (event, context, callback) => {
 
 
 /**
+ * PROJECT ENTRY SUBMISSION
+ *
+ * @param event
+ * @param context
+ * @param callback
+ */
+module.exports.entrySubmission = (event, context, callback) => {
+    // Authenticated user information
+    // const principalId = event.requestContext.authorizer.principalId;
+    // const auth = principalId.split("|");
+    // const authenticationProvider = auth[0];
+    // let authenticatedUserId = auth[1];
+    // if (authenticationProvider !== 'auth0') {
+    //     callback(null, createErrorResponse(401, 'No Auth0 authentication found'));
+    //     db.close();
+    // } else if (authenticatedUserId != event.pathParameters.user_id) {
+    //     callback(null, createErrorResponse(403, 'You do not have access to this project entry'));
+    //     db.close();
+    // }
+    //
+    // // Authorize the authenticated user's scopes
+    // const scope = event.requestContext.authorizer.scope;
+    // const scopes = scope.split(" ");
+    // if (!scopes.includes("manage:entry")) {
+    //     callback(null, createErrorResponse(403, 'You must be a student to manage a project entry'));
+    // }
+    //
+    // mongoose.connect(mongoString);
+    // let db = mongoose.connection;
+    // db.on('error', () => {
+    //     db.close();
+    //     callback(null, createErrorResponse(503, 'There was an error connecting to the database'));
+    // });
+    //
+    // let project_id = event.pathParameters.project_id;
+    // if (!mongoose.Types.ObjectId.isValid(project_id)) {
+    //     db.close();
+    //     callback(null, createErrorResponse(400, 'Invalid ObjectId'));
+    //     return;
+    // }
+    //
+    // let data = JSON.parse(event.body);
+    //
+    // db.once('open', () => {
+    //     Project
+    //         .findById(project_id)
+    //         .then((project) => {
+    //             if (!project) {
+    //                 db.close();
+    //                 callback(null, createErrorResponse(404, 'Project not found'));
+    //             } else if (data.userType !== 'student') {
+    //                 db.close();
+    //                 callback(null, createErrorResponse(403, 'You must be a student to sign up for a project'));
+    //             } else if (project.entries.some(element => element.student == data._id)) {
+    //                 db.close();
+    //                 callback(null, createErrorResponse(409, 'You are already signed up for this project'));
+    //             } else {
+    //                 project.update({
+    //                     $push: {'entries': {student: data._id}}
+    //                 })
+    //                     .then(() => {
+    //                         s3.putObject(
+    //                             {
+    //                                 Bucket: 'scholance-users',
+    //                                 Key: data._id + '/projects/' + project._id.toString() + '/'
+    //                             }, function(err, data) {
+    //                                 if (err) {
+    //                                     console.log(err);
+    //                                     callback(null, createErrorResponse(503, 'There was an error creating the S3 bucket'));
+    //                                 }
+    //                                 else{
+    //                                     console.log(data);
+    //                                     callback(null, {statusCode: 201, body: JSON.stringify({id: project._id})});
+    //                                 }
+    //                                 /*
+    //                                 data = {
+    //                                  Location: "http://examplebucket.s3.amazonaws.com/"
+    //                                 }
+    //                                 */
+    //                             });
+    //                         db.close();
+    //                         callback(null, {statusCode: 204});
+    //                     })
+    //                     .catch((err) => {
+    //                         db.close();
+    //                         callback(null, createErrorResponse(err.statusCode, err.message));
+    //                     })
+    //             }
+    //         })
+    //         .catch((err) => {
+    //             db.close();
+    //             callback(null, createErrorResponse(err.statusCode, err.message));
+    //         })
+    // });
+};
+
+
+/**
+ * CREATE ENTRY COMMENT
+ *
+ * @param event
+ * @param context
+ * @param callback
+ */
+module.exports.createEntryComment = (event, context, callback) => {
+    // Authenticated user information
+    const principalId = event.requestContext.authorizer.principalId;
+    const auth = principalId.split("|");
+    const authenticationProvider = auth[0];
+    let authenticatedUserId = auth[1];
+    if (authenticationProvider !== 'auth0') {
+        callback(null, createErrorResponse(401, 'No Auth0 authentication found'));
+    }
+
+    let project_id = event.pathParameters.project_id;
+    let user_id = event.pathParameters.user_id;
+
+    if (!mongoose.Types.ObjectId.isValid(project_id) || !mongoose.Types.ObjectId.isValid(user_id)) {
+        db.close();
+        callback(null, createErrorResponse(400, 'Invalid ObjectId'));
+        return;
+    }
+
+    let data = JSON.parse(event.body);
+
+    let newComment = {
+        author: authenticatedUserId,
+        text: data.text
+    };
+
+    mongoose.connect(mongoString);
+    let db = mongoose.connection;
+    db.on('error', () => {
+        db.close();
+        callback(null, createErrorResponse(503, 'There was an error connecting to the database'));
+    });
+
+    db.once('open', () => {
+        Project
+            .findById(project_id)
+            .then((project) => {
+                if (!project) {
+                    db.close();
+                    callback(null, createErrorResponse(404, 'Project not found'));
+                } else {
+                    let entryIndex = project.entries.findIndex( entry => entry.student == user_id);
+                    console.log(entryIndex);
+                    project.entries[entryIndex].comments.push(newComment);
+                    project.save()
+                        .then((newProject) => {
+                            db.close();
+                            callback(null, createSuccessResponse(201, newProject.entries[entryIndex].comments.slice(-1)[0]));
+                        })
+                        .catch((err) => {
+                            db.close();
+                            callback(null, createErrorResponse(err.statusCode, err.message));
+                        });
+                }
+            })
+            .catch((err) => {
+                db.close();
+                callback(null, createErrorResponse(err.statusCode, err.message));
+            })
+    });
+};
+
+
+/**
+ * DELETE ENTRY COMMENT
+ *
+ * @param event
+ * @param context
+ * @param callback
+ */
+module.exports.deleteEntryComment = (event, context, callback) => {
+    // Authenticated user information
+    const principalId = event.requestContext.authorizer.principalId;
+    const auth = principalId.split("|");
+    const authenticationProvider = auth[0];
+    let authenticatedUserId = auth[1];
+    if (authenticationProvider !== 'auth0') {
+        callback(null, createErrorResponse(401, 'No Auth0 authentication found'));
+    }
+
+    let project_id = event.pathParameters.project_id;
+    let user_id = event.pathParameters.user_id;
+    let comment_id = event.pathParameters.comment_id;
+
+    if (!mongoose.Types.ObjectId.isValid(project_id) || !mongoose.Types.ObjectId.isValid(user_id)) {
+        db.close();
+        callback(null, createErrorResponse(400, 'Invalid ObjectId'));
+        return;
+    }
+
+    let data = JSON.parse(event.body);
+
+    let newComment = {
+        author: authenticatedUserId,
+        text: data.text
+    };
+
+    mongoose.connect(mongoString);
+    let db = mongoose.connection;
+    db.on('error', () => {
+        db.close();
+        callback(null, createErrorResponse(503, 'There was an error connecting to the database'));
+    });
+
+    db.once('open', () => {
+        Project
+            .findById(project_id)
+            .then((project) => {
+                if (!project) {
+                    db.close();
+                    callback(null, createErrorResponse(404, 'Project not found'));
+                } else {
+                    let entryIndex = project.entries.findIndex( entry => entry.student == user_id);
+                    console.log(entryIndex);
+                    let commentIndex = project.entries[entryIndex].comments.findIndex( comment => comment._id == comment_id);
+                    project.entries[entryIndex].comments.splice(commentIndex, 1);
+                    project.save()
+                        .then((newProject) => {
+                            db.close();
+                            callback(null, createSuccessResponse(204));
+                        })
+                        .catch((err) => {
+                            db.close();
+                            callback(null, createErrorResponse(err.statusCode, err.message));
+                        });
+                }
+            })
+            .catch((err) => {
+                db.close();
+                callback(null, createErrorResponse(err.statusCode, err.message));
+            })
+    });
+};
+
+
+/*************************
+ * ENTRY ASSETS
+ *************************/
+
+
+/**
  * UPLOAD ENTRY ASSET
  *
  * @param event
@@ -905,10 +1164,8 @@ module.exports.createEntryAsset = (event, context, callback) => {
     let authenticatedUserId = auth[1];
     if (authenticationProvider !== 'auth0') {
         callback(null, createErrorResponse(401, 'No Auth0 authentication found'));
-        db.close();
     } else if (authenticatedUserId != event.pathParameters.user_id) {
         callback(null, createErrorResponse(403, 'You do not have access to this project entry'));
-        db.close();
     }
 
     // Authorize the authenticated user's scopes
@@ -919,6 +1176,7 @@ module.exports.createEntryAsset = (event, context, callback) => {
     }
 
     let project_id = event.pathParameters.project_id;
+    let user_id = event.pathParameters.user_id;
 
     if (!mongoose.Types.ObjectId.isValid(project_id) || !mongoose.Types.ObjectId.isValid(user_id)) {
         db.close();
@@ -1197,102 +1455,4 @@ module.exports.deleteEntryAsset = (event, context, callback) => {
                 callback(null, createErrorResponse(err.statusCode, err.message));
             })
     });
-};
-
-
-/**
- * PROJECT ENTRY SUBMISSION
- *
- * @param event
- * @param context
- * @param callback
- */
-module.exports.entrySubmission = (event, context, callback) => {
-    // Authenticated user information
-    // const principalId = event.requestContext.authorizer.principalId;
-    // const auth = principalId.split("|");
-    // const authenticationProvider = auth[0];
-    // let authenticatedUserId = auth[1];
-    // if (authenticationProvider !== 'auth0') {
-    //     callback(null, createErrorResponse(401, 'No Auth0 authentication found'));
-    //     db.close();
-    // } else if (authenticatedUserId != event.pathParameters.user_id) {
-    //     callback(null, createErrorResponse(403, 'You do not have access to this project entry'));
-    //     db.close();
-    // }
-    //
-    // // Authorize the authenticated user's scopes
-    // const scope = event.requestContext.authorizer.scope;
-    // const scopes = scope.split(" ");
-    // if (!scopes.includes("manage:entry")) {
-    //     callback(null, createErrorResponse(403, 'You must be a student to manage a project entry'));
-    // }
-    //
-    // mongoose.connect(mongoString);
-    // let db = mongoose.connection;
-    // db.on('error', () => {
-    //     db.close();
-    //     callback(null, createErrorResponse(503, 'There was an error connecting to the database'));
-    // });
-    //
-    // let project_id = event.pathParameters.project_id;
-    // if (!mongoose.Types.ObjectId.isValid(project_id)) {
-    //     db.close();
-    //     callback(null, createErrorResponse(400, 'Invalid ObjectId'));
-    //     return;
-    // }
-    //
-    // let data = JSON.parse(event.body);
-    //
-    // db.once('open', () => {
-    //     Project
-    //         .findById(project_id)
-    //         .then((project) => {
-    //             if (!project) {
-    //                 db.close();
-    //                 callback(null, createErrorResponse(404, 'Project not found'));
-    //             } else if (data.userType !== 'student') {
-    //                 db.close();
-    //                 callback(null, createErrorResponse(403, 'You must be a student to sign up for a project'));
-    //             } else if (project.entries.some(element => element.student == data._id)) {
-    //                 db.close();
-    //                 callback(null, createErrorResponse(409, 'You are already signed up for this project'));
-    //             } else {
-    //                 project.update({
-    //                     $push: {'entries': {student: data._id}}
-    //                 })
-    //                     .then(() => {
-    //                         s3.putObject(
-    //                             {
-    //                                 Bucket: 'scholance-users',
-    //                                 Key: data._id + '/projects/' + project._id.toString() + '/'
-    //                             }, function(err, data) {
-    //                                 if (err) {
-    //                                     console.log(err);
-    //                                     callback(null, createErrorResponse(503, 'There was an error creating the S3 bucket'));
-    //                                 }
-    //                                 else{
-    //                                     console.log(data);
-    //                                     callback(null, {statusCode: 201, body: JSON.stringify({id: project._id})});
-    //                                 }
-    //                                 /*
-    //                                 data = {
-    //                                  Location: "http://examplebucket.s3.amazonaws.com/"
-    //                                 }
-    //                                 */
-    //                             });
-    //                         db.close();
-    //                         callback(null, {statusCode: 204});
-    //                     })
-    //                     .catch((err) => {
-    //                         db.close();
-    //                         callback(null, createErrorResponse(err.statusCode, err.message));
-    //                     })
-    //             }
-    //         })
-    //         .catch((err) => {
-    //             db.close();
-    //             callback(null, createErrorResponse(err.statusCode, err.message));
-    //         })
-    // });
 };

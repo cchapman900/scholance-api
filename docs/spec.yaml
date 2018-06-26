@@ -727,6 +727,71 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /projects/{project_id}/entries/{user_id}/comments:
+    parameters:
+      - name: project_id
+        in: path
+        description: ID of project
+        required: true
+        schema:
+          type: string
+          format: ObjectId
+          example: "507f1f77bcf86cd799439011"
+      - name: user_id
+        in: path
+        description: ID of the user, and subsequently the entry_id
+        required: true
+        schema:
+          type: string
+          format: ObjectId
+          example: "507f1f77bcf86cd799439011"
+    post:
+      summary: Create an Entry Comment
+      description: Comment on a Project Entry
+      tags:
+        - Entry
+        - Message
+      operationId: createEntryComment
+      security:
+        - Auth0AccessToken: []
+      requestBody:
+        description: Message
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Message'
+      responses:
+        '201':
+          description: Successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '400':
+          description: Invalid content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Not logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Insufficient permisions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 components:
   schemas:
     Project:
@@ -914,6 +979,29 @@ components:
           type: string
           format: base64encoded
           example: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAFhAJ/wlseKgAAAABJRU5ErkJggg=="
+
+    NewMessage:
+      description:
+        A comment or direct message
+      required:
+        - text
+        - author
+      properties:
+        text:
+          type: string
+        author:
+          $ref: '#/components/schemas/User'
+
+    Message:
+      allOf:
+        - $ref: '#/components/schemas/NewMessage'
+      required:
+        - _id
+      properties:
+        _id:
+          type: string
+          format: ObjectId
+          example: '507f1f77bcf86cd799439011'
 
     AccessTokenEncoded:
       type: string
