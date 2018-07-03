@@ -51,7 +51,8 @@ const entrySchema = new Schema({
         type: assetSchema
     }],
     submissionStatus: {
-        type: String
+        type: String,
+        required: true
     },
     comments: [{
         type: messageSchema
@@ -91,7 +92,14 @@ const projectModel = mongoose.model('Project', {
     }],
     comments: [{
         type: messageSchema
-    }]
+    }],
+    status: {
+        type: String,
+        required: true
+    },
+    selectedEntry: {
+        type: String
+    }
 });
 
 module.exports = projectModel;

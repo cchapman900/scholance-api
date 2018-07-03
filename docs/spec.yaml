@@ -226,6 +226,68 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /projects/{project_id}/status:
+    parameters:
+      - name: project_id
+        in: path
+        description: ID of project
+        required: true
+        schema:
+          type: string
+          format: ObjectId
+          example: "507f1f77bcf86cd799439011"
+    put:
+      summary: Select project submission
+      description: Select project submission
+      tags:
+        - Project
+      operationId: updateProjectStatus
+      security:
+        - Auth0AccessToken: []
+      requestBody:
+        description: Project to be updated
+        required: true
+        content:
+          application/json:
+            schema:
+              properties:
+                status:
+                  type: string
+                  example: "complete"
+                selectedEntry:
+                  type: string
+                  example: "507f1f77bcf86cd799439011"
+      responses:
+        '200':
+          description: Project updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '400':
+          description: Invalid content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Not logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Insufficient permisions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /projects/{project_id}/supplemental-resources/file:
     parameters:
       - name: project_id
@@ -460,34 +522,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-    put:
-      summary: Submit or resubmit to a project
-      description: Submit or resubmit completed work to a project
+    delete:
+      summary: Project Signoff
+      description: Sign off of a project
       tags:
         - Entry
-      operationId: projectSubmission
+      operationId: projectSignoff
       security:
         - Auth0AccessToken: []
-      requestBody:
-        description: Completed work
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Entry'
       responses:
-        '200':
-          description: Successful submission
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Entry'
-        '400':
-          description: Invalid content
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+        '204':
+          description: Sucessful signoff
         '401':
           description: Not logged in
           content:
@@ -506,17 +551,38 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-    delete:
-      summary: Project Signoff
-      description: Sign off of a project
+  /projects/{project_id}/entries/{user_id}/submission-status:
+    patch:
+      summary: Submit or resubmit to a project
+      description: Submit or resubmit completed work to a project
       tags:
         - Entry
-      operationId: projectSignoff
+      operationId: projectSubmission
       security:
         - Auth0AccessToken: []
+      requestBody:
+        description: Completed work
+        required: true
+        content:
+          application/json:
+            schema:
+              properties:
+                submissionStatus:
+                  type: string
+                  example: active
       responses:
-        '204':
-          description: Sucessful signoff
+        '200':
+          description: Successful submission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Entry'
+        '400':
+          description: Invalid content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '401':
           description: Not logged in
           content:
@@ -814,6 +880,12 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Entry'
+        status:
+          type: string
+          example: complete
+        selectedEntry:
+          type: string
+          example: '507f1f77bcf86cd799439011'
       required:
         - _id
         - liaison

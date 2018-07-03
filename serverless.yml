@@ -76,6 +76,19 @@ functions:
             identitySource: method.request.header.Authorization
             identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
 
+  updateProjectStatus:
+    handler: handler.updateProjectStatus
+    events:
+      - http:
+          path: projects/{project_id}/status
+          method: put
+          cors: true
+          authorizer:
+            arn: ${file(./serverless.env.yml):dev.AUTH_URI}
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
+
   ########################
   # SUPPLEMENTAL RESOURCES
   ########################
@@ -162,6 +175,19 @@ functions:
             identitySource: method.request.header.Authorization
             identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
 
+  submitEntry:
+    handler: handler.submitEntry
+    events:
+      - http:
+          path: projects/{project_id}/entries/{user_id}/submission-status
+          method: patch
+          cors: true
+          authorizer:
+            arn: ${file(./serverless.env.yml):dev.AUTH_URI}
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
+
   createEntryAsset:
     handler: handler.createEntryAsset
     events:
@@ -219,7 +245,7 @@ functions:
     events:
       - http:
           path: projects/{project_id}/entries/{user_id}/comments/{comment_id}
-          method: post
+          method: delete
           cors: true
           authorizer:
             arn: ${file(./serverless.env.yml):dev.AUTH_URI}
