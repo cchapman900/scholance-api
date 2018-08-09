@@ -89,6 +89,32 @@ functions:
             identitySource: method.request.header.Authorization
             identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
 
+  createProjectComment:
+    handler: handler.createProjectComment
+    events:
+      - http:
+          path: projects/{project_id}/comments
+          method: post
+          cors: true
+          authorizer:
+            arn: ${file(./serverless.env.yml):dev.AUTH_URI}
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
+
+  deleteProjectComment:
+    handler: handler.deleteProjectComment
+    events:
+      - http:
+          path: projects/{project_id}/comments/{comment_id}
+          method: delete
+          cors: true
+          authorizer:
+            arn: ${file(./serverless.env.yml):dev.AUTH_URI}
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
+
   ########################
   # SUPPLEMENTAL RESOURCES
   ########################
@@ -163,7 +189,7 @@ functions:
             identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
 
   getEntry:
-    handler: handler.getEntry
+    handler: handler.getEntryByStudentId
     events:
       - http:
           path: projects/{project_id}/entries/{user_id}
@@ -175,12 +201,12 @@ functions:
             identitySource: method.request.header.Authorization
             identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
 
-  submitEntry:
-    handler: handler.submitEntry
+  updateEntry:
+    handler: handler.updateEntry
     events:
       - http:
-          path: projects/{project_id}/entries/{user_id}/submission-status
-          method: patch
+          path: projects/{project_id}/entries/{user_id}
+          method: put
           cors: true
           authorizer:
             arn: ${file(./serverless.env.yml):dev.AUTH_URI}

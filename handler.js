@@ -8,10 +8,17 @@ const fileType = require('file-type');
 const validator = require('validator');
 const Project = require('./models/project.js');
 const User = require('./models/user.js');
+const Organization = require('./models/organization.js');
+
+
 
 mongoose.Promise = bluebird;
 
 const mongoString = process.env.MONGO_URI; // MongoDB Url
+const mongooseOptions = {
+    server: { socketOptions: { keepAlive: 1, connectTimeoutMS: 30000 } },
+    replset: { socketOptions: { keepAlive: 1, connectTimeoutMS: 30000 } }
+};
 
 const createSuccessResponse = (statusCode, body) => ({
     statusCode: statusCode || 200,
@@ -50,7 +57,7 @@ module.exports.getProject = (event, context, callback) => {
         return;
     }
 
-    mongoose.connect(mongoString);
+    mongoose.connect(mongoString, mongooseOptions);
     const db = mongoose.connection;
 
     db.on('error', () => {
@@ -60,9 +67,12 @@ module.exports.getProject = (event, context, callback) => {
     db.on('open', () => {
         Project
             .findById(project_id)
+            // TODO: Might be a good idea to limit population based on scopes
             .populate({path: 'entries.student', select: 'name'})
+            .populate({path: 'organization', select: 'name about'})
             .populate({path: 'liaison', select: 'name'})
             .populate({path: 'selectedEntry'})
+            .populate({path: 'comments.author', select: 'name'})
             .then((project) => {
                 if (!project) {
                     callback(null, createErrorResponse(404, 'Project not found'));
@@ -88,7 +98,7 @@ module.exports.getProject = (event, context, callback) => {
  * @param callback
  */
 module.exports.listProjects = (event, context, callback) => {
-    mongoose.connect(mongoString);
+    mongoose.connect(mongoString, mongooseOptions);
     const db = mongoose.connection;
 
     db.on('error', () => {callback(null, createErrorResponse(503, 'There was an error connecting to the database'))});
@@ -137,7 +147,7 @@ module.exports.createProject = (event, context, callback) => {
         callback(null, createErrorResponse(403, 'You must be a business user to post a project'));
     }
 
-    mongoose.connect(mongoString);
+    mongoose.connect(mongoString, mongooseOptions);
     const db = mongoose.connection;
     let data = {};
     let errs = {};
@@ -149,11 +159,9 @@ module.exports.createProject = (event, context, callback) => {
         title: data.title,
         summary: data.summary,
         liaison: authenticatedUserId,
-        organization: {
-            _id: data.organization._id,
-            name: data.organization.name
-        },
+        organization: data.organization,
         fullDescription: data.fullDescription,
+        deliverables: data.deliverables,
         category: data.category,
         status: 'active'
     });
@@ -186,7 +194,7 @@ module.exports.createProject = (event, context, callback) => {
                     }
                     else{
                         console.log(data);
-                        callback(null, createSuccessResponse(201, {id: project._id}));
+                        callback(null, createSuccessResponse(201, project));
                     }
                     /*
                     data = {
@@ -230,7 +238,7 @@ module.exports.updateProject = (event, context, callback) => {
     }
 
 
-    mongoose.connect(mongoString);
+    mongoose.connect(mongoString, mongooseOptions);
     let db = mongoose.connection;
     let project_id = event.pathParameters.project_id;
     let data = {};
@@ -261,11 +269,10 @@ module.exports.updateProject = (event, context, callback) => {
                         title: data.title,
                         summary: data.summary,
                         liaison: authenticatedUserId,
-                        organization: {
-                            _id: data.organization._id,
-                            name: data.organization.name
-                        },
+                        organization: data.organization,
                         fullDescription: data.fullDescription,
+                        specs: data.specs,
+                        deliverables: data.deliverables,
                         category: data.category
                     })
                         .then(() => {
@@ -313,7 +320,7 @@ module.exports.deleteProject = (event, context, callback) => {
         callback(null, createErrorResponse(403, 'You must be a business user to delete a project'));
     }
 
-    mongoose.connect(mongoString);
+    mongoose.connect(mongoString, mongooseOptions);
     const db = mongoose.connection;
     const project_id = event.pathParameters.project_id;
     let data = {};
@@ -384,7 +391,7 @@ module.exports.updateProjectStatus = (event, context, callback) => {
         callback(null, createErrorResponse(403, 'You must be a business user to update a project'));
     }
 
-    mongoose.connect(mongoString);
+    mongoose.connect(mongoString, mongooseOptions);
     let db = mongoose.connection;
     let project_id = event.pathParameters.project_id;
     let data = {};
@@ -433,6 +440,133 @@ module.exports.updateProjectStatus = (event, context, callback) => {
                 db.close();
             })
 
+    });
+};
+
+
+/**
+ * CREATE PROJECT COMMENT
+ *
+ * @param event
+ * @param context
+ * @param callback
+ */
+module.exports.createProjectComment = (event, context, callback) => {
+    // Authenticated user information
+    const principalId = event.requestContext.authorizer.principalId;
+    const auth = principalId.split("|");
+    const authenticationProvider = auth[0];
+    let authenticatedUserId = auth[1];
+    if (authenticationProvider !== 'auth0') {
+        callback(null, createErrorResponse(401, 'No Auth0 authentication found'));
+    }
+
+    let project_id = event.pathParameters.project_id;
+
+    if (!mongoose.Types.ObjectId.isValid(project_id)) {
+        callback(null, createErrorResponse(400, 'Invalid ObjectId'));
+        return;
+    }
+
+    let data = JSON.parse(event.body);
+
+    let newComment = {
+        author: authenticatedUserId,
+        text: data.text
+    };
+
+    mongoose.connect(mongoString, mongooseOptions);
+    let db = mongoose.connection;
+    db.on('error', () => {
+        db.close();
+        callback(null, createErrorResponse(503, 'There was an error connecting to the database'));
+    });
+
+    db.once('open', () => {
+        Project
+            .findById(project_id)
+            .then((project) => {
+                if (!project) {
+                    db.close();
+                    callback(null, createErrorResponse(404, 'Project not found'));
+                } else {
+                    project.comments.push(newComment);
+                    project.save()
+                        .then((newProject) => {
+                            db.close();
+                            callback(null, createSuccessResponse(201, newProject));
+                        })
+                        .catch((err) => {
+                            db.close();
+                            callback(null, createErrorResponse(err.statusCode, err.message));
+                        });
+                }
+            })
+            .catch((err) => {
+                db.close();
+                callback(null, createErrorResponse(err.statusCode, err.message));
+            })
+    });
+};
+
+
+/**
+ * DELETE PROJECT COMMENT
+ *
+ * @param event
+ * @param context
+ * @param callback
+ */
+module.exports.deleteProjectComment = (event, context, callback) => {
+    // Authenticated user information
+    const principalId = event.requestContext.authorizer.principalId;
+    const auth = principalId.split("|");
+    const authenticationProvider = auth[0];
+    let authenticatedUserId = auth[1];
+    if (authenticationProvider !== 'auth0') {
+        callback(null, createErrorResponse(401, 'No Auth0 authentication found'));
+    }
+
+    let project_id = event.pathParameters.project_id;
+    let comment_id = event.pathParameters.comment_id;
+
+    if (!mongoose.Types.ObjectId.isValid(project_id) || !mongoose.Types.ObjectId.isValid(comment_id)) {
+        callback(null, createErrorResponse(400, 'Invalid ObjectId'));
+        return;
+    }
+
+    mongoose.connect(mongoString, mongooseOptions);
+    let db = mongoose.connection;
+    db.on('error', () => {
+        db.close();
+        callback(null, createErrorResponse(503, 'There was an error connecting to the database'));
+    });
+
+    db.once('open', () => {
+        Project
+            .findById(project_id)
+            .then((project) => {
+                if (!project) {
+                    db.close();
+                    callback(null, createErrorResponse(404, 'Project not found'));
+                } else {
+                    let commentIndex = project.comments.findIndex( comment => comment._id == comment_id);
+                    project.comments.splice(commentIndex, 1);
+                    project.save()
+                        .then((newProject) => {
+                            db.close();
+                            callback(null, createSuccessResponse(204));
+                        })
+                        .catch((err) => {
+                            db.close();
+                            callback(null, createErrorResponse(err.statusCode, err.message));
+                        });
+                }
+            })
+            .catch((err) => {
+                db.close();
+                callback(null, createErrorResponse(err.statusCode, err.message));
+            })
     });
 };
 
@@ -491,7 +625,7 @@ module.exports.createSupplementalResource = (event, context, callback) => {
 
     // TODO: If it is a link, add "http" if needed
 
-    mongoose.connect(mongoString);
+    mongoose.connect(mongoString, mongooseOptions);
     let db = mongoose.connection;
     db.on('error', () => {
         db.close();
@@ -566,6 +700,7 @@ module.exports.createSupplementalResourceFile = (event, context, callback) => {
     //get the request
     let name = data.name;
     let file = data.file;
+    let text = data.text;
     let base64String = file.replace('data:image/png;base64,', ''); // TODO: Clean this up
     if (!name || !base64String) {
         callback(null, createErrorResponse(400, 'Invalid input'));
@@ -600,7 +735,7 @@ module.exports.createSupplementalResourceFile = (event, context, callback) => {
         }
 
         ////
-        mongoose.connect(mongoString);
+        mongoose.connect(mongoString, mongooseOptions);
         let db = mongoose.connection;
 
         db.on('error', () => {
@@ -618,7 +753,7 @@ module.exports.createSupplementalResourceFile = (event, context, callback) => {
                         callback(null, createErrorResponse(403, 'You cannot add a resource to a project that is not your own'));
                         db.close();
                     } else {
-                        const asset = {name: name, mediaType: mediaType, uri: fileLink};
+                        const asset = {name: name, mediaType: mediaType, uri: fileLink, text: text};
                         project.update({
                             $push: {'supplementalResources': asset}
                         })
@@ -679,7 +814,7 @@ module.exports.deleteSupplementalResource = (event, context, callback) => {
         return;
     }
 
-    mongoose.connect(mongoString);
+    mongoose.connect(mongoString, mongooseOptions);
     let db = mongoose.connection;
     db.on('error', () => {
         db.close();
@@ -695,10 +830,12 @@ module.exports.deleteSupplementalResource = (event, context, callback) => {
                     callback(null, createErrorResponse(404, 'Project not found'));
                 } else if (project.liaison != authenticatedUserId) {
                     db.close();
-                    callback(null, createErrorResponse(404, 'Liaison does not have access to this project'));
+                    callback(null, createErrorResponse(403, 'Liaison does not have access to this project'));
                 } else {
                     let assetIndex = project.supplementalResources.findIndex( asset => asset._id == asset_id);
                     let asset = project.supplementalResources.splice(assetIndex, 1);
+                    console.log(assetIndex);
+                    console.log(asset);
                     project.save()
                         .then(() => {
                             if (asset.mediaType === 'image') {
@@ -748,7 +885,7 @@ module.exports.deleteSupplementalResource = (event, context, callback) => {
  * @param context
  * @param callback
  */
-module.exports.getEntry = (event, context, callback) => {
+module.exports.getEntryByStudentId = (event, context, callback) => {
     // Authenticated user information
     const principalId = event.requestContext.authorizer.principalId;
     const auth = principalId.split("|");
@@ -759,7 +896,7 @@ module.exports.getEntry = (event, context, callback) => {
         db.close();
     }
 
-    mongoose.connect(mongoString);
+    mongoose.connect(mongoString, mongooseOptions);
     let db = mongoose.connection;
     db.on('error', () => {
         db.close();
@@ -833,7 +970,7 @@ module.exports.projectSignup = (event, context, callback) => {
         callback(null, createErrorResponse(403, 'You must be a student to sign up for a project'));
     }
 
-    mongoose.connect(mongoString);
+    mongoose.connect(mongoString, mongooseOptions);
     let db = mongoose.connection;
     db.on('error', () => {
         db.close();
@@ -934,7 +1071,7 @@ module.exports.projectSignoff = (event, context, callback) => {
         callback(null, createErrorResponse(403, 'You must be a student to sign up for a project'));
     }
 
-    mongoose.connect(mongoString);
+    mongoose.connect(mongoString, mongooseOptions);
     let db = mongoose.connection;
     db.on('error', () => {
         db.close();
@@ -983,13 +1120,13 @@ module.exports.projectSignoff = (event, context, callback) => {
 
 
 /**
- * PROJECT ENTRY SUBMISSION
+ * UPDATE ENTRY
  *
  * @param event
  * @param context
  * @param callback
  */
-module.exports.submitEntry = (event, context, callback) => {
+module.exports.updateEntry = (event, context, callback) => {
     // Authenticated user information
     const principalId = event.requestContext.authorizer.principalId;
     const auth = principalId.split("|");
@@ -1018,10 +1155,13 @@ module.exports.submitEntry = (event, context, callback) => {
 
     let data = JSON.parse(event.body);
 
-    let submissionStatus = data.submissionStatus;
+    let entryUpdateRequest = {
+        commentary: data.commentary,
+        submissionStatus: data.submissionStatus
+    };
 
 
-    mongoose.connect(mongoString);
+    mongoose.connect(mongoString, mongooseOptions);
     let db = mongoose.connection;
     db.on('error', () => {
         db.close();
@@ -1040,7 +1180,10 @@ module.exports.submitEntry = (event, context, callback) => {
                     callback(null, createErrorResponse(404, 'User is not signed up for this project'));
                 } else {
                     let entryIndex = project.entries.findIndex( entry => entry.student == authenticatedUserId);
-                    project.entries[entryIndex].submissionStatus = submissionStatus;
+                    project.entries[entryIndex].submissionStatus = entryUpdateRequest.submissionStatus;
+                    if (entryUpdateRequest.commentary) {
+                        project.entries[entryIndex].commentary = entryUpdateRequest.commentary;
+                    }
                     project.save()
                         .then((updatedProject) => {
                             db.close();
@@ -1093,7 +1236,7 @@ module.exports.createEntryComment = (event, context, callback) => {
         text: data.text
     };
 
-    mongoose.connect(mongoString);
+    mongoose.connect(mongoString, mongooseOptions);
     let db = mongoose.connection;
     db.on('error', () => {
         db.close();
@@ -1157,7 +1300,7 @@ module.exports.deleteEntryComment = (event, context, callback) => {
         return;
     }
 
-    mongoose.connect(mongoString);
+    mongoose.connect(mongoString, mongooseOptions);
     let db = mongoose.connection;
     db.on('error', () => {
         db.close();
@@ -1250,7 +1393,7 @@ module.exports.createEntryAsset = (event, context, callback) => {
     }
 
 
-    mongoose.connect(mongoString);
+    mongoose.connect(mongoString, mongooseOptions);
     let db = mongoose.connection;
     db.on('error', () => {
         db.close();
@@ -1327,6 +1470,7 @@ module.exports.createEntryAssetFile = (event, context, callback) => {
     let data = JSON.parse(event.body);
     //get the request
     let name = data.name;
+    let text = data.text;
     let file = data.file.split(';');
     console.log(file);
     let base64String = file[1].replace('base64,', ''); // TODO: Clean this up
@@ -1363,7 +1507,7 @@ module.exports.createEntryAssetFile = (event, context, callback) => {
             callback(null, createErrorResponse(500, 'Could not upload to S3'));
         }
 
-        mongoose.connect(mongoString);
+        mongoose.connect(mongoString, mongooseOptions);
         let db = mongoose.connection;
         db.on('error', () => {
             db.close();
@@ -1385,7 +1529,8 @@ module.exports.createEntryAssetFile = (event, context, callback) => {
                         let newAsset = {
                             name: name,
                             mediaType: mediaType,
-                            uri: fileLink
+                            uri: fileLink,
+                            text: text
                         };
                         let entryIndex = project.entries.findIndex( entry => entry.student == authenticatedUserId);
                         project.entries[entryIndex].assets.push(newAsset);
@@ -1449,7 +1594,7 @@ module.exports.deleteEntryAsset = (event, context, callback) => {
         return;
     }
 
-    mongoose.connect(mongoString);
+    mongoose.connect(mongoString, mongooseOptions);
     let db = mongoose.connection;
     db.on('error', () => {
         db.close();

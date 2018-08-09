@@ -3,13 +3,6 @@ const Schema = mongoose.Schema;
 const validator = require('validator');
 
 
-const organizationSchema = new Schema({
-    name: {
-        type: String,
-        required: true
-    }
-});
-
 const messageSchema = new Schema({
     author: {
         type: Schema.Types.ObjectId,
@@ -75,7 +68,8 @@ const projectModel = mongoose.model('Project', {
         required: true
     },
     organization: {
-        type: organizationSchema,
+        type: Schema.Types.ObjectId,
+        ref: 'Organization',
         required: true
     },
     fullDescription: {
@@ -84,6 +78,17 @@ const projectModel = mongoose.model('Project', {
     category: {
         type: String,
     },
+    deliverables: {
+        name: {
+            type: String
+        },
+        type: {
+            type: String
+        }
+    },
+    specs: [{
+        type: String
+    }],
     supplementalResources: [{
        type: assetSchema
     }],
