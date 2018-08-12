@@ -522,38 +522,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-    delete:
-      summary: Project Signoff
-      description: Sign off of a project
-      tags:
-        - Entry
-      operationId: projectSignoff
-      security:
-        - Auth0AccessToken: []
-      responses:
-        '204':
-          description: Sucessful signoff
-        '401':
-          description: Not logged in
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '403':
-          description: Insufficient permisions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-  /projects/{project_id}/entries/{user_id}/submission-status:
-    patch:
-      summary: Submit or resubmit to a project
+    put:
+      summary: Update a project entry submission
       description: Submit or resubmit completed work to a project
       tags:
         - Entry
@@ -583,6 +553,35 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '401':
+          description: Not logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Insufficient permisions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      summary: Project Signoff
+      description: Sign off of a project
+      tags:
+        - Entry
+      operationId: projectSignoff
+      security:
+        - Auth0AccessToken: []
+      responses:
+        '204':
+          description: Sucessful signoff
         '401':
           description: Not logged in
           content:

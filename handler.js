@@ -1014,7 +1014,7 @@ module.exports.projectSignup = (event, context, callback) => {
                                         callback(null, createErrorResponse(503, 'There was an error creating the S3 bucket'));
                                     }
                                     else{
-                                        callback(null, createSuccessResponse(201, {id: project._id}));
+                                        callback(null, createSuccessResponse(201, project));
                                     }
                                     /*
                                     data = {
@@ -1023,7 +1023,7 @@ module.exports.projectSignup = (event, context, callback) => {
                                     */
                                 });
                             // db.close();
-                            callback(null, {statusCode: 204});
+                            // callback(null, {statusCode: 204});
                         })
                         .catch((err) => {
                             // db.close();
@@ -1101,9 +1101,20 @@ module.exports.projectSignoff = (event, context, callback) => {
                         $pull: {'entries': {student: authenticatedUserId}}
                     })
                         .then(() => {
-                            User.findByIdAndUpdate(authenticatedUserId, {$pop: {'projects': project_id}}).exec();
-                            db.close();
-                            callback(null, createSuccessResponse(204));
+                            User.findById(authenticatedUserId)
+                                .then((user) => {
+                                    let projectIndex = user.projects.indexOf(project_id);
+                                    user.projects.splice(projectIndex, 1);
+                                    user.save()
+                                        .then(() => {
+                                            db.close();
+                                            callback(null, createSuccessResponse(204));
+                                        })
+                                })
+                                .catch((err) => {
+                                    db.close();
+                                    callback(null, createErrorResponse(err.statusCode, err.message));
+                                });
                         })
                         .catch((err) => {
                             db.close();
