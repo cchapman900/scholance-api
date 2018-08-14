@@ -14,6 +14,39 @@ const userSchema = new Schema({
     projects: [{
         type: Schema.Types.ObjectId,
         ref: 'Project'
+    }],
+    completedProjects: [{
+        project: {
+            title: {
+                type: String
+            },
+            organization: {
+                type: Schema.Types.ObjectId,
+                ref: 'Organization'
+            },
+            summary: {
+                type: String
+            }
+        },
+        submission: {
+            assets: [{
+                name: {
+                    type: String
+                },
+                mediaType: {
+                    type: String
+                },
+                uri: {
+                    type: String
+                },
+                text: {
+                    type: String
+                }
+            }],
+            commentary: {
+                type: String
+            }
+        }
     }]
 });
 

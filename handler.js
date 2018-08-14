@@ -71,7 +71,6 @@ module.exports.getProject = (event, context, callback) => {
             .populate({path: 'entries.student', select: 'name'})
             .populate({path: 'organization', select: 'name about'})
             .populate({path: 'liaison', select: 'name'})
-            .populate({path: 'selectedEntry'})
             .populate({path: 'comments.author', select: 'name'})
             .then((project) => {
                 if (!project) {
@@ -426,8 +425,38 @@ module.exports.updateProjectStatus = (event, context, callback) => {
                         selectedEntry: selectedEntry
                     })
                         .then(() => {
-                            callback(null, createSuccessResponse(200, project));
-                            db.close();
+                            if (status === 'complete') {
+                                let itemsProcessed = 0;
+                                project.entries.forEach((entry, index, array) => {
+                                    User.findByIdAndUpdate(entry.student, {
+                                        $push: {
+                                            completedProjects: {
+                                                project: {
+                                                    title: project.title,
+                                                    organization: project.organization,
+                                                    summary: project.summary
+                                                },
+                                                submission: {
+                                                    assets: entry.assets
+                                                }
+                                            }
+                                        }
+                                    })
+                                    .then((user) => {
+                                        console.log(entry);
+                                        console.log(user);
+                                        itemsProcessed++;
+                                        if (itemsProcessed === array.length) {
+                                            db.close();
+                                            callback(null, createSuccessResponse(200, project));
+                                        }
+                                    })
+                                    .catch((err) => {
+                                            callback(null, createErrorResponse(err.statusCode, err.message));
+                                            db.close();
+                                        })
+                                    });
+                                };
                         })
                         .catch((err) => {
                             callback(null, createErrorResponse(err.statusCode, err.message));

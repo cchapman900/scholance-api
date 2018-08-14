@@ -981,6 +981,11 @@ components:
     Student:
       allOf:
         - $ref: '#/components/schemas/User'
+      properties:
+        completedProjects:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompletedProject'
 
     Liaison:
       allOf:
@@ -998,6 +1003,35 @@ components:
       required:
         - _id
         - name
+
+    CompletedProject:
+      properties:
+        _id:
+          type: string
+          format: ObjectId
+          example: '507f1f77bcf86cd799439011'
+        project:
+          properties:
+            title:
+              type: string
+            organization:
+              properties:
+                _id:
+                  type: string
+                  format: ObjectId
+                  example: '507f1f77bcf86cd799439011'
+                name:
+                  type: string
+            summary:
+              type: string
+        submission:
+          properties:
+            assets:
+              type: array
+              items:
+                $ref: '#/components/schemas/Asset'
+            commentary:
+              type: string
 
     Entry:
       description: >-
