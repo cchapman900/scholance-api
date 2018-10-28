@@ -4,10 +4,14 @@ const validator = require('validator');
 const User = require('./user');
 
 
-const organizationSchema = new Schema({
-    name: {
-        type: String,
+const messageSchema = new Schema({
+    author: {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
         required: true
+    },
+    text: {
+        type: String
     }
 });
 
@@ -16,7 +20,7 @@ const assetSchema = new Schema({
         type: String,
         required: true
     },
-    assetType: {
+    mediaType: {
         type: String,
         required: true
     },
@@ -41,8 +45,15 @@ const entrySchema = new Schema({
         type: assetSchema
     }],
     submissionStatus: {
-        type: String
-    }
+        type: String,
+        required: true
+    },
+    comments: [{
+        type: messageSchema
+    }],
+    selected: {
+        type: Boolean
+    },
 });
 
 
@@ -61,8 +72,12 @@ const projectModel = mongoose.model('Project', {
         required: true
     },
     organization: {
-        type: organizationSchema,
+        type: Schema.Types.ObjectId,
+        ref: 'Organization',
         required: true
+    },
+    deadline: {
+        type: Date,
     },
     fullDescription: {
         type: String,
@@ -70,12 +85,30 @@ const projectModel = mongoose.model('Project', {
     category: {
         type: String,
     },
+    deliverables: {
+        name: {
+            type: String
+        },
+        type: {
+            type: String
+        }
+    },
+    specs: [{
+        type: String
+    }],
     supplementalResources: [{
        type: assetSchema
     }],
     entries: [{
         type: entrySchema
-    }]
+    }],
+    comments: [{
+        type: messageSchema
+    }],
+    status: {
+        type: String,
+        required: true
+    }
 });
 
 module.exports = projectModel;
