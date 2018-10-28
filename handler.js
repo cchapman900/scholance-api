@@ -71,6 +71,7 @@ module.exports.getProject = (event, context, callback) => {
             .populate({path: 'entries.student', select: 'name'})
             .populate({path: 'organization', select: 'name about'})
             .populate({path: 'liaison', select: 'name'})
+            .populate({path: 'selectedEntry', select: 'name'})
             .populate({path: 'comments.author', select: 'name'})
             .then((project) => {
                 if (!project) {
@@ -97,13 +98,16 @@ module.exports.getProject = (event, context, callback) => {
  * @param callback
  */
 module.exports.listProjects = (event, context, callback) => {
+    let statusQuery = event.queryStringParameters ? { status: event.queryStringParameters.status || 'active' } : {};
+
     mongoose.connect(mongoString, mongooseOptions);
     const db = mongoose.connection;
 
     db.on('error', () => {callback(null, createErrorResponse(503, 'There was an error connecting to the database'))});
     db.once('open', () => {
         Project
-            .find()
+            .find(statusQuery)
+            .populate({path: 'organization', select: 'name'})
             .then((projects) => {
                 callback(null, createSuccessResponse(200, projects));
             })
@@ -164,6 +168,12 @@ module.exports.createProject = (event, context, callback) => {
         category: data.category,
         status: 'active'
     });
+
+    if (data.deadline) {
+        project.deadline = Date.parse(data.deadline)
+    }
+
+
 
     errs = project.validateSync();
 
@@ -397,7 +407,7 @@ module.exports.updateProjectStatus = (event, context, callback) => {
     data = JSON.parse(event.body);
 
     let status = data.status;
-    let selectedEntry = data.selectedEntry;
+    let selectedEntryId = data.selectedEntryId;
 
     if (!mongoose.Types.ObjectId.isValid(project_id)) {
         callback(null, createErrorResponse(400, 'Invalid ObjectId'));
@@ -420,31 +430,36 @@ module.exports.updateProjectStatus = (event, context, callback) => {
                     callback(null, createErrorResponse(403, 'You can only update your own project'));
                     db.close();
                 } else {
-                    project.update({
-                        status: status,
-                        selectedEntry: selectedEntry
-                    })
+                    project.entries.id(selectedEntryId).selected = true;
+                    console.log(project);
+                    project.save();
+                    project.update(
+                        {
+                            status: status
+                        }
+                    )
                         .then(() => {
                             if (status === 'complete') {
                                 let itemsProcessed = 0;
                                 project.entries.forEach((entry, index, array) => {
                                     User.findByIdAndUpdate(entry.student, {
                                         $push: {
-                                            completedProjects: {
+                                            portfolioEntries: {
                                                 project: {
                                                     title: project.title,
                                                     organization: project.organization,
+                                                    liaison: project.liaison,
                                                     summary: project.summary
                                                 },
                                                 submission: {
-                                                    assets: entry.assets
-                                                }
+                                                    assets: entry.assets,
+                                                    selected: entry.selected
+                                                },
+                                                visible: true
                                             }
                                         }
                                     })
                                     .then((user) => {
-                                        console.log(entry);
-                                        console.log(user);
                                         itemsProcessed++;
                                         if (itemsProcessed === array.length) {
                                             db.close();

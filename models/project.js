@@ -49,7 +49,10 @@ const entrySchema = new Schema({
     },
     comments: [{
         type: messageSchema
-    }]
+    }],
+    selected: {
+        type: Boolean
+    },
 });
 
 
@@ -71,6 +74,9 @@ const projectModel = mongoose.model('Project', {
         type: Schema.Types.ObjectId,
         ref: 'Organization',
         required: true
+    },
+    deadline: {
+        type: Date,
     },
     fullDescription: {
         type: String,
@@ -101,9 +107,6 @@ const projectModel = mongoose.model('Project', {
     status: {
         type: String,
         required: true
-    },
-    selectedEntry: {
-        type: String
     }
 });
 

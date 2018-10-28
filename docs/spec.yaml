@@ -982,7 +982,7 @@ components:
       allOf:
         - $ref: '#/components/schemas/User'
       properties:
-        completedProjects:
+        portfolioEntries:
           type: array
           items:
             $ref: '#/components/schemas/CompletedProject'
@@ -1003,6 +1003,30 @@ components:
       required:
         - _id
         - name
+
+    Entry:
+      description: >-
+        A Student entry to a project. This is created when a Student signs up and serves as a
+        container for the Assets that will be submitted upon submission
+      required:
+        - student
+      properties:
+        student:
+          $ref: '#/components/schemas/Student'
+        commentary:
+          type: string
+          example: >-
+            Mumblecore bicycle rights neutra locavore forage keffiyeh tumblr four loko pinterest
+            asymmetrical farm-to-table tote bag craft beer sartorial. Fam man braid banh mi, try-hard
+            cliche hell of letterpress. Taiyaki iPhone yr, wolf vinyl hammock pitchfork organic
+            flexitarian yuccie next level meggings fanny pack whatever.
+        assets:
+          type: array
+          items:
+            $ref: '#/components/schemas/Asset'
+        status:
+          type: string
+          example: 'submitted'
 
     CompletedProject:
       properties:
@@ -1032,30 +1056,8 @@ components:
                 $ref: '#/components/schemas/Asset'
             commentary:
               type: string
-
-    Entry:
-      description: >-
-        A Student entry to a project. This is created when a Student signs up and serves as a
-        container for the Assets that will be submitted upon submission
-      required:
-        - student
-      properties:
-        student:
-          $ref: '#/components/schemas/Student'
-        commentary:
-          type: string
-          example: >-
-            Mumblecore bicycle rights neutra locavore forage keffiyeh tumblr four loko pinterest
-            asymmetrical farm-to-table tote bag craft beer sartorial. Fam man braid banh mi, try-hard
-            cliche hell of letterpress. Taiyaki iPhone yr, wolf vinyl hammock pitchfork organic
-            flexitarian yuccie next level meggings fanny pack whatever.
-        assets:
-          type: array
-          items:
-            $ref: '#/components/schemas/Asset'
-        status:
-          type: string
-          example: 'submitted'
+        public:
+          type: boolean
 
     NewAsset:
       description: >-
