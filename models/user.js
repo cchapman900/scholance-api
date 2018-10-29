@@ -2,8 +2,6 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const validator = require('validator');
 
-<<<<<<< HEAD
-=======
 const portfolioEntrySchema = new Schema({
     project: {
         title: {
@@ -44,7 +42,6 @@ const portfolioEntrySchema = new Schema({
     }
 });
 
->>>>>>> Authentication
 const userSchema = new Schema({
     name: {
         type: String,
@@ -52,11 +49,7 @@ const userSchema = new Schema({
     },
     userType: {
         type: String,
-<<<<<<< HEAD
         required: true,
-        enum: ['student', 'business']
-    }
-=======
         enum: ['student', 'business']
     },
     projects: [{
@@ -66,7 +59,6 @@ const userSchema = new Schema({
     portfolioEntries: [{
         type: portfolioEntrySchema
     }]
->>>>>>> Authentication
 });
 
 const userModel = mongoose.model('User', userSchema);

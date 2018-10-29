@@ -1,7 +1,7 @@
 "use strict";
-
-const mongoose = require('mongoose');
-const bluebird = require('bluebird');
+//
+// const mongoose = require('mongoose');
+// const bluebird = require('bluebird');
 const AWS = require('aws-sdk');
 const s3 = new AWS.S3();
 const fileType = require('file-type');
@@ -11,32 +11,23 @@ const User = require('./models/user.js');
 const Organization = require('./models/organization.js');
 
 
+const dbService = require('utils/db');
+const ProjectService = require('services/project.service');
+const projectService = new ProjectService(dbService);
 
-mongoose.Promise = bluebird;
+// const db = require('utils/db');
+// console.error('test test');
+// const ProjectService = require('services/project.service');
 
-const mongoString = process.env.MONGO_URI; // MongoDB Url
-const mongooseOptions = {
-    server: { socketOptions: { keepAlive: 1, connectTimeoutMS: 30000 } },
-    replset: { socketOptions: { keepAlive: 1, connectTimeoutMS: 30000 } }
-};
+// let projectService = new ProjectService(db);
 
-const createSuccessResponse = (statusCode, body) => ({
-    statusCode: statusCode || 200,
-    headers: {
-        'Access-Control-Allow-Origin' : '*',
-        'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(body),
-});
-
-const createErrorResponse = (statusCode, message) => ({
-    statusCode: statusCode || 500,
-    headers: {
-        'Access-Control-Allow-Origin' : '*',
-        'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({'message': message}),
-});
+// mongoose.Promise = bluebird;
+//
+// const mongoString = process.env.MONGO_URI; // MongoDB Url
+// const mongooseOptions = {
+//     server: { socketOptions: { keepAlive: 1, connectTimeoutMS: 30000 } },
+//     replset: { socketOptions: { keepAlive: 1, connectTimeoutMS: 30000 } }
+// };
 
 /*************************
  * PROJECTS
@@ -57,7 +48,7 @@ module.exports.getProject = (event, context, callback) => {
         return;
     }
 
-    mongoose.connect(mongoString, mongooseOptions);
+    DBService.connect(mongoString, mongooseOptions);
     const db = mongoose.connection;
 
     db.on('error', () => {
@@ -98,26 +89,12 @@ module.exports.getProject = (event, context, callback) => {
  * @param callback
  */
 module.exports.listProjects = (event, context, callback) => {
-    let statusQuery = event.queryStringParameters ? { status: event.queryStringParameters.status || 'active' } : {};
 
-    mongoose.connect(mongoString, mongooseOptions);
-    const db = mongoose.connection;
-
-    db.on('error', () => {callback(null, createErrorResponse(503, 'There was an error connecting to the database'))});
-    db.once('open', () => {
-        Project
-            .find(statusQuery)
-            .populate({path: 'organization', select: 'name'})
-            .then((projects) => {
-                callback(null, createSuccessResponse(200, projects));
-            })
-            .catch((err) => {
-                callback(null, createErrorResponse(err.statusCode, err.message));
-            })
-            .finally(() => {
-                // Close db connection or node event loop won't exit , and lambda will timeout
-                db.close();
-            });
+    projectService.list(event.queryStringParameters, (err, projects) => {
+        if (err) {
+            callback(null, createErrorResponse(err.statusCode, err.message));
+        }
+        callback(null, createSuccessResponse(200, projects));
     });
 };
 
@@ -150,7 +127,7 @@ module.exports.createProject = (event, context, callback) => {
         callback(null, createErrorResponse(403, 'You must be a business user to post a project'));
     }
 
-    mongoose.connect(mongoString, mongooseOptions);
+    DBService.connect(mongoString, mongooseOptions);
     const db = mongoose.connection;
     let data = {};
     let errs = {};
@@ -247,7 +224,7 @@ module.exports.updateProject = (event, context, callback) => {
     }
 
 
-    mongoose.connect(mongoString, mongooseOptions);
+    DBService.connect(mongoString, mongooseOptions);
     let db = mongoose.connection;
     let project_id = event.pathParameters.project_id;
     let data = {};
@@ -329,7 +306,7 @@ module.exports.deleteProject = (event, context, callback) => {
         callback(null, createErrorResponse(403, 'You must be a business user to delete a project'));
     }
 
-    mongoose.connect(mongoString, mongooseOptions);
+    DBService.connect(mongoString, mongooseOptions);
     const db = mongoose.connection;
     const project_id = event.pathParameters.project_id;
     let data = {};
@@ -400,7 +377,7 @@ module.exports.updateProjectStatus = (event, context, callback) => {
         callback(null, createErrorResponse(403, 'You must be a business user to update a project'));
     }
 
-    mongoose.connect(mongoString, mongooseOptions);
+    DBService.connect(mongoString, mongooseOptions);
     let db = mongoose.connection;
     let project_id = event.pathParameters.project_id;
     let data = {};
@@ -519,7 +496,7 @@ module.exports.createProjectComment = (event, context, callback) => {
         text: data.text
     };
 
-    mongoose.connect(mongoString, mongooseOptions);
+    DBService.connect(mongoString, mongooseOptions);
     let db = mongoose.connection;
     db.on('error', () => {
         db.close();
@@ -579,7 +556,7 @@ module.exports.deleteProjectComment = (event, context, callback) => {
         return;
     }
 
-    mongoose.connect(mongoString, mongooseOptions);
+    DBService.connect(mongoString, mongooseOptions);
     let db = mongoose.connection;
     db.on('error', () => {
         db.close();
@@ -669,7 +646,7 @@ module.exports.createSupplementalResource = (event, context, callback) => {
 
     // TODO: If it is a link, add "http" if needed
 
-    mongoose.connect(mongoString, mongooseOptions);
+    DBService.connect(mongoString, mongooseOptions);
     let db = mongoose.connection;
     db.on('error', () => {
         db.close();
@@ -779,7 +756,7 @@ module.exports.createSupplementalResourceFile = (event, context, callback) => {
         }
 
         ////
-        mongoose.connect(mongoString, mongooseOptions);
+        DBService.connect(mongoString, mongooseOptions);
         let db = mongoose.connection;
 
         db.on('error', () => {
@@ -858,7 +835,7 @@ module.exports.deleteSupplementalResource = (event, context, callback) => {
         return;
     }
 
-    mongoose.connect(mongoString, mongooseOptions);
+    DBService.connect(mongoString, mongooseOptions);
     let db = mongoose.connection;
     db.on('error', () => {
         db.close();
@@ -940,7 +917,7 @@ module.exports.getEntryByStudentId = (event, context, callback) => {
         db.close();
     }
 
-    mongoose.connect(mongoString, mongooseOptions);
+    DBService.connect(mongoString, mongooseOptions);
     let db = mongoose.connection;
     db.on('error', () => {
         db.close();
@@ -1014,7 +991,7 @@ module.exports.projectSignup = (event, context, callback) => {
         callback(null, createErrorResponse(403, 'You must be a student to sign up for a project'));
     }
 
-    mongoose.connect(mongoString, mongooseOptions);
+    DBService.connect(mongoString, mongooseOptions);
     let db = mongoose.connection;
     db.on('error', () => {
         db.close();
@@ -1115,7 +1092,7 @@ module.exports.projectSignoff = (event, context, callback) => {
         callback(null, createErrorResponse(403, 'You must be a student to sign up for a project'));
     }
 
-    mongoose.connect(mongoString, mongooseOptions);
+    DBService.connect(mongoString, mongooseOptions);
     let db = mongoose.connection;
     db.on('error', () => {
         db.close();
@@ -1216,7 +1193,7 @@ module.exports.updateEntry = (event, context, callback) => {
     };
 
 
-    mongoose.connect(mongoString, mongooseOptions);
+    DBService.connect(mongoString, mongooseOptions);
     let db = mongoose.connection;
     db.on('error', () => {
         db.close();
@@ -1291,7 +1268,7 @@ module.exports.createEntryComment = (event, context, callback) => {
         text: data.text
     };
 
-    mongoose.connect(mongoString, mongooseOptions);
+    DBService.connect(mongoString, mongooseOptions);
     let db = mongoose.connection;
     db.on('error', () => {
         db.close();
@@ -1355,7 +1332,7 @@ module.exports.deleteEntryComment = (event, context, callback) => {
         return;
     }
 
-    mongoose.connect(mongoString, mongooseOptions);
+    DBService.connect(mongoString, mongooseOptions);
     let db = mongoose.connection;
     db.on('error', () => {
         db.close();
@@ -1448,7 +1425,7 @@ module.exports.createEntryAsset = (event, context, callback) => {
     }
 
 
-    mongoose.connect(mongoString, mongooseOptions);
+    DBService.connect(mongoString, mongooseOptions);
     let db = mongoose.connection;
     db.on('error', () => {
         db.close();
@@ -1562,7 +1539,7 @@ module.exports.createEntryAssetFile = (event, context, callback) => {
             callback(null, createErrorResponse(500, 'Could not upload to S3'));
         }
 
-        mongoose.connect(mongoString, mongooseOptions);
+        DBService.connect(mongoString, mongooseOptions);
         let db = mongoose.connection;
         db.on('error', () => {
             db.close();
@@ -1649,7 +1626,7 @@ module.exports.deleteEntryAsset = (event, context, callback) => {
         return;
     }
 
-    mongoose.connect(mongoString, mongooseOptions);
+    DBService.connect(mongoString, mongooseOptions);
     let db = mongoose.connection;
     db.on('error', () => {
         db.close();
@@ -1706,3 +1683,27 @@ module.exports.deleteEntryAsset = (event, context, callback) => {
             })
     });
 };
+
+
+/**************************
+ * HELPER METHODS
+ **************************/
+
+
+const createSuccessResponse = (statusCode, body) => ({
+    statusCode: statusCode || 200,
+    headers: {
+        'Access-Control-Allow-Origin' : '*',
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body),
+});
+
+const createErrorResponse = (statusCode, message) => ({
+    statusCode: statusCode || 500,
+    headers: {
+        'Access-Control-Allow-Origin' : '*',
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({'message': message}),
+});

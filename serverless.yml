@@ -253,29 +253,6 @@ functions:
             resultTtlInSeconds: 0
             identitySource: method.request.header.Authorization
             identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
-  createEntryAsset:
-    handler: handler.createEntryAsset
-    events:
-      - http:
-          path: projects/{project_id}/entries/{user_id}/assets
-          method: post
-          cors: true
-
-  createEntryAssetFile:
-    handler: handler.createEntryAssetFile
-    events:
-      - http:
-          path: projects/{project_id}/entries/{user_id}/assets/file
-          method: post
-          cors: true
-
-  deleteEntryAsset:
-    handler: handler.deleteEntryAsset
-    events:
-      - http:
-          path: projects/{project_id}/entries/{user_id}/assets/{asset_id}
-          method: delete
-          cors: true
   createEntryComment:
     handler: handler.createEntryComment
     events:
