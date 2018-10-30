@@ -41,42 +41,13 @@ const projectService = new ProjectService(dbService);
  * @param callback
  */
 module.exports.getProject = (event, context, callback) => {
-    const project_id = event.pathParameters.project_id;
+    const projectId = event.pathParameters.project_id;
 
-    if (!mongoose.Types.ObjectId.isValid(project_id)) {
-        callback(null, createErrorResponse(400, 'Invalid ObjectId'));
-        return;
-    }
-
-    DBService.connect(mongoString, mongooseOptions);
-    const db = mongoose.connection;
-
-    db.on('error', () => {
-        db.close();
-        callback(null, createErrorResponse(503, 'There was an error connecting to the database'))
-    });
-    db.on('open', () => {
-        Project
-            .findById(project_id)
-            // TODO: Might be a good idea to limit population based on scopes
-            .populate({path: 'entries.student', select: 'name'})
-            .populate({path: 'organization', select: 'name about'})
-            .populate({path: 'liaison', select: 'name'})
-            .populate({path: 'selectedEntry', select: 'name'})
-            .populate({path: 'comments.author', select: 'name'})
-            .then((project) => {
-                if (!project) {
-                    callback(null, createErrorResponse(404, 'Project not found'));
-                    db.close();
-                } else {
-                    callback(null, createSuccessResponse(200, project));
-                    db.close();
-                }
-            })
-            .catch((err) => {
-                callback(null, createErrorResponse(err.statusCode, err.message));
-                db.close();
-            });
+    projectService.get(projectId, (err, project) => {
+        if (err) {
+            callback(null, createErrorResponse(err.statusCode, err.message));
+        }
+        callback(null, createSuccessResponse(200, project));
     });
 };
 
@@ -89,7 +60,6 @@ module.exports.getProject = (event, context, callback) => {
  * @param callback
  */
 module.exports.listProjects = (event, context, callback) => {
-
     projectService.list(event.queryStringParameters, (err, projects) => {
         if (err) {
             callback(null, createErrorResponse(err.statusCode, err.message));
