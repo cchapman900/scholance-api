@@ -1,6 +1,6 @@
 "use strict";
 //
-// const mongoose = require('mongoose');
+const mongoose = require('mongoose');
 // const bluebird = require('bluebird');
 const AWS = require('aws-sdk');
 const s3 = new AWS.S3();
@@ -79,95 +79,44 @@ module.exports.getProject = (event, context, callback) => {
  * @param callback
  */
 module.exports.createProject = (event, context, callback) => {
-    // console.log(event)
-    // callback(null, {statusCode: 201, body: JSON.stringify(event)});
 
     // Authenticated user information
-    const principalId = event.requestContext.authorizer.principalId;
-    const auth = principalId.split("|");
-    const authenticationProvider = auth[0];
-    let authenticatedUserId = auth[1];
-    if (authenticationProvider !== 'auth0') {
-        callback(null, createErrorResponse(401, 'No Auth0 authentication found'));
-        db.close();
+    const authId = getAuthId(event);
+    if (!authId) {
+        callback(null, createErrorResponse(401, 'No authentication found'));
     }
 
     // Authorize the authenticated user's scopes
-    const scope = event.requestContext.authorizer.scope;
-    const scopes = scope.split(" ");
-    if (!scopes.includes("manage:project")) {
+    const scopes = getScopes(event);
+    if (!scopesContainScope(scopes, "manage:project")) {
         callback(null, createErrorResponse(403, 'You must be a business user to post a project'));
     }
 
-    DBService.connect(mongoString, mongooseOptions);
-    const db = mongoose.connection;
-    let data = {};
-    let errs = {};
-    let project = {};
-
-    data = JSON.parse(event.body);
-
-    project = new Project({
-        title: data.title,
-        summary: data.summary,
-        liaison: authenticatedUserId,
-        organization: data.organization,
-        fullDescription: data.fullDescription,
-        deliverables: data.deliverables,
-        category: data.category,
+    // Parse the request
+    const request = JSON.parse(event.body);
+    let project = new Project({
+        _id: new mongoose.Types.ObjectId(),
+        title: request.title,
+        summary: request.summary,
+        liaison: authId,
+        organization: request.organization,
+        fullDescription: request.fullDescription,
+        deliverables: request.deliverables,
+        category: request.category,
         status: 'active'
     });
-
     if (data.deadline) {
         project.deadline = Date.parse(data.deadline)
     }
 
-
-
-    errs = project.validateSync();
-
+    // Validate the request
+    const errs = project.validateSync();
     if (errs) {
-        console.log(errs);
         callback(null, createErrorResponse(400, 'Incorrect project data'));
-        db.close();
         return;
     }
 
-    db.on('error', () => {callback(null, createErrorResponse(503, 'There was an error connecting to the database'))});
-    db.once('open', () => {
-        project
-            .save()
-            .then((project) => {
-                User.findByIdAndUpdate(authenticatedUserId, {$push: {'projects': project._id}}, {'upsert': true}).exec()  // TODO: Take upsert out of this. Doesn't seem safe
-            })
-            .then(() => {
-                s3.putObject(
-                    {
-                        Bucket: 'scholance-projects',
-                        Key: project._id.toString() + '/'
-                    }, function(err, data) {
-                        if (err) {
-                        console.log(err);
-                        callback(null, createErrorResponse(503, 'There was an error creating the S3 bucket'));
-                    }
-                    else{
-                        console.log(data);
-                        callback(null, createSuccessResponse(201, project));
-                    }
-                    /*
-                    data = {
-                     Location: "http://examplebucket.s3.amazonaws.com/"
-                    }
-                    */
-                    });
-            })
-            .catch((err) => {
-                callback(null, createErrorResponse(err.statusCode, err.message));
-            })
-            .finally(() => {
-                db.close();
-            });
-    });
+    projectService.create(project, callback);
 };
 
 

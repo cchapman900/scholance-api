@@ -85,6 +85,50 @@ class ProjectService {
     };
 
 
+    create(project, callback) {
+
+        const db = this.dbService.connect();
+        db.on('error', (err) => {
+            callback(err)
+        });
+        db.once('open', () => {
+            project
+                .save()
+                .then((project) => {
+                    User.findByIdAndUpdate(authenticatedUserId, {$push: {'projects': project._id}}, {'upsert': true}).exec()  // TODO: Take upsert out of this. Doesn't seem safe
+                })
+                .then(() => {
+                    s3.putObject(
+                        {
+                            Bucket: 'scholance-projects',
+                            Key: project._id.toString() + '/'
+                        }, function(err, data) {
+                            if (err) {
+                                console.log(err);
+                                callback(null, createErrorResponse(503, 'There was an error creating the S3 bucket'));
+                            }
+                            else{
+                                console.log(data);
+                                callback(null, createSuccessResponse(201, project));
+                            }
+                            /*
+                            data = {
+                             Location: "http://examplebucket.s3.amazonaws.com/"
+                            }
+                            */
+                        });
+                })
+                .catch((err) => {
+                    callback(null, createErrorResponse(err.statusCode, err.message));
+                })
+                .finally(() => {
+                    db.close();
+                });
+            });
+        });
+    };
+
+
     /*****************
      * METHOD TEMPLATE
      *****************/
