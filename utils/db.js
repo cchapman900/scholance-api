@@ -5,8 +5,8 @@ mongoose.Promise = bluebird;
 
 const mongoString = process.env.MONGO_URI;
 const mongooseOptions = {
-    server: { socketOptions: { keepAlive: 1, connectTimeoutMS: 30000 } },
-    replset: { socketOptions: { keepAlive: 1, connectTimeoutMS: 30000 } }
+    // server: { socketOptions: { keepAlive: 1, connectTimeoutMS: 30000 } },
+    // replset: { socketOptions: { keepAlive: 1, connectTimeoutMS: 30000 } }
 };
 
 class DBService {

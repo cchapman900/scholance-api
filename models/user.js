@@ -11,6 +11,10 @@ const portfolioEntrySchema = new Schema({
             type: Schema.Types.ObjectId,
             ref: 'Organization'
         },
+        liaison: {
+            type: Schema.Types.ObjectId,
+            ref: 'User'
+        },
         summary: {
             type: String
         }
@@ -32,9 +36,6 @@ const portfolioEntrySchema = new Schema({
         }],
         commentary: {
             type: String
-        },
-        selected: {
-            type: Boolean
         }
     },
     visible: {
@@ -42,25 +43,59 @@ const portfolioEntrySchema = new Schema({
     }
 });
 
-const userSchema = new Schema({
+const model = mongoose.model('User', {
     name: {
-        type: String,
-        required: true
+        type: String
     },
     userType: {
         type: String,
         required: true,
-        enum: ['student', 'business']
+    },
+    email: {
+        type: String,
+        required: true
+    },
+    photo: {
+        type: String,
     },
     projects: [{
         type: Schema.Types.ObjectId,
         ref: 'Project'
     }],
+    about: {
+        type: String
+    },
+    organization: {
+        type: Schema.Types.ObjectId,
+        ref: 'Organization'
+    },
+    position: {
+        type: String
+    },
+    school: {
+        type: String
+    },
+    academicFocus: {
+        type: String
+    },
+    interests: {
+        type: String
+    },
+    linkedin: {
+        type: String
+    },
+    twitter: {
+        type: String
+    },
+    instagram: {
+        type: String
+    },
+    website: {
+        type: String
+    },
     portfolioEntries: [{
         type: portfolioEntrySchema
     }]
 });
 
-const userModel = mongoose.model('User', userSchema);
-
-module.exports = userModel;
+module.exports = model;

@@ -1,49 +1,28 @@
 "use strict";
 //
-const mongoose = require('mongoose');
-// const bluebird = require('bluebird');
-const AWS = require('aws-sdk');
-const s3 = new AWS.S3();
-const fileType = require('file-type');
-const validator = require('validator');
-const Project = require('./models/project.js');
-const User = require('./models/user.js');
-const Organization = require('./models/organization.js');
+const Project = require('../models/project.js');
+const User = require('../models/user.js');
 
+const dbService = require('../utils/db');
 
-const dbService = require('utils/db');
-const ProjectService = require('services/project.service');
+const ProjectService = require('../services/project');
 const projectService = new ProjectService(dbService);
 
-// const db = require('utils/db');
-// console.error('test test');
-// const ProjectService = require('services/project.service');
-
-// let projectService = new ProjectService(db);
-
-// mongoose.Promise = bluebird;
-//
-// const mongoString = process.env.MONGO_URI; // MongoDB Url
-// const mongooseOptions = {
-//     server: { socketOptions: { keepAlive: 1, connectTimeoutMS: 30000 } },
-//     replset: { socketOptions: { keepAlive: 1, connectTimeoutMS: 30000 } }
-// };
-
-/*************************
- * PROJECTS
- *************************/
+const UserService = require('../services/user');
+const userService = new UserService(dbService);
 
 
 /**
  * LIST PROJECTS
  *
- * @param event
+ * @param event {{queryStringParameters: string[]}}
  * @param context
  * @param callback
  */
 module.exports.listProjects = (event, context, callback) => {
     projectService.list(event.queryStringParameters, (err, projects) => {
         if (err) {
+            console.log(err);
             callback(null, createErrorResponse(err.statusCode, err.message));
         }
         callback(null, createSuccessResponse(200, projects));
@@ -53,7 +32,7 @@ module.exports.listProjects = (event, context, callback) => {
 /**
  * GET PROJECT
  *
- * @param event
+ * @param event {{pathParameters: {project_id: string}}}
  * @param context
  * @param callback
  */
@@ -64,6 +43,7 @@ module.exports.getProject = (event, context, callback) => {
 
     projectService.get(projectId, showFullEntries, (err, project) => {
         if (err) {
+            console.log(err);
             callback(null, createErrorResponse(err.statusCode, err.message));
         }
         callback(null, createSuccessResponse(200, project));
@@ -80,43 +60,31 @@ module.exports.getProject = (event, context, callback) => {
  */
 module.exports.createProject = (event, context, callback) => {
 
-    // Authenticated user information
+    // Get the authenticated user id
     const authId = getAuthId(event);
     if (!authId) {
-        callback(null, createErrorResponse(401, 'No authentication found'));
+        return callback(null, createErrorResponse(401, 'No authentication found'));
     }
 
     // Authorize the authenticated user's scopes
     const scopes = getScopes(event);
     if (!scopesContainScope(scopes, "manage:project")) {
-        callback(null, createErrorResponse(403, 'You must be a business user to post a project'));
+        return callback(null, createErrorResponse(403, 'You must be a business user to post a project'));
     }
 
-    // Parse the request
-    const request = JSON.parse(event.body);
-    let project = new Project({
-        _id: new mongoose.Types.ObjectId(),
-        title: request.title,
-        summary: request.summary,
-        liaison: authId,
-        organization: request.organization,
-        fullDescription: request.fullDescription,
-        deliverables: request.deliverables,
-        category: request.category,
-        status: 'active'
+    // Parse the request and append the authId
+    let request = JSON.parse(event.body);
+    request.liaison = authId;
+
+    // Create the project
+    projectService.create(request, (err, project) => {
+        if (err) {
+            console.log(err);
+            return callback(null, createErrorResponse(err.statusCode, err.message));
+        }
+        return callback(null, createSuccessResponse(201, project));
     });
-    if (data.deadline) {
-        project.deadline = Date.parse(data.deadline)
-    }
 
-    // Validate the request
-    const errs = project.validateSync();
-    if (errs) {
-        callback(null, createErrorResponse(400, 'Incorrect project data'));
-        return;
-    }
-
-    projectService.create(project, callback);
 };
 
 
@@ -1611,33 +1579,69 @@ module.exports.deleteEntryAsset = (event, context, callback) => {
  **************************/
 
 
-const createSuccessResponse = (statusCode, body) => ({
-    statusCode: statusCode || 200,
-    headers: {
-        'Access-Control-Allow-Origin' : '*',
-        'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(body),
-});
+/**
+ * Create a Success Response
+ *
+ * @param statusCode
+ * @param body
+ * @returns object - {statusCode: number, headers: object, body: string}
+ */
+const createSuccessResponse = (statusCode, body) => {
+    return {
+        statusCode: statusCode || 200,
+        headers: {
+            'Access-Control-Allow-Origin' : '*',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body),
+    };
+};
 
-const createErrorResponse = (statusCode, message) => ({
-    statusCode: statusCode || 500,
-    headers: {
-        'Access-Control-Allow-Origin' : '*',
-        'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({'message': message}),
-})
+/**
+ * Create an Error Response
+ *
+ * @param statusCode
+ * @param message
+ * @returns object - {statusCode: number, headers: object, body: string}
+ */
+const createErrorResponse = (statusCode, message) => {
+    return {
+        statusCode: statusCode || 500,
+        headers: {
+            'Access-Control-Allow-Origin' : '*',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({'message': message}),
+    };
+};
 
+/**
+ * Parse the scopes from the event
+ *
+ * @param event
+ * @returns {array}
+ */
 const getScopes = (event) => {
     const scope = (((event.requestContext || {}).authorizer || {}).scope || null);
     return scope ? scope.split(" ") : [];
 };
 
+/**
+ * Check if a specified scope is within the scopes array
+ *
+ * @param scopes
+ * @param scope
+ * @returns boolean
+ */
 const scopesContainScope = (scopes, scope) => {
     return scopes.includes(scope);
 };
 
+/**
+ * Get the authenticated user's id from the event
+ * @param event
+ * @returns {null}
+ */
 const getAuthId = (event) => {
     const principalId = (((event.requestContext || {}).authorizer || {}).principalId || null);
     const auth = principalId ? principalId.split("|") : [];

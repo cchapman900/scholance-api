@@ -16,6 +16,12 @@ provider:
         - s3:*
       Resource: "*"
 
+package:
+  exclude:
+    - test/**
+    - .git/**
+    - docs/**
+
 functions:
 
   #########
@@ -23,7 +29,7 @@ functions:
   #########
 
   listProjects:
-    handler: handler.listProjects
+    handler: controllers/project.listProjects
     events:
       - http:
           path: projects
@@ -31,7 +37,7 @@ functions:
           cors: true
 
   createProject:
-    handler: handler.createProject
+    handler: controllers/project.createProject
     events:
       - http:
           path: projects
@@ -44,7 +50,7 @@ functions:
             identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
 
   getProject:
-    handler: handler.getProject
+    handler: controllers/project.getProject
     events:
       - http:
           path: projects/{project_id}
@@ -52,7 +58,7 @@ functions:
           cors: true
 
   updateProject:
-    handler: handler.updateProject
+    handler: controllers/project.updateProject
     events:
       - http:
           path: projects/{project_id}
@@ -65,7 +71,7 @@ functions:
             identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
 
   deleteProject:
-    handler: handler.deleteProject
+    handler: controllers/project.deleteProject
     events:
       - http:
           path: projects/{project_id}
@@ -78,7 +84,7 @@ functions:
             identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
 
   updateProjectStatus:
-    handler: handler.updateProjectStatus
+    handler: controllers/project.updateProjectStatus
     events:
       - http:
           path: projects/{project_id}/status
@@ -91,7 +97,7 @@ functions:
             identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
 
   createProjectComment:
-    handler: handler.createProjectComment
+    handler: controllers/project.createProjectComment
     events:
       - http:
           path: projects/{project_id}/comments
@@ -104,7 +110,7 @@ functions:
             identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
 
   deleteProjectComment:
-    handler: handler.deleteProjectComment
+    handler: controllers/project.deleteProjectComment
     events:
       - http:
           path: projects/{project_id}/comments/{comment_id}
@@ -121,7 +127,7 @@ functions:
   ########################
 
   createSupplementalResource:
-    handler: handler.createSupplementalResource
+    handler: controllers/project.createSupplementalResource
     events:
       - http:
           path: projects/{project_id}/supplemental-resources
@@ -134,7 +140,7 @@ functions:
             identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
 
   createSupplementalResourceFile:
-    handler: handler.createSupplementalResourceFile
+    handler: controllers/project.createSupplementalResourceFile
     events:
       - http:
           path: projects/{project_id}/supplemental-resources/file
@@ -147,7 +153,7 @@ functions:
             identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
 
   deleteSupplementalResource:
-    handler: handler.deleteSupplementalResource
+    handler: controllers/project.deleteSupplementalResource
     events:
       - http:
           path: projects/{project_id}/supplemental-resources/{asset_id}
@@ -164,7 +170,7 @@ functions:
   ######################
 
   projectSignup:
-    handler: handler.projectSignup
+    handler: controllers/project.projectSignup
     events:
       - http:
           path: projects/{project_id}/entries
@@ -177,7 +183,7 @@ functions:
             identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
 
   projectSignoff:
-    handler: handler.projectSignoff
+    handler: controllers/project.projectSignoff
     events:
       - http:
           path: projects/{project_id}/entries/{user_id}
@@ -190,7 +196,7 @@ functions:
             identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
 
   getEntry:
-    handler: handler.getEntryByStudentId
+    handler: controllers/project.getEntryByStudentId
     events:
       - http:
           path: projects/{project_id}/entries/{user_id}
@@ -203,7 +209,7 @@ functions:
             identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
 
   updateEntry:
-    handler: handler.updateEntry
+    handler: controllers/project.updateEntry
     events:
       - http:
           path: projects/{project_id}/entries/{user_id}
@@ -216,7 +222,7 @@ functions:
             identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
 
   createEntryAsset:
-    handler: handler.createEntryAsset
+    handler: controllers/project.createEntryAsset
     events:
       - http:
           path: projects/{project_id}/entries/{user_id}/assets
@@ -229,7 +235,7 @@ functions:
             identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
 
   createEntryAssetFile:
-    handler: handler.createEntryAssetFile
+    handler: controllers/project.createEntryAssetFile
     events:
       - http:
           path: projects/{project_id}/entries/{user_id}/assets/file
@@ -242,7 +248,7 @@ functions:
             identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
 
   deleteEntryAsset:
-    handler: handler.deleteEntryAsset
+    handler: controllers/project.deleteEntryAsset
     events:
       - http:
           path: projects/{project_id}/entries/{user_id}/assets/{asset_id}
@@ -254,7 +260,7 @@ functions:
             identitySource: method.request.header.Authorization
             identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
   createEntryComment:
-    handler: handler.createEntryComment
+    handler: controllers/project.createEntryComment
     events:
       - http:
           path: projects/{project_id}/entries/{user_id}/comments
@@ -267,7 +273,7 @@ functions:
             identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
 
   deleteEntryComment:
-    handler: handler.deleteEntryComment
+    handler: controllers/project.deleteEntryComment
     events:
       - http:
           path: projects/{project_id}/entries/{user_id}/comments/{comment_id}

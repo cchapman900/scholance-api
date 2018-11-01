@@ -1,8 +1,16 @@
-const Project = require('../models/project.js');
+const mongoose = require('mongoose');
+const AWS = require('aws-sdk');
+const s3 = new AWS.S3();
+const fileType = require('file-type');
+
+const Project = require('../models/project');
+const User = require('../models/user');
 
 class ProjectService {
 
     /**
+     * Constructor
+     *
      * @param dbService
      */
     constructor (dbService) {
@@ -24,6 +32,7 @@ class ProjectService {
 
         const db = this.dbService.connect();
         db.on('error', (err) => {
+            console.error(err);
             callback(err)
         });
         db.once('open', () => {
@@ -52,6 +61,7 @@ class ProjectService {
 
         const db = this.dbService.connect();
         db.on('error', (err) => {
+            console.error(err);
             callback(err)
         });
         db.once('open', () => {
@@ -85,52 +95,79 @@ class ProjectService {
     };
 
 
-    create(project, callback) {
+    create(request, callback) {
 
+        // Create a Project from the request
+        let project = new Project({
+            _id: new mongoose.Types.ObjectId(),
+            title: request.title,
+            summary: request.summary,
+            liaison: request.liaison,
+            organization: request.organization,
+            fullDescription: request.fullDescription,
+            deliverables: request.deliverables,
+            category: request.category,
+            status: 'active'
+        });
+        if (request.deadline) {
+            project.deadline = Date.parse(data.deadline)
+        }
+
+        // Validate the request
+        const errs = project.validateSync();
+        if (errs) return callback({statusCode: 400, message: 'Incorrect project data'});
+
+        // Run the database query
         const db = this.dbService.connect();
         db.on('error', (err) => {
+            console.error(err);
             callback(err)
         });
         db.once('open', () => {
+
+            // Create the project
             project
                 .save()
-                .then((project) => {
-                    User.findByIdAndUpdate(authenticatedUserId, {$push: {'projects': project._id}}, {'upsert': true}).exec()  // TODO: Take upsert out of this. Doesn't seem safe
+                .then(() => {
+
+                    // Add the project to the user's projects
+                    User.findByIdAndUpdate(project.liaison, {$push: {'projects': project._id}})
+                        // .then(() => {})
+                        .catch((err) => {
+                            console.error(err);
+                            callback(err);
+                        })
                 })
                 .then(() => {
+
+                    // Prep the folder for the asset files
                     s3.putObject(
                         {
                             Bucket: 'scholance-projects',
                             Key: project._id.toString() + '/'
-                        }, function(err, data) {
+                        }, function(err, request) {
                             if (err) {
-                                console.log(err);
-                                callback(null, createErrorResponse(503, 'There was an error creating the S3 bucket'));
+                                console.error(err);
+                                callback({statusCode: 503, message: 'There was an error creating the S3 bucket'});
                             }
                             else{
-                                console.log(data);
-                                callback(null, createSuccessResponse(201, project));
+                                callback(null, project);
                             }
-                            /*
-                            data = {
-                             Location: "http://examplebucket.s3.amazonaws.com/"
-                            }
-                            */
                         });
                 })
                 .catch((err) => {
-                    callback(null, createErrorResponse(err.statusCode, err.message));
+                    console.error(err);
+                    callback(err);
                 })
                 .finally(() => {
                     db.close();
                 });
-            });
         });
     };
 
 
     /*****************
-     * METHOD TEMPLATE
+     * FUNCTION TEMPLATE
      *****************/
 
     // template(callback) {
