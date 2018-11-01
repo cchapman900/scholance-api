@@ -33,24 +33,6 @@ const projectService = new ProjectService(dbService);
  * PROJECTS
  *************************/
 
-/**
- * GET PROJECT
- *
- * @param event
- * @param context
- * @param callback
- */
-module.exports.getProject = (event, context, callback) => {
-    const projectId = event.pathParameters.project_id;
-
-    projectService.get(projectId, (err, project) => {
-        if (err) {
-            callback(null, createErrorResponse(err.statusCode, err.message));
-        }
-        callback(null, createSuccessResponse(200, project));
-    });
-};
-
 
 /**
  * LIST PROJECTS
@@ -65,6 +47,26 @@ module.exports.listProjects = (event, context, callback) => {
             callback(null, createErrorResponse(err.statusCode, err.message));
         }
         callback(null, createSuccessResponse(200, projects));
+    });
+};
+
+/**
+ * GET PROJECT
+ *
+ * @param event
+ * @param context
+ * @param callback
+ */
+module.exports.getProject = (event, context, callback) => {
+    const projectId = event.pathParameters.project_id;
+    const scopes = getScopes(event);
+    const showFullEntries = scopesContainScope(scopes, 'manage:project');
+
+    projectService.get(projectId, showFullEntries, (err, project) => {
+        if (err) {
+            callback(null, createErrorResponse(err.statusCode, err.message));
+        }
+        callback(null, createSuccessResponse(200, project));
     });
 };
 
@@ -1676,4 +1678,19 @@ const createErrorResponse = (statusCode, message) => ({
         'Content-Type': 'application/json'
     },
     body: JSON.stringify({'message': message}),
-});
+})
+
+const getScopes = (event) => {
+    const scope = (((event.requestContext || {}).authorizer || {}).scope || null);
+    return scope ? scope.split(" ") : [];
+};
+
+const scopesContainScope = (scopes, scope) => {
+    return scopes.includes(scope);
+};
+
+const getAuthId = (event) => {
+    const principalId = (((event.requestContext || {}).authorizer || {}).principalId || null);
+    const auth = principalId ? principalId.split("|") : [];
+    return auth.length === 2 ? auth[1] : null;
+};

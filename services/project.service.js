@@ -45,23 +45,29 @@ class ProjectService {
      * Get a single project with the specified id
      *
      * @param projectId - A project's ObjectId.
+     * @param showFullEntries
      * @param callback
      */
-    get(projectId, callback) {
+    get(projectId, showFullEntries, callback) {
 
         const db = this.dbService.connect();
         db.on('error', (err) => {
             callback(err)
         });
         db.once('open', () => {
-            Project
+            let query = Project
                 .findById(projectId)
-                // TODO: Might be a good idea to limit population based on scopes
-                .populate({path: 'entries.student', select: 'name'})
                 .populate({path: 'organization', select: 'name about'})
                 .populate({path: 'liaison', select: 'name'})
                 .populate({path: 'selectedEntry', select: 'name'})
-                .populate({path: 'comments.author', select: 'name'})
+                .populate({path: 'comments.author', select: 'name'});
+
+            if (showFullEntries) {
+                query
+                    .populate({path: 'entries.student', select: 'name'})
+            }
+
+            query
                 .then((project) => {
                     if (!project) {
                         callback({statusCode: 404, message: 'Project not found'});
@@ -79,10 +85,25 @@ class ProjectService {
     };
 
 
+    /*****************
+     * METHOD TEMPLATE
+     *****************/
+
+    // template(callback) {
+    //
+    //     const db = this.dbService.connect();
+    //     db.on('error', (err) => {
+    //         callback(err)
+    //     });
+    //     db.once('open', () => {
+    //         // Main body
+    //     });
+    // };
+
+
     /************************
      * HELPER METHODS
      ************************/
-
 
     /**
      * @param queryStringParameters
