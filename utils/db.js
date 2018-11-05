@@ -11,9 +11,12 @@ const mongooseOptions = {
 
 class DBService {
 
+    /**
+     * @returns {mongoose.Connection}
+     */
     static connect() {
         mongoose.connect(mongoString, mongooseOptions);
-        return mongoose.connection
+        return mongoose.connection;
     }
 }
 

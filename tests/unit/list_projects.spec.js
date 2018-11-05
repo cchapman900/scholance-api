@@ -2,7 +2,7 @@ const assert = require('assert');
 
 const dbMock = require('../mocks/db_mock');
 
-const ProjectService = require('../../services/project.service');
+const ProjectService = require('../../services/project');
 const projectService = new ProjectService(dbMock);
 
 // describe('Project Service', function() {

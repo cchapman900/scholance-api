@@ -20,13 +20,19 @@ const userService = new UserService(dbService);
  * @param callback
  */
 module.exports.listProjects = (event, context, callback) => {
-    projectService.list(event.queryStringParameters, (err, projects) => {
-        if (err) {
-            console.log(err);
-            callback(null, createErrorResponse(err.statusCode, err.message));
-        }
-        callback(null, createSuccessResponse(200, projects));
-    });
+    try {
+        projectService.list(event.queryStringParameters, (err, projects) => {
+            if (err) {
+                console.log(err);
+                callback(null, createErrorResponse(err.statusCode, err.message));
+            }
+            callback(null, createSuccessResponse(200, projects));
+        });
+    }
+    catch(err) {
+        console.error(err);
+        throw err;
+    }
 };
 
 /**
@@ -37,17 +43,23 @@ module.exports.listProjects = (event, context, callback) => {
  * @param callback
  */
 module.exports.getProject = (event, context, callback) => {
-    const projectId = event.pathParameters.project_id;
-    const scopes = getScopes(event);
-    const showFullEntries = scopesContainScope(scopes, 'manage:project');
+    try {
+        const projectId = event.pathParameters.project_id;
+        const scopes = getScopes(event);
+        const showFullEntries = scopesContainScope(scopes, 'manage:project');
 
-    projectService.get(projectId, showFullEntries, (err, project) => {
-        if (err) {
-            console.log(err);
-            callback(null, createErrorResponse(err.statusCode, err.message));
-        }
-        callback(null, createSuccessResponse(200, project));
-    });
+        projectService.get(projectId, showFullEntries, (err, project) => {
+            if (err) {
+                console.log(err);
+                callback(null, createErrorResponse(err.statusCode, err.message));
+            }
+            callback(null, createSuccessResponse(200, project));
+        });
+    }
+    catch(err) {
+        console.error(err);
+        throw err;
+    }
 };
 
 
@@ -59,31 +71,36 @@ module.exports.getProject = (event, context, callback) => {
  * @param callback
  */
 module.exports.createProject = (event, context, callback) => {
-
-    // Get the authenticated user id
-    const authId = getAuthId(event);
-    if (!authId) {
-        return callback(null, createErrorResponse(401, 'No authentication found'));
-    }
-
-    // Authorize the authenticated user's scopes
-    const scopes = getScopes(event);
-    if (!scopesContainScope(scopes, "manage:project")) {
-        return callback(null, createErrorResponse(403, 'You must be a business user to post a project'));
-    }
-
-    // Parse the request and append the authId
-    let request = JSON.parse(event.body);
-    request.liaison = authId;
-
-    // Create the project
-    projectService.create(request, (err, project) => {
-        if (err) {
-            console.log(err);
-            return callback(null, createErrorResponse(err.statusCode, err.message));
+    try {
+        // Get the authenticated user id
+        const authId = getAuthId(event);
+        if (!authId) {
+            return callback(null, createErrorResponse(401, 'No authentication found'));
         }
-        return callback(null, createSuccessResponse(201, project));
-    });
+
+        // Authorize the authenticated user's scopes
+        const scopes = getScopes(event);
+        if (!scopesContainScope(scopes, "manage:project")) {
+            return callback(null, createErrorResponse(403, 'You must be a business user to post a project'));
+        }
+
+        // Parse the request and append the authId
+        let request = JSON.parse(event.body);
+        request.liaison = authId;
+
+        // Create the project
+        projectService.create(request, (err, project) => {
+            if (err) {
+                console.log(err);
+                return callback(null, createErrorResponse(err.statusCode, err.message));
+            }
+            return callback(null, createSuccessResponse(201, project));
+        });
+    }
+    catch(err) {
+        console.error(err);
+        throw err;
+    }
 
 };
 
@@ -1647,3 +1664,13 @@ const getAuthId = (event) => {
     const auth = principalId ? principalId.split("|") : [];
     return auth.length === 2 ? auth[1] : null;
 };
+
+/**********************
+ * JSDoc stuff
+ **********************/
+
+/**
+ * @callback requestCallback
+ * @param {{number statusCode, string message}|null} err
+ * @param {*} [response]
+ */

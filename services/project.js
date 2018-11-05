@@ -1,17 +1,16 @@
 const mongoose = require('mongoose');
-const AWS = require('aws-sdk');
-const s3 = new AWS.S3();
-const fileType = require('file-type');
 
 const Project = require('../models/project');
 const User = require('../models/user');
+
+const S3Util = require('../utils/s3');
 
 class ProjectService {
 
     /**
      * Constructor
      *
-     * @param dbService
+     * @param {DBService} dbService
      */
     constructor (dbService) {
         this.dbService = dbService;
@@ -22,8 +21,8 @@ class ProjectService {
      * LIST PROJECT
      * Get a list of projects with the specified query
      *
-     * @param queryStringParameters - An object of query string parameters.
-     * @param callback
+     * @param {{}} queryStringParameters - An object of query string parameters.
+     * @param {requestCallback} callback
      */
     list(queryStringParameters = {}, callback) {
 
@@ -33,14 +32,14 @@ class ProjectService {
         const db = this.dbService.connect();
         db.on('error', (err) => {
             console.error(err);
-            callback(err)
+            return callback(err)
         });
         db.once('open', () => {
             Project
                 .find(query)
                 .populate({path: 'organization', select: 'name'})
                 .then((projects) => {
-                    callback(null, projects);
+                    return callback(null, projects);
                 })
                 .finally(() => {
                     db.close();
@@ -53,16 +52,16 @@ class ProjectService {
      * GET PROJECT BY ID
      * Get a single project with the specified id
      *
-     * @param projectId - A project's ObjectId.
-     * @param showFullEntries
-     * @param callback
+     * @param {string} projectId - A project's ObjectId.
+     * @param {boolean} showFullEntries - Whether to show deeper information about a project's entries
+     * @param {requestCallback} callback
      */
     get(projectId, showFullEntries, callback) {
 
         const db = this.dbService.connect();
         db.on('error', (err) => {
             console.error(err);
-            callback(err)
+            return callback(err)
         });
         db.once('open', () => {
             let query = Project
@@ -80,13 +79,13 @@ class ProjectService {
             query
                 .then((project) => {
                     if (!project) {
-                        callback({statusCode: 404, message: 'Project not found'});
+                        return callback({statusCode: 404, message: 'Project not found'});
                     } else {
-                        callback(null, project);
+                        return callback(null, project);
                     }
                 })
                 .catch((err) => {
-                    callback(err);
+                    return callback(err);
                 })
                 .finally(() => {
                     db.close();
@@ -95,6 +94,14 @@ class ProjectService {
     };
 
 
+    /**
+     * CREATE A PROJECT
+     *
+     * @param request
+     * @param {requestCallback} callback
+     * @returns {requestCallback}
+     * @callback {}
+     */
     create(request, callback) {
 
         // Create a Project from the request
@@ -121,7 +128,7 @@ class ProjectService {
         const db = this.dbService.connect();
         db.on('error', (err) => {
             console.error(err);
-            callback(err)
+            return callback(err)
         });
         db.once('open', () => {
 
@@ -129,35 +136,30 @@ class ProjectService {
             project
                 .save()
                 .then(() => {
-
                     // Add the project to the user's projects
                     User.findByIdAndUpdate(project.liaison, {$push: {'projects': project._id}})
                         // .then(() => {})
                         .catch((err) => {
                             console.error(err);
-                            callback(err);
+                            return callback(err);
                         })
                 })
                 .then(() => {
-
-                    // Prep the folder for the asset files
-                    s3.putObject(
-                        {
-                            Bucket: 'scholance-projects',
-                            Key: project._id.toString() + '/'
-                        }, function(err, request) {
-                            if (err) {
-                                console.error(err);
-                                callback({statusCode: 503, message: 'There was an error creating the S3 bucket'});
-                            }
-                            else{
-                                callback(null, project);
-                            }
-                        });
+                    const s3 = new S3Util();
+                    s3.createProjectS3Bucket(project._id.toString(), (err) => {
+                        if (err) {
+                            console.error(err);
+                            return callback({
+                                statusCode: 503,
+                                message: 'There was an error creating the S3 bucket'
+                            });
+                        }
+                        return callback(null, project);
+                    });
                 })
                 .catch((err) => {
                     console.error(err);
-                    callback(err);
+                    return callback(err);
                 })
                 .finally(() => {
                     db.close();
@@ -170,6 +172,10 @@ class ProjectService {
      * FUNCTION TEMPLATE
      *****************/
 
+    // /**
+    //  * @param {requestCallback} callback
+    //  * @returns {requestCallback}
+    //  */
     // template(callback) {
     //
     //     const db = this.dbService.connect();
@@ -188,7 +194,7 @@ class ProjectService {
 
     /**
      * @param queryStringParameters
-     * @returns {{}}
+     * @returns {{}} - E.g. {status: 'active', limit: 10}
      */
     getValidListProjectsQueryParams(queryStringParameters) {
         const validQueryParams = ['status'];
@@ -205,4 +211,8 @@ class ProjectService {
     };
 }
 
+
+/**
+ * @type {ProjectService}
+ */
 module.exports = ProjectService;
