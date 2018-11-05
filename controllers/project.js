@@ -8,16 +8,13 @@ const dbService = require('../utils/db');
 const ProjectService = require('../services/project');
 const projectService = new ProjectService(dbService);
 
-const UserService = require('../services/user');
-const userService = new UserService(dbService);
-
 
 /**
  * LIST PROJECTS
  *
  * @param event {{queryStringParameters: string[]}}
- * @param context
- * @param callback
+ * @param {{}} context
+ * @param {requestCallback} callback
  */
 module.exports.listProjects = (event, context, callback) => {
     try {
@@ -35,12 +32,13 @@ module.exports.listProjects = (event, context, callback) => {
     }
 };
 
+
 /**
  * GET PROJECT
  *
- * @param event {{pathParameters: {project_id: string}}}
- * @param context
- * @param callback
+ * @param {{pathParameters: {project_id: string}}} event
+ * @param {{}} context
+ * @param {requestCallback} callback
  */
 module.exports.getProject = (event, context, callback) => {
     try {
@@ -66,9 +64,9 @@ module.exports.getProject = (event, context, callback) => {
 /**
  * CREATE PROJECT
  *
- * @param event
- * @param context
- * @param callback
+ * @param {{body: string, pathParameters: {project_id}, requestContext: {authorizer: {principalId: string}}}} event
+ * @param {{}} context
+ * @param {requestCallback} callback
  */
 module.exports.createProject = (event, context, callback) => {
     try {
@@ -108,154 +106,89 @@ module.exports.createProject = (event, context, callback) => {
 /**
  * UPDATE PROJECT
  *
- * @param event
- * @param context
- * @param callback
+ * @param {{body: string, pathParameters: {project_id}, requestContext: {authorizer: {principalId: string}}}} event
+ * @param {{}} context
+ * @param {requestCallback} callback
  */
 module.exports.updateProject = (event, context, callback) => {
-    // Authenticated user information
-    const principalId = event.requestContext.authorizer.principalId;
-    const auth = principalId.split("|");
-    const authenticationProvider = auth[0];
-    let authenticatedUserId = auth[1];
-    if (authenticationProvider !== 'auth0') {
-        callback(null, createErrorResponse(401, 'No Auth0 authentication found'));
+
+    try {
+        // Get the authenticated user id
+        const authId = getAuthId(event);
+        if (!authId) {
+            console.log('Update Project: No authentication found');
+            return callback(null, createErrorResponse(401, 'No authentication found'));
+        }
+
+        const projectId = event.pathParameters.project_id;
+
+        // Authorize the authenticated user's scopes
+        const scopes = getScopes(event);
+        if (!scopesContainScope(scopes, "manage:project")) {
+            console.log('Update Project: Non-business User ' + authId + ' tried to update project ' + projectId);
+            return callback(null, createErrorResponse(403, 'You must be a business user to update a project'));
+        }
+
+        let request = JSON.parse(event.body);
+        request.liaison = authId;
+
+        // Create the project
+        projectService.update(projectId, request, (err, project) => {
+            if (err) {
+                console.error(err);
+                return callback(null, createErrorResponse(err.statusCode, err.message));
+            }
+            return callback(null, createSuccessResponse(200, project));
+        });
+
     }
-
-    // Authorize the authenticated user's scopes
-    const scope = event.requestContext.authorizer.scope;
-    const scopes = scope.split(" ");
-    if (!scopes.includes("manage:project")) {
-        callback(null, createErrorResponse(403, 'You must be a business user to update a project'));
+    catch(err) {
+        console.error(err);
+        throw err;
     }
-
-
-    DBService.connect(mongoString, mongooseOptions);
-    let db = mongoose.connection;
-    let project_id = event.pathParameters.project_id;
-    let data = {};
-    data = JSON.parse(event.body);
-
-    if (!mongoose.Types.ObjectId.isValid(project_id)) {
-        callback(null, createErrorResponse(400, 'Invalid ObjectId'));
-        db.close();
-        return;
-    }
-
-    db.on('error', () => {
-        callback(null, createErrorResponse(503, 'There was an error connecting to the database'));
-        db.close();
-    });
-    db.once('open', () => {
-        Project
-            .findById(project_id)
-            .then((project) => {
-                if (!project) {
-                    callback(null, createErrorResponse(404, 'Project not found'));
-                    db.close();
-                } else if (authenticatedUserId != project.liaison) {
-                    callback(null, createErrorResponse(403, 'You can only update your own project'));
-                    db.close();
-                } else {
-                    project.update({
-                        title: data.title,
-                        summary: data.summary,
-                        liaison: authenticatedUserId,
-                        organization: data.organization,
-                        fullDescription: data.fullDescription,
-                        specs: data.specs,
-                        deliverables: data.deliverables,
-                        category: data.category
-                    })
-                        .then(() => {
-                            callback(null, createSuccessResponse(200, project));
-                            db.close();
-                        })
-                        .catch((err) => {
-                            callback(null, createErrorResponse(err.statusCode, err.message));
-                            db.close();
-                        })
-                }
-            })
-            .catch((err) => {
-                callback(null, createErrorResponse(err.statusCode, err.message));
-                db.close();
-            })
-
-    });
 };
 
 
 /**
  * DELETE PROJECT
  *
- * @param event
- * @param context
- * @param callback
+ * @param {{body: string, pathParameters: {project_id}, requestContext: {authorizer: {principalId: string}}}} event
+ * @param {{}} context
+ * @param {requestCallback} callback
  */
 module.exports.deleteProject = (event, context, callback) => {
 
-    // Authenticated user information
-    const principalId = event.requestContext.authorizer.principalId;
-    const auth = principalId.split("|");
-    const authenticationProvider = auth[0];
-    let authenticatedUserId = auth[1];
-    if (authenticationProvider !== 'auth0') {
-        callback(null, createErrorResponse(401, 'No Auth0 authentication found'));
-        db.close();
+    try {
+        // Get the authenticated user id
+        const authId = getAuthId(event);
+        if (!authId) {
+            console.log('Delete Project: No authentication found');
+            return callback(null, createErrorResponse(401, 'No authentication found'));
+        }
+
+        const projectId = event.pathParameters.project_id;
+
+        // Authorize the authenticated user's scopes
+        const scopes = getScopes(event);
+        if (!scopesContainScope(scopes, "manage:project")) {
+            console.log('Delete Project: Non-business User ' + authId + ' tried to update project ' + projectId);
+            return callback(null, createErrorResponse(403, 'You must be a business user to delete a project'));
+        }
+
+        // Create the project
+        projectService.delete(projectId, authId, (err, project) => {
+            if (err) {
+                console.error(err);
+                return callback(null, createErrorResponse(err.statusCode, err.message));
+            }
+            return callback(null, createSuccessResponse(200, project));
+        });
+
     }
-
-    // Authorize the authenticated user's scopes
-    const scope = event.requestContext.authorizer.scope;
-    const scopes = scope.split(" ");
-    if (!scopes.includes("manage:project")) {
-        callback(null, createErrorResponse(403, 'You must be a business user to delete a project'));
+    catch(err) {
+        console.error(err);
+        throw err;
     }
-
-    DBService.connect(mongoString, mongooseOptions);
-    const db = mongoose.connection;
-    const project_id = event.pathParameters.project_id;
-    let data = {};
-    data = JSON.parse(event.body);
-
-    if (!mongoose.Types.ObjectId.isValid(project_id)) {
-        callback(null, createErrorResponse(400, 'Invalid ObjectId'));
-        db.close();
-        return;
-    }
-
-    db.on('error', () => {
-        callback(null, createErrorResponse(503, 'There was an error connecting to the database'))
-        db.close();
-    });
-    db.on('open', () => {
-        Project
-            .findById(project_id)
-            .then((project) => {
-                if (!project) {
-                    callback(null, createErrorResponse(404, 'Project not found'));
-                    db.close();
-                } else if (authenticatedUserId != project.liaison) {
-                    callback(null, createErrorResponse(403, 'You can only delete your own project'));
-                    db.close();
-                } else {
-                    project
-                        .remove({_id: project_id})
-                        .then(() => {
-                            callback(null, createSuccessResponse(204));
-                            db.close();
-                        })
-                        .catch((err) => {
-                            callback(null, createErrorResponse(err.statusCode, err.message));
-                            db.close();
-                        })
-                }
-            })
-            .catch((err) => {
-                callback(null, createErrorResponse(err.statusCode, err.message));
-                db.close();
-            })
-    });
 };
 
 
@@ -1656,8 +1589,8 @@ const scopesContainScope = (scopes, scope) => {
 
 /**
  * Get the authenticated user's id from the event
- * @param event
- * @returns {null}
+ * @param {{requestContext: {authorizer: {principalId: string}}}} event
+ * @returns {string|null}
  */
 const getAuthId = (event) => {
     const principalId = (((event.requestContext || {}).authorizer || {}).principalId || null);

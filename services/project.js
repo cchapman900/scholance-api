@@ -168,6 +168,102 @@ class ProjectService {
     };
 
 
+    /**
+     * UPDATE PROJECT
+     *
+     * @param projectId
+     * @param request
+     * @param {requestCallback} callback
+     *
+     * @returns {requestCallback}
+     */
+    update(projectId, request, callback) {
+
+        const db = this.dbService.connect();
+        db.on('error', (err) => {
+            callback(err)
+        });
+        db.once('open', () => {
+            Project
+                .findById(projectId)
+                .then((project) => {
+                    if (!project) {
+                        return callback({statusCode: 404, message: 'Project not found'});
+                    } else {
+                        project.update({
+                            title: request.title,
+                            summary: request.summary,
+                            liaison: request.liaison,
+                            organization: request.organization,
+                            fullDescription: request.fullDescription,
+                            specs: request.specs,
+                            deliverables: request.deliverables,
+                            category: request.category
+                        })
+                            .then(() => {
+                                return callback(null, project);
+                            })
+                            .catch((err) => {
+                                return callback(err);
+                            })
+                    }
+                })
+                .catch((err) => {
+                    console.error(err);
+                    return callback(err);
+                })
+                .finally(() => {
+                    db.close();
+                })
+        });
+    };
+
+
+    /**
+     * DELETE A PROJECT
+     *
+     * @param {string} projectId
+     * @param {string} authId
+     * @param {requestCallback} callback
+     *
+     * @returns {requestCallback}
+     */
+    delete(projectId, authId, callback) {
+
+        const db = this.dbService.connect();
+        db.on('error', (err) => {
+            return callback(err)
+        });
+        db.once('open', () => {
+            Project
+                .findById(projectId)
+                .then((project) => {
+                    if (!project) {
+                        return callback({statusCode: 404, message: 'Project not found'});
+                    } else if (authId !== project.liaison) {
+                        return callback({statusCode: 403, message: 'You can only delete your own project'});
+                    } else {
+                        project
+                            .remove({_id: projectId})
+                            .then(() => {
+                                return callback(null, createSuccessResponse(204));
+                            })
+                            .catch((err) => {
+                                return callback(err);
+                            })
+                    }
+                })
+                .catch((err) => {
+                    console.error(err);
+                    return callback(err);
+                })
+                .finally(() => {
+                    db.close();
+                })
+        });
+    };
+
+
     /*****************
      * FUNCTION TEMPLATE
      *****************/
@@ -180,7 +276,8 @@ class ProjectService {
     //
     //     const db = this.dbService.connect();
     //     db.on('error', (err) => {
-    //         callback(err)
+    //         console.error(err);
+    //         callback(err);
     //     });
     //     db.once('open', () => {
     //         // Main body
