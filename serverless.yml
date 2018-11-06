@@ -1,7 +1,4 @@
-service: project-service
-
-custom:
-  projectsBucket: dev-scholance-projects
+service: scholance-api
 
 provider:
   name: aws
@@ -284,5 +281,125 @@ functions:
           authorizer:
             arn: ${file(./.env.yml):${self:provider.stage}.AUTH_URI}
             resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
+
+
+###############
+# USERS
+###############
+
+  createOrUpdateUser:
+    handler: controllers/user.createOrUpdateUser
+    events:
+      - http:
+          path: users/{user_id}
+          method: put
+          cors: true
+          authorizer:
+            arn: ${file(./.env.yml):${self:provider.stage}.AUTH_URI}
+            resultTtlInSeconds: 3600
+            identitySource: method.request.header.Authorization
+            identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
+
+  deleteUser:
+    handler: controllers/user.deleteUser
+    events:
+      - http:
+          path: users/{user_id}
+          method: delete
+          cors: true
+          authorizer:
+            arn: ${file(./.env.yml):${self:provider.stage}.AUTH_URI}
+            resultTtlInSeconds: 3600
+            identitySource: method.request.header.Authorization
+            identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
+
+  getUser:
+    handler: controllers/user.getUser
+    events:
+      - http:
+          path: users/{user_id}
+          method: get
+          cors: true
+
+  updatePortfolioEntries:
+    handler: controllers/user.updatePortfolioEntries
+    events:
+      - http:
+          path: users/{user_id}/completed-projects
+          method: put
+          cors: true
+          authorizer:
+            arn: ${file(./.env.yml):${self:provider.stage}.AUTH_URI}
+            resultTtlInSeconds: 3600
+            identitySource: method.request.header.Authorization
+            identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
+
+  listOrganizations:
+    handler: controllers/user.listOrganizations
+    events:
+      - http:
+          path: organizations
+          method: get
+          cors: true
+
+  getOrganization:
+    handler: controllers/user.getOrganization
+    events:
+      - http:
+          path: organizations/{organization_id}
+          method: get
+          cors: true
+
+  createOrganization:
+    handler: controllers/user.createOrganization
+    events:
+      - http:
+          path: organizations
+          method: post
+          cors: true
+          authorizer:
+            arn: ${file(./.env.yml):${self:provider.stage}.AUTH_URI}
+            resultTtlInSeconds: 3600
+            identitySource: method.request.header.Authorization
+            identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
+
+  updateOrganization:
+    handler: controllers/user.updateOrganization
+    events:
+      - http:
+          path: organizations/{organization_id}
+          method: put
+          cors: true
+          authorizer:
+            arn: ${file(./.env.yml):${self:provider.stage}.AUTH_URI}
+            resultTtlInSeconds: 3600
+            identitySource: method.request.header.Authorization
+            identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
+
+  addLiaisonToOrganization:
+    handler: controllers/user.addLiaisonToOrganization
+    events:
+      - http:
+          path: organizations/{organization_id}/users/{user_id}
+          method: post
+          cors: true
+          authorizer:
+            arn: ${file(./.env.yml):${self:provider.stage}.AUTH_URI}
+            resultTtlInSeconds: 3600
+            identitySource: method.request.header.Authorization
+            identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
+
+  removeLiaisonFromOrganization:
+    handler: controllers/user.removeLiaisonFromOrganization
+    events:
+      - http:
+          path: organizations/{organization_id}/users/{user_id}
+          method: delete
+          cors: true
+          authorizer:
+            arn: ${file(./.env.yml):${self:provider.stage}.AUTH_URI}
+            resultTtlInSeconds: 3600
             identitySource: method.request.header.Authorization
             identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$

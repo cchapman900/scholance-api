@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
+const Project = require('./project');
+const Organization = require('./organization');
 const validator = require('validator');
 
 const portfolioEntrySchema = new Schema({
