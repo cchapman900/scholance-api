@@ -184,6 +184,7 @@ class ProjectService {
             callback(err)
         });
         db.once('open', () => {
+
             Project
                 .findById(projectId)
                 .then((project) => {
@@ -262,6 +263,92 @@ class ProjectService {
                 })
         });
     };
+
+
+    /**
+     * UPDATE PROJECT STATUS
+     *
+     * @param {string} projectId
+     * @param {string} authId
+     * @param {string} status
+     * @param {string} selectedEntryId
+     * @param {requestCallback} callback
+     * @returns {requestCallback}
+     */
+    updateProjectStatus(projectId, authId, status, selectedEntryId, callback) {
+
+        const db = this.dbService.connect();
+        db.on('error', (err) => {
+            console.error(err);
+            callback(err);
+        });
+        db.once('open', () => {
+            Project
+                .findById(projectId)
+                .then((project) => {
+                    if (!project) {
+                        console.log('Project not found: ' + projectId);
+                        return callback({statusCode: 404, message: 'Project not found'});
+                    } else if (authId !== project.liaison) {
+                        return callback({statusCode: 403, message: 'You can only update your own project'});
+                    } else {
+                        project.entries.id(selectedEntryId).selected = true;
+                        project.save();
+                        project.update(
+                            {
+                                status: status
+                            }
+                        )
+                            .then(() => {
+                                if (status === 'complete') {
+                                    let itemsProcessed = 0;
+                                    project.entries.forEach((entry, index, array) => {
+                                        User.findByIdAndUpdate(entry.student, {
+                                            $push: {
+                                                portfolioEntries: {
+                                                    project: {
+                                                        title: project.title,
+                                                        organization: project.organization,
+                                                        liaison: project.liaison,
+                                                        summary: project.summary
+                                                    },
+                                                    submission: {
+                                                        assets: entry.assets,
+                                                        selected: entry.selected
+                                                    },
+                                                    visible: true
+                                                }
+                                            }
+                                        })
+                                            .then(() => {
+                                                itemsProcessed++;
+                                                if (itemsProcessed === array.length) {
+                                                    return callback(null, project);
+                                                }
+                                            })
+                                            .catch((err) => {
+                                                console.error(err);
+                                                return callback(err);
+                                            })
+                                    });
+                                }
+                            })
+                            .catch((err) => {
+                                console.error(err);
+                                return callback(err);
+                            })
+                    }
+                })
+                .catch((err) => {
+                    console.error(err);
+                    return callback(err);
+                })
+                .finally(() => {
+                    db.close();
+                })
+        });
+    };
+
 
 
     /*****************

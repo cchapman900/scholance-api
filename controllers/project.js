@@ -173,11 +173,10 @@ module.exports.deleteProject = (event, context, callback) => {
         // Authorize the authenticated user's scopes
         const scopes = helper.getScopes(event);
         if (!helper.scopesContainScope(scopes, "manage:project")) {
-            console.log('Delete Project: Non-business User ' + authId + ' tried to update project ' + projectId);
+            console.log('Delete Project: Non-business User ' + authId + ' tried to delete project ' + projectId);
             return callback(null, helper.createErrorResponse(403, 'You must be a business user to delete a project'));
         }
 
-        // Create the project
         projectService.delete(projectId, authId, (err, project) => {
             if (err) {
                 console.error(err);
@@ -197,112 +196,39 @@ module.exports.deleteProject = (event, context, callback) => {
 /**
  * UPDATE PROJECT STATUS
  *
- * @param event
- * @param context
- * @param callback
+ * @param {{body: string, pathParameters: {project_id}, requestContext: {authorizer: {principalId: string}}}} event
+ * @param {{}} context
+ * @param {requestCallback} callback
  */
 module.exports.updateProjectStatus = (event, context, callback) => {
-    // Authenticated user information
-    const principalId = event.requestContext.authorizer.principalId;
-    const auth = principalId.split("|");
-    const authenticationProvider = auth[0];
-    let authenticatedUserId = auth[1];
-    if (authenticationProvider !== 'auth0') {
-        callback(null, helper.createErrorResponse(401, 'No Auth0 authentication found'));
+
+    // Get the authenticated user id
+    const authId = helper.getAuthId(event);
+    if (!authId) {
+        console.log('Update Project Status: No authentication found');
+        return callback(null, helper.createErrorResponse(401, 'No authentication found'));
     }
+
+    const projectId = event.pathParameters.project_id;
 
     // Authorize the authenticated user's scopes
-    const scope = event.requestContext.authorizer.scope;
-    const scopes = scope.split(" ");
-    if (!scopes.includes("manage:project")) {
-        callback(null, helper.createErrorResponse(403, 'You must be a business user to update a project'));
+    const scopes = helper.getScopes(event);
+    if (!helper.scopesContainScope(scopes, "manage:project")) {
+        console.log('Delete Project: Non-business User ' + authId + ' tried to update project status for ' + projectId);
+        return callback(null, helper.createErrorResponse(403, 'You must be a business user to delete a project'));
     }
 
-    DBService.connect(mongoString, mongooseOptions);
-    let db = mongoose.connection;
-    let project_id = event.pathParameters.project_id;
-    let data = {};
-    data = JSON.parse(event.body);
+    const status = data.status;
+    const selectedEntryId = data.selectedEntryId;
 
-    let status = data.status;
-    let selectedEntryId = data.selectedEntryId;
-
-    if (!mongoose.Types.ObjectId.isValid(project_id)) {
-        callback(null, helper.createErrorResponse(400, 'Invalid ObjectId'));
-        db.close();
-        return;
-    }
-
-    db.on('error', () => {
-        callback(null, helper.createErrorResponse(503, 'There was an error connecting to the database'));
-        db.close();
+    projectService.updateProjectStatus(projectId, status, selectedEntryId, (err, project) => {
+        if (err) {
+            console.error(err);
+            return callback(null, helper.createErrorResponse(err.statusCode, err.message));
+        }
+        return callback(null, helper.createSuccessResponse(200, project));
     });
-    db.once('open', () => {
-        Project
-            .findById(project_id)
-            .then((project) => {
-                if (!project) {
-                    callback(null, helper.createErrorResponse(404, 'Project not found'));
-                    db.close();
-                } else if (authenticatedUserId != project.liaison) {
-                    callback(null, helper.createErrorResponse(403, 'You can only update your own project'));
-                    db.close();
-                } else {
-                    project.entries.id(selectedEntryId).selected = true;
-                    console.log(project);
-                    project.save();
-                    project.update(
-                        {
-                            status: status
-                        }
-                    )
-                        .then(() => {
-                            if (status === 'complete') {
-                                let itemsProcessed = 0;
-                                project.entries.forEach((entry, index, array) => {
-                                    User.findByIdAndUpdate(entry.student, {
-                                        $push: {
-                                            portfolioEntries: {
-                                                project: {
-                                                    title: project.title,
-                                                    organization: project.organization,
-                                                    liaison: project.liaison,
-                                                    summary: project.summary
-                                                },
-                                                submission: {
-                                                    assets: entry.assets,
-                                                    selected: entry.selected
-                                                },
-                                                visible: true
-                                            }
-                                        }
-                                    })
-                                    .then((user) => {
-                                        itemsProcessed++;
-                                        if (itemsProcessed === array.length) {
-                                            db.close();
-                                            callback(null, helper.createSuccessResponse(200, project));
-                                        }
-                                    })
-                                    .catch((err) => {
-                                            callback(null, helper.createErrorResponse(err.statusCode, err.message));
-                                            db.close();
-                                        })
-                                    });
-                                };
-                        })
-                        .catch((err) => {
-                            callback(null, helper.createErrorResponse(err.statusCode, err.message));
-                            db.close();
-                        })
-                }
-            })
-            .catch((err) => {
-                callback(null, helper.createErrorResponse(err.statusCode, err.message));
-                db.close();
-            })
 
-    });
 };
 
 
