@@ -218,10 +218,12 @@ module.exports.updateProjectStatus = (event, context, callback) => {
         return callback(null, helper.createErrorResponse(403, 'You must be a business user to delete a project'));
     }
 
-    const status = data.status;
-    const selectedEntryId = data.selectedEntryId;
+    let request = JSON.parse(event.body);
 
-    projectService.updateProjectStatus(projectId, status, selectedEntryId, (err, project) => {
+    const status = request.status;
+    const selectedEntryId = request.selectedEntryId;
+
+    projectService.updateProjectStatus(projectId, authId, status, selectedEntryId, (err, project) => {
         if (err) {
             console.error(err);
             return callback(null, helper.createErrorResponse(err.statusCode, err.message));

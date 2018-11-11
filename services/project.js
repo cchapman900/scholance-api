@@ -1,4 +1,7 @@
 const mongoose = require('mongoose');
+const Promise = require('bluebird');
+
+const HTTPError = require('../utils/errors');
 
 const Project = require('../models/project');
 const User = require('../models/user');
@@ -117,7 +120,7 @@ class ProjectService {
             status: 'active'
         });
         if (request.deadline) {
-            project.deadline = Date.parse(data.deadline)
+            project.deadline = Date.parse(request.deadline)
         }
 
         // Validate the request
@@ -184,29 +187,21 @@ class ProjectService {
             callback(err)
         });
         db.once('open', () => {
-
-            Project
-                .findById(projectId)
+            Project.findByIdAndUpdate(projectId, {
+                title: request.title,
+                summary: request.summary,
+                liaison: request.liaison,
+                organization: request.organization,
+                fullDescription: request.fullDescription,
+                specs: request.specs,
+                deliverables: request.deliverables,
+                category: request.category
+            })
                 .then((project) => {
                     if (!project) {
-                        return callback({statusCode: 404, message: 'Project not found'});
+                        throw new HTTPError(404, 'could not find project');
                     } else {
-                        project.update({
-                            title: request.title,
-                            summary: request.summary,
-                            liaison: request.liaison,
-                            organization: request.organization,
-                            fullDescription: request.fullDescription,
-                            specs: request.specs,
-                            deliverables: request.deliverables,
-                            category: request.category
-                        })
-                            .then(() => {
-                                return callback(null, project);
-                            })
-                            .catch((err) => {
-                                return callback(err);
-                            })
+                        return callback(null, project);
                     }
                 })
                 .catch((err) => {
@@ -215,7 +210,7 @@ class ProjectService {
                 })
                 .finally(() => {
                     db.close();
-                })
+                });
         });
     };
 
@@ -287,56 +282,28 @@ class ProjectService {
                 .findById(projectId)
                 .then((project) => {
                     if (!project) {
-                        console.log('Project not found: ' + projectId);
-                        return callback({statusCode: 404, message: 'Project not found'});
-                    } else if (authId !== project.liaison) {
-                        return callback({statusCode: 403, message: 'You can only update your own project'});
+                        throw new HTTPError(404, 'Project not found');
+                    } else if (authId !== project.liaison.toString()) {
+                        throw new HTTPError(403, 'You can only update your own project');
                     } else {
-                        project.entries.id(selectedEntryId).selected = true;
-                        project.save();
-                        project.update(
-                            {
-                                status: status
-                            }
-                        )
-                            .then(() => {
-                                if (status === 'complete') {
-                                    let itemsProcessed = 0;
-                                    project.entries.forEach((entry, index, array) => {
-                                        User.findByIdAndUpdate(entry.student, {
-                                            $push: {
-                                                portfolioEntries: {
-                                                    project: {
-                                                        title: project.title,
-                                                        organization: project.organization,
-                                                        liaison: project.liaison,
-                                                        summary: project.summary
-                                                    },
-                                                    submission: {
-                                                        assets: entry.assets,
-                                                        selected: entry.selected
-                                                    },
-                                                    visible: true
-                                                }
-                                            }
-                                        })
-                                            .then(() => {
-                                                itemsProcessed++;
-                                                if (itemsProcessed === array.length) {
-                                                    return callback(null, project);
-                                                }
-                                            })
-                                            .catch((err) => {
-                                                console.error(err);
-                                                return callback(err);
-                                            })
-                                    });
-                                }
-                            })
-                            .catch((err) => {
-                                console.error(err);
-                                return callback(err);
-                            })
+                        return project;
+                    }
+                })
+                .then((project) => {
+                    // if (!project.entries.id(selectedEntryId)) {
+                    //     throw new HTTPError(404, 'Entry does not exist on project')
+                    // }
+                    // project.entries.id(selectedEntryId).selected = true;
+                    // project.save();
+                    return Project.findByIdAndUpdate(projectId, {status: status}, {new: true});
+                })
+                .then((project) => {
+                    if (status === 'complete') {
+                        // TODO THis is broken
+                        this.addCompletedProjectToStudentPortfolios(project, (err, project) => {
+                            console.log(project);
+                            return callback(null, project);
+                        });
                     }
                 })
                 .catch((err) => {
@@ -348,6 +315,38 @@ class ProjectService {
                 })
         });
     };
+
+    addCompletedProjectToStudentPortfolios(project, callback) {
+        let itemsProcessed = 0;
+        project.entries.forEach((entry, index, array) => {
+            User.findByIdAndUpdate(entry.student, {
+                $push: {
+                    portfolioEntries: {
+                        project: {
+                            title: project.title,
+                            organization: project.organization,
+                            liaison: project.liaison,
+                            summary: project.summary
+                        },
+                        submission: {
+                            assets: entry.assets,
+                            selected: entry.selected
+                        },
+                        visible: true
+                    }
+                }
+            })
+                .then(() => {
+                    itemsProcessed++;
+                    if (itemsProcessed === array.length) {
+                        return callback(null, project);
+                    }
+                })
+                .catch((err) => {
+                    throw err;
+                })
+        });
+    }
 
 
 
