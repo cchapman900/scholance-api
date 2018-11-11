@@ -44,72 +44,33 @@ module.exports.getUser = (event, context, callback) => {
  * @param callback
  */
 module.exports.createOrUpdateUser = (event, context, callback) => {
+    try {
+        // Get the authenticated user id
+        const authId = helper.getAuthId(event);
+        if (!authId) {
+            return callback(null, helper.createErrorResponse(401, 'No authentication found'));
+        }
 
-    // Authenticated user information
-    const principalId = event.requestContext.authorizer.principalId;
-    const auth = principalId.split("|");
-    const authenticationProvider = auth[0];
-    let authenticatedUserId = auth[1];
-    if (authenticationProvider !== 'auth0') {
-        callback(null, helper.createErrorResponse(401, 'No Auth0 authentication found'));
+        const userId = event.pathParameters.user_id;
+
+        if (userId !== authId) return callback(null, helper.createErrorResponse(403, 'Trying to update non-authenticated user'));
+
+        // Parse the request and append the authId
+        let request = JSON.parse(event.body);
+        request.userId = userId;
+
+        userService.createOrUpdate(request, (err, user) => {
+            if (err) {
+                console.error(err);
+                callback(null, helper.createErrorResponse(err.statusCode, err.message));
+            }
+            callback(null, helper.createSuccessResponse(200, user));
+        });
     }
-
-
-
-    const user_id = event.pathParameters.user_id;
-
-    mongoose.connect(mongoString, mongooseOptions);
-    let db = mongoose.connection;
-    db.on('error', () => {
-        db.close();
-        callback(null, helper.createErrorResponse(503, 'There was an error connecting to the database'));
-    });
-
-    const data = JSON.parse(event.body);
-
-    //TODO: Break these apart to optional fields
-
-    let request = {
-        _id: user_id,
-        name: data.name,
-        email: data.email,
-        about: data.about,
-        position: data.position,
-        school: data.school,
-        academicFocus: data.academicFocus,
-        interests: data.interests,
-        linkedin: data.linkedin,
-        website: data.website,
-        twitter: data.twitter,
-        instagram: data.instagram,
-    };
-
-    if (data.userType) {
-        request.userType = data.userType
+    catch(err) {
+        console.error(err);
+        throw err;
     }
-    // errs = request.validateSync();
-
-    // if (errs) {
-    //     callback(null, helper.createErrorResponse(400, 'Incorrect parameter'));
-    //     db.close();
-    //     return;
-    // }
-
-    db.once('open', () => {
-        // User.save() could be used too
-        User.findByIdAndUpdate(user_id, request, {'upsert': true})
-            .then(() => {
-                db.close();
-                callback(null, helper.createSuccessResponse(200, request));
-            })
-            .catch((err) => {
-                db.close();
-                callback(err, helper.createErrorResponse(err.statusCode, err.message));
-            })
-            .finally(() => {
-                db.close();
-            });
-    });
 };
 
 

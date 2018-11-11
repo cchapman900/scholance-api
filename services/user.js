@@ -1,5 +1,7 @@
 const User = require('../models/user');
 
+const HTTPError = require('../utils/errors');
+
 class UserService {
 
     /**
@@ -69,6 +71,57 @@ class UserService {
                 })
                 .finally(() => {
                     // Close db connection or node event loop won't exit , and lambda will timeout
+                    db.close();
+                });
+        });
+    };
+
+
+    /**
+     * @param request
+     * @param {requestCallback} callback
+     * @returns {requestCallback}
+     */
+    createOrUpdate(request, callback) {
+
+        let user = new User({
+            _id: request.userId,
+            name: request.name,
+            email: request.email,
+            about: request.about,
+            position: request.position,
+            school: request.school,
+            academicFocus: request.academicFocus,
+            interests: request.interests,
+            linkedin: request.linkedin,
+            website: request.website,
+            twitter: request.twitter,
+            instagram: request.instagram,
+        });
+
+        if (request.userType) {
+            user.userType = request.userType
+        }
+
+        // Validate the request
+        const errs = user.validateSync();
+        if (errs) throw new HTTPError(400, 'User data invalid');
+
+        const db = this.dbService.connect();
+        db.on('error', (err) => {
+            console.error(err);
+            callback(err);
+        });
+        db.once('open', () => {
+            User.findByIdAndUpdate(user._id, request, {'upsert': true})
+                .then(() => {
+                    callback(null, user);
+                })
+                .catch((err) => {
+                    console.error(err);
+                    throw new HTTPError(err.statusCode, err.message);
+                })
+                .finally(() => {
                     db.close();
                 });
         });

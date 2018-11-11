@@ -336,6 +336,11 @@ functions:
             identitySource: method.request.header.Authorization
             identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
 
+
+######################
+# ORGANIZATIONS
+#####################
+
   listOrganizations:
     handler: controllers/user.listOrganizations
     events:

@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const Promise = require('bluebird');
 
 const HTTPError = require('../utils/errors');
 
@@ -315,6 +314,7 @@ class ProjectService {
                 })
         });
     };
+
 
     addCompletedProjectToStudentPortfolios(project, callback) {
         let itemsProcessed = 0;
