@@ -116,49 +116,37 @@ module.exports.createOrganization = (event, context, callback) => {
  * @param callback
  */
 module.exports.updateOrganization = (event, context, callback) => {
-    // Authenticated user information
-    const principalId = event.requestContext.authorizer.principalId;
-    const auth = principalId.split("|");
-    const authenticationProvider = auth[0];
-    let authenticatedUserId = auth[1];
-    if (authenticationProvider !== 'auth0') {
-        callback(null, helper.createErrorResponse(401, 'No Auth0 authentication found'));
-        db.close();
+    try {
+        // Get the authenticated user id
+        const authId = helper.getAuthId(event);
+        if (!authId) {
+            return callback(null, helper.createErrorResponse(401, 'No authentication found'));
+        }
+
+        // Authorize the authenticated user's scopes
+        //TODO: Should need to be a part of the organization to update
+        const scopes = helper.getScopes(event);
+        if (!helper.scopesContainScope(scopes, constants.SCOPES.MANAGE_ORGANIZATION)) {
+            return callback(null, helper.createErrorResponse(403, 'You must be a business user to update an organization'));
+        }
+
+        const organizationId = event.pathParameters.organization_id;
+
+        // Parse the request and append the authId
+        const request = JSON.parse(event.body);
+
+        organizationService.update(organizationId, request, (err, organization) => {
+            if (err) {
+                console.error(err);
+                callback(null, helper.createErrorResponse(err.statusCode, err.message));
+            }
+            callback(null, helper.createSuccessResponse(200, organization));
+        });
     }
-    const organization_id = event.pathParameters.organization_id;
-
-    // Authorize the authenticated user's scopes
-    const scope = event.requestContext.authorizer.scope;
-    const scopes = scope.split(" ");
-    if (!scopes.includes("manage:project")) {
-        callback(null, helper.createErrorResponse(403, 'You must be a business user to update a project'));
+    catch(err) {
+        console.error(err);
+        throw err;
     }
-
-    const data = JSON.parse(event.body);
-    const request = {
-        name: data.name,
-        domain: data.domain,
-        about: data.about,
-        logo: data.position,
-        industry: data.industry,
-        linkedin: data.linkedin,
-        twitter: data.twitter
-    };
-
-    mongoose.connect(mongoString);
-    const db = mongoose.connection;
-
-    db.once('open', () => {
-        Organization.findByIdAndUpdate(organization_id, request)
-            .then((organization) => {
-                db.close();
-                callback(null, helper.createSuccessResponse(201, organization));
-            })
-            .catch((err) => {
-                db.close();
-                callback(err, helper.createErrorResponse(err.statusCode, err.message));
-            })
-    });
 };
 
 

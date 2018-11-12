@@ -72,7 +72,7 @@ class OrganizationService {
                     if (!organization) {
                         throw new HTTPError(404, 'organization not found');
                     }
-                    callback(null, helper.createSuccessResponse(200, organization));
+                    callback(null, organization);
                 })
                 .catch((err) => {
                     console.error(err);
@@ -133,13 +133,22 @@ class OrganizationService {
 
 
     /**
-     * DELETE USER
-     *
-     * @param {string} userId
+     * @param {string} organizationId
+     * @param {{}} request
      * @param {requestCallback} callback
      * @returns {requestCallback}
      */
-    delete(userId, callback) {
+    update(organizationId, request, callback) {
+
+        const organizationRequest = {
+            name: request.name,
+            domain: request.domain,
+            about: request.about,
+            logo: request.position,
+            industry: request.industry,
+            linkedin: request.linkedin,
+            twitter: request.twitter
+        };
 
         const db = this.dbService.connect();
         db.on('error', (err) => {
@@ -147,20 +156,20 @@ class OrganizationService {
             callback(err);
         });
         db.once('open', () => {
-            User
-                .remove({_id: userId})
-                .then(() => {
-                    callback(null);
+            Organization.findByIdAndUpdate(organizationId, organizationRequest)
+                .then((organization) => {
+                    callback(null, organization);
                 })
                 .catch((err) => {
-                    console.error(err);
                     callback(err);
                 })
                 .finally(() => {
                     db.close();
-                });
+                })
         });
     };
+
+
 
 
     /*****************
