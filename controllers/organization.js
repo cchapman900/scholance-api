@@ -65,34 +65,6 @@ module.exports.getOrganization = (event, context, callback) => {
         console.error(err);
         throw err;
     }
-
-
-
-    mongoose.connect(mongoString);
-    const db = mongoose.connection;
-    const organization_id = event.pathParameters.organization_id;
-
-    if (!validator.isAlphanumeric(organization_id)) {
-        callback(null, helper.createErrorResponse(400, 'Incorrect id'));
-        db.close();
-        return;
-    }
-
-    db.once('open', () => {
-        Organization
-            .findOne({_id: organization_id})
-            .populate({path: 'liaisons', select: 'name photo position'})
-            .then((organization) => {
-                callback(null, helper.createSuccessResponse(200, organization));
-            })
-            .catch((err) => {
-                callback(null, helper.createErrorResponse(err.statusCode, err.message));
-            })
-            .finally(() => {
-                // Close db connection or node event loop won't exit , and lambda will timeout
-                db.close();
-            });
-    });
 };
 
 
@@ -104,59 +76,35 @@ module.exports.getOrganization = (event, context, callback) => {
  * @param callback
  */
 module.exports.createOrganization = (event, context, callback) => {
-    // // Authenticated user information
-    // const principalId = event.requestContext.authorizer.principalId;
-    // const auth = principalId.split("|");
-    // const authenticationProvider = auth[0];
-    // let authenticatedUserId = auth[1];
-    // if (authenticationProvider !== 'auth0') {
-    //     callback(null, helper.createErrorResponse(401, 'No Auth0 authentication found'));
-    //     db.close();
-    // }
-    //
-    // // Authorize the authenticated user's scopes
-    // const scope = event.requestContext.authorizer.scope;
-    // const scopes = scope.split(" ");
-    // if (!scopes.includes("manage:project")) {
-    //     callback(null, helper.createErrorResponse(403, 'You must be a business user to delete a project'));
-    // }
-    //
-    // mongoose.connect(mongoString);
-    // const db = mongoose.connection;
-    // const data = JSON.parse(event.body);
-    //
-    // organization = new Organization({
-    //     name: data.name,
-    //     domain: data.domain,
-    //     liaisons: [authenticatedUserId]
-    // });
-    //
-    // errs = organization.validateSync();
-    //
-    // if (errs) {
-    //     callback(null, helper.createErrorResponse(400, 'Incorrect parameter'));
-    //     db.close();
-    //     return;
-    // }
-    //
-    // db.once('open', () => {
-    //     Organization.create(organization)
-    //         .then((organization) => {
-    //             User.findByIdAndUpdate(authenticatedUserId, {organization: organization._id})
-    //                 .then(() => {
-    //                     db.close();
-    //                     callback(null, helper.createSuccessResponse(201, organization));
-    //                 })
-    //                 .catch((err) => {
-    //                     db.close();
-    //                     callback(err, helper.createErrorResponse(err.statusCode, err.message));
-    //                 })
-    //         })
-    //         .catch((err) => {
-    //             db.close();
-    //             callback(err, helper.createErrorResponse(err.statusCode, err.message));
-    //         })
-    // });
+    try {
+        // Get the authenticated user id
+        const authId = helper.getAuthId(event);
+        if (!authId) {
+            return callback(null, helper.createErrorResponse(401, 'No authentication found'));
+        }
+
+        // Authorize the authenticated user's scopes
+        const scopes = helper.getScopes(event);
+        if (!helper.scopesContainScope(scopes, constants.SCOPES.MANAGE_ORGANIZATION)) {
+            return callback(null, helper.createErrorResponse(403, 'You must be a business user to create an organization'));
+        }
+
+        // Parse the request and append the authId
+        let request = JSON.parse(event.body);
+        request.liaisons = [authId];
+
+        organizationService.create(request, (err, organization) => {
+            if (err) {
+                console.error(err);
+                callback(null, helper.createErrorResponse(err.statusCode, err.message));
+            }
+            callback(null, helper.createSuccessResponse(200, organization));
+        });
+    }
+    catch(err) {
+        console.error(err);
+        throw err;
+    }
 };
 
 

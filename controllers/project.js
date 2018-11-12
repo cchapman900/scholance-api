@@ -1,6 +1,7 @@
 "use strict";
 
 const helper = require('./_helper');
+const constants = require('../lib/constants');
 
 const Project = require('../models/project.js');
 const User = require('../models/user.js');
@@ -80,7 +81,7 @@ module.exports.createProject = (event, context, callback) => {
 
         // Authorize the authenticated user's scopes
         const scopes = helper.getScopes(event);
-        if (!helper.scopesContainScope(scopes, "manage:project")) {
+        if (!helper.scopesContainScope(scopes, constants.SCOPES.MANAGE_PROJECT)) {
             return callback(null, helper.createErrorResponse(403, 'You must be a business user to post a project'));
         }
 

@@ -1,4 +1,5 @@
 const Organization = require('../models/organization');
+const User = require('../models/user');
 
 const HTTPError = require('../lib/errors');
 
@@ -85,36 +86,23 @@ class OrganizationService {
 
 
     /**
-     * CREATE OR UPDATE USER
+     * CREATE ORGANIZATION
      *
      * @param request
      * @param {requestCallback} callback
      * @returns {requestCallback}
      */
-    createOrUpdate(request, callback) {
+    create(request, callback) {
 
-        let user = new User({
-            _id: request.userId,
+        const organization = new Organization({
             name: request.name,
-            email: request.email,
-            about: request.about,
-            position: request.position,
-            school: request.school,
-            academicFocus: request.academicFocus,
-            interests: request.interests,
-            linkedin: request.linkedin,
-            website: request.website,
-            twitter: request.twitter,
-            instagram: request.instagram,
+            domain: request.domain,
+            liaisons: request.liaisons
         });
 
-        if (request.userType) {
-            user.userType = request.userType
-        }
-
         // Validate the request
-        const errs = user.validateSync();
-        if (errs) throw new HTTPError(400, 'User data invalid');
+        const errs = organization.validateSync();
+        if (errs) throw new HTTPError(400, 'Organization data invalid');
 
         const db = this.dbService.connect();
         db.on('error', (err) => {
@@ -122,9 +110,16 @@ class OrganizationService {
             callback(err);
         });
         db.once('open', () => {
-            User.findByIdAndUpdate(user._id, request, {'upsert': true})
-                .then(() => {
-                    callback(null, user);
+            Organization.create(organization)
+                // TODO: Break this out
+                .then((organization) => {
+                    User.findByIdAndUpdate(organization.liaisons[0], {organization: organization._id})
+                        .then(() => {
+                            callback(null, organization);
+                        })
+                        .catch((err) => {
+                            callback(err);
+                        })
                 })
                 .catch((err) => {
                     console.error(err);
@@ -156,33 +151,6 @@ class OrganizationService {
                 .remove({_id: userId})
                 .then(() => {
                     callback(null);
-                })
-                .catch((err) => {
-                    console.error(err);
-                    callback(err);
-                })
-                .finally(() => {
-                    db.close();
-                });
-        });
-    };
-
-    /**
-     * @param {string} userId
-     * @param {{}} portfolioEntries
-     * @param {requestCallback} callback
-     * @returns {requestCallback}
-     */
-    updatePortfolioEntries(userId, portfolioEntries, callback) {
-        const db = this.dbService.connect();
-        db.on('error', (err) => {
-            console.error(err);
-            callback(err);
-        });
-        db.once('open', () => {
-            User.findByIdAndUpdate(userId, {portfolioEntries: portfolioEntries})
-                .then(() => {
-                    callback(portfolioEntries);
                 })
                 .catch((err) => {
                     console.error(err);
