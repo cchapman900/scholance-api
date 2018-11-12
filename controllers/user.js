@@ -1,10 +1,11 @@
 "use strict";
 
 const helper = require('./_helper');
+const constants = require('../lib/constants');
 
 const User = require('../models/user.js');
 
-const dbService = require('../utils/db');
+const dbService = require('../lib/db');
 
 const UserService = require('../services/user');
 const userService = new UserService(dbService);
@@ -88,7 +89,6 @@ module.exports.deleteUser = (event, context, callback) => {
         if (!authId) {
             return callback(null, helper.createErrorResponse(401, 'No authentication found'));
         }
-
         const userId = event.pathParameters.user_id;
 
         if (userId !== authId) return callback(null, helper.createErrorResponse(403, 'Trying to delete non-authenticated user'));
@@ -109,53 +109,42 @@ module.exports.deleteUser = (event, context, callback) => {
 
 
 /**
- * UPDATE COMPLETED PROJECT
+ * UPDATE COMPLETED PROJECT ENTRY
  *
  * @param event
  * @param context
  * @param callback
  */
 module.exports.updatePortfolioEntries = (event, context, callback) => {
+    try {
+        // Get the authenticated user id
+        const authId = helper.getAuthId(event);
+        if (!authId) {
+            return callback(null, helper.createErrorResponse(401, 'No authentication found'));
+        }
 
-    // Authenticated user information
-    const principalId = event.requestContext.authorizer.principalId;
-    const auth = principalId.split("|");
-    const authenticationProvider = auth[0];
-    let authenticatedUserId = auth[1];
-    if (authenticationProvider !== 'auth0') {
-        callback(null, helper.createErrorResponse(401, 'No Auth0 authentication found'));
+        // Authorize the authenticated user's scopes
+        const scopes = helper.getScopes(event);
+        if (!helper.scopesContainScope(scopes, constants.SCOPES.MANAGE_ENTRY)) {
+            return callback(null, helper.createErrorResponse(403, 'You must be a student user to update a portfolio entry'));
+        }
+
+        const data = JSON.parse(event.body);
+        const portfolioEntries = data.portfolioEntries;
+
+        userService.updatePortfolioEntries(userId, portfolioEntries, (err, portfolioEntries) => {
+            if (err) {
+                console.error(err);
+                callback(null, helper.createErrorResponse(err.statusCode, err.message));
+            }
+            callback(null, helper.createSuccessResponse(200, portfolioEntries));
+        });
+
     }
-
-    // TODO: Add authorization
-
-    const user_id = event.pathParameters.user_id;
-
-    mongoose.connect(mongoString, mongooseOptions);
-    let db = mongoose.connection;
-    db.on('error', () => {
-        db.close();
-        callback(null, helper.createErrorResponse(503, 'There was an error connecting to the database'));
-    });
-
-    const data = JSON.parse(event.body);
-
-    let portfolioEntries = data.portfolioEntries;
-
-    db.once('open', () => {
-        // User.save() could be used too
-        User.findByIdAndUpdate(user_id, {portfolioEntries: portfolioEntries})
-            .then(() => {
-                db.close();
-                callback(null, helper.createSuccessResponse(200, portfolioEntries));
-            })
-            .catch((err) => {
-                db.close();
-                callback(err, helper.createErrorResponse(err.statusCode, err.message));
-            })
-            .finally(() => {
-                db.close();
-            });
-    });
+    catch(err) {
+        console.error(err);
+        throw err;
+    }
 };
 
 

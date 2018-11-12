@@ -1,11 +1,11 @@
 const mongoose = require('mongoose');
 
-const HTTPError = require('../utils/errors');
+const HTTPError = require('../lib/errors');
 
 const Project = require('../models/project');
 const User = require('../models/user');
 
-const S3Util = require('../utils/s3');
+const S3Util = require('../lib/s3');
 
 class ProjectService {
 

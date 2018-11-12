@@ -5,7 +5,7 @@ const helper = require('./_helper');
 const Project = require('../models/project.js');
 const User = require('../models/user.js');
 
-const dbService = require('../utils/db');
+const dbService = require('../lib/db');
 
 const ProjectService = require('../services/project');
 const projectService = new ProjectService(dbService);

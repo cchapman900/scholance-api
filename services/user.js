@@ -1,6 +1,6 @@
 const User = require('../models/user');
 
-const HTTPError = require('../utils/errors');
+const HTTPError = require('../lib/errors');
 
 class UserService {
 
@@ -152,6 +152,33 @@ class UserService {
                 .remove({_id: userId})
                 .then(() => {
                     callback(null);
+                })
+                .catch((err) => {
+                    console.error(err);
+                    callback(err);
+                })
+                .finally(() => {
+                    db.close();
+                });
+        });
+    };
+
+    /**
+     * @param {string} userId
+     * @param {{}} portfolioEntries
+     * @param {requestCallback} callback
+     * @returns {requestCallback}
+     */
+    updatePortfolioEntries(userId, portfolioEntries, callback) {
+        const db = this.dbService.connect();
+        db.on('error', (err) => {
+            console.error(err);
+            callback(err);
+        });
+        db.once('open', () => {
+            User.findByIdAndUpdate(userId, {portfolioEntries: portfolioEntries})
+                .then(() => {
+                    callback(portfolioEntries);
                 })
                 .catch((err) => {
                     console.error(err);
