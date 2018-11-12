@@ -13,7 +13,10 @@ class UserService {
         this.dbService = dbService;
     }
 
+
     /**
+     * GET USER
+     *
      * @param {string} user_id
      * @param {requestCallback} callback
      * @returns {requestCallback}
@@ -78,6 +81,8 @@ class UserService {
 
 
     /**
+     * CREATE OR UPDATE USER
+     *
      * @param request
      * @param {requestCallback} callback
      * @returns {requestCallback}
@@ -120,6 +125,37 @@ class UserService {
                 .catch((err) => {
                     console.error(err);
                     throw new HTTPError(err.statusCode, err.message);
+                })
+                .finally(() => {
+                    db.close();
+                });
+        });
+    };
+
+
+    /**
+     * DELETE USER
+     *
+     * @param {string} userId
+     * @param {requestCallback} callback
+     * @returns {requestCallback}
+     */
+    delete(userId, callback) {
+
+        const db = this.dbService.connect();
+        db.on('error', (err) => {
+            console.error(err);
+            callback(err);
+        });
+        db.once('open', () => {
+            User
+                .remove({_id: userId})
+                .then(() => {
+                    callback(null);
+                })
+                .catch((err) => {
+                    console.error(err);
+                    callback(err);
                 })
                 .finally(() => {
                     db.close();

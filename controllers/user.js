@@ -82,29 +82,29 @@ module.exports.createOrUpdateUser = (event, context, callback) => {
  * @param callback
  */
 module.exports.deleteUser = (event, context, callback) => {
-    mongoose.connect(mongoString);
-    const db = mongoose.connection;
-    const user_id = event.pathParameters.user_id;
+    try {
+        // Get the authenticated user id
+        const authId = helper.getAuthId(event);
+        if (!authId) {
+            return callback(null, helper.createErrorResponse(401, 'No authentication found'));
+        }
 
-    if (!validator.isAlphanumeric(user_id)) {
-        callback(null, helper.createErrorResponse(400, 'Incorrect id'));
-        db.close();
-        return;
-    }
+        const userId = event.pathParameters.user_id;
 
-    db.once('open', () => {
-        User
-            .remove({_id: user_id})
-            .then(() => {
-                callback(null, helper.createSuccessResponse(204));
-            })
-            .catch((err) => {
+        if (userId !== authId) return callback(null, helper.createErrorResponse(403, 'Trying to delete non-authenticated user'));
+
+        userService.delete(userId, (err, user) => {
+            if (err) {
+                console.error(err);
                 callback(null, helper.createErrorResponse(err.statusCode, err.message));
-            })
-            .finally(() => {
-                db.close();
-            });
-    });
+            }
+            callback(null, helper.createSuccessResponse(204));
+        });
+    }
+    catch(err) {
+        console.error(err);
+        throw err;
+    }
 };
 
 
