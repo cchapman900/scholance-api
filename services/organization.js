@@ -1,8 +1,8 @@
-const User = require('../models/user');
+const Organization = require('../models/organization');
 
 const HTTPError = require('../lib/errors');
 
-class UserService {
+class OrganizationService {
 
     /**
      * Constructor
@@ -15,13 +15,11 @@ class UserService {
 
 
     /**
-     * GET USER
-     *
-     * @param {string} user_id
+     * @param {{domain: string}} query
      * @param {requestCallback} callback
      * @returns {requestCallback}
      */
-    get(user_id, callback) {
+    list(query, callback) {
 
         const db = this.dbService.connect();
         db.on('error', (err) => {
@@ -29,49 +27,55 @@ class UserService {
             callback(err);
         });
         db.once('open', () => {
-            User
-                .findOne({_id: user_id})
-                .populate({
-                    path: 'projects',
-                    select: '_id title organization liaison entries category status',
-                    populate: [
-                        {
-                            path: 'liaison',
-                            select: 'name'
-                        },
-                        {
-                            path: 'organization',
-                            select: 'name'
-                        },
-                        {
-                            path: 'entries.student',
-                            select: 'name'
-                        }
-                    ]
-                })
-                .populate({
-                    path: 'organization',
-                    select: 'name domain'
-                })
-                .populate({
-                    path: 'portfolioEntries.project.organization',
-                    select: 'name'
-                })
-                .populate({
-                    path: 'portfolioEntries.project.liaison',
-                    select: 'name'
-                })
-                .then((user) => {
-                    if (!user) {
-                        console.log('User ' + user_id + ' not found');
-                        return callback({statusCode: 404, message: 'User not found'})
-                    } else {
-                        return callback(null, user);
-                    }
+            let search = Organization
+                .find();
+
+            if (query.domain) {
+                search.find({domain: query.domain})
+            }
+
+            search
+                .then((organizations) => {
+                    callback(null, organizations);
                 })
                 .catch((err) => {
                     console.error(err);
-                    return callback(err);
+                    callback(err);
+                })
+                .finally(() => {
+                    db.close();
+                });
+        });
+    };
+
+
+    /**
+     * GET ORGANIZATION
+     *
+     * @param {string} organizationId
+     * @param {requestCallback} callback
+     * @returns {requestCallback}
+     */
+    get(organizationId, callback) {
+
+        const db = this.dbService.connect();
+        db.on('error', (err) => {
+            console.error(err);
+            callback(err);
+        });
+        db.once('open', () => {
+            Organization
+                .findOne({_id: organizationId})
+                .populate({path: 'liaisons', select: 'name photo position'})
+                .then((organization) => {
+                    if (!organization) {
+                        throw new HTTPError(404, 'organization not found');
+                    }
+                    callback(null, helper.createSuccessResponse(200, organization));
+                })
+                .catch((err) => {
+                    console.error(err);
+                    callback(err);
                 })
                 .finally(() => {
                     db.close();
@@ -219,4 +223,4 @@ class UserService {
 
 }
 
-module.exports = UserService;
+module.exports = OrganizationService;

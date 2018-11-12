@@ -23,9 +23,9 @@ package:
 
 functions:
 
-  #########
-  # PROJECT
-  #########
+  ###########
+  # PROJECTS
+  ###########
 
   listProjects:
     handler: controllers/project.listProjects
@@ -121,9 +121,9 @@ functions:
             identitySource: method.request.header.Authorization
             identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
 
-  ########################
+  #########################
   # SUPPLEMENTAL RESOURCES
-  ########################
+  #########################
 
   createSupplementalResource:
     handler: controllers/project.createSupplementalResource
@@ -164,9 +164,9 @@ functions:
             identitySource: method.request.header.Authorization
             identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
 
-  ######################
+  #######################
   # ENTRY & ENTRY ASSETS
-  ######################
+  #######################
 
   projectSignup:
     handler: controllers/project.projectSignup
@@ -285,9 +285,9 @@ functions:
             identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
 
 
-###############
+########
 # USERS
-###############
+########
 
   createOrUpdateUser:
     handler: controllers/user.createOrUpdateUser
@@ -337,12 +337,12 @@ functions:
             identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
 
 
-######################
+################
 # ORGANIZATIONS
-#####################
+################
 
   listOrganizations:
-    handler: controllers/user.listOrganizations
+    handler: controllers/organization.listOrganizations
     events:
       - http:
           path: organizations
@@ -350,7 +350,7 @@ functions:
           cors: true
 
   getOrganization:
-    handler: controllers/user.getOrganization
+    handler: controllers/organization.getOrganization
     events:
       - http:
           path: organizations/{organization_id}
@@ -358,7 +358,7 @@ functions:
           cors: true
 
   createOrganization:
-    handler: controllers/user.createOrganization
+    handler: controllers/organization.createOrganization
     events:
       - http:
           path: organizations
@@ -371,7 +371,7 @@ functions:
             identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
 
   updateOrganization:
-    handler: controllers/user.updateOrganization
+    handler: controllers/organization.updateOrganization
     events:
       - http:
           path: organizations/{organization_id}
@@ -384,7 +384,7 @@ functions:
             identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
 
   addLiaisonToOrganization:
-    handler: controllers/user.addLiaisonToOrganization
+    handler: controllers/organization.addLiaisonToOrganization
     events:
       - http:
           path: organizations/{organization_id}/users/{user_id}
@@ -397,7 +397,7 @@ functions:
             identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
 
   removeLiaisonFromOrganization:
-    handler: controllers/user.removeLiaisonFromOrganization
+    handler: controllers/organization.removeLiaisonFromOrganization
     events:
       - http:
           path: organizations/{organization_id}/users/{user_id}
