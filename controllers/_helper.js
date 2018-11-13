@@ -67,12 +67,23 @@ module.exports.getAuthId = (event) => {
     return auth.length === 2 ? auth[1] : null;
 };
 
+/**
+ * Get the authenticated user's id from the event
+ * @param {{requestContext: {authorizer: {principalId: string}}}} event
+ * @returns {string|null}
+ */
+module.exports.authorize = (event, scope) => {
+    const principalId = (((event.requestContext || {}).authorizer || {}).principalId || null);
+    const auth = principalId ? principalId.split("|") : [];
+    return auth.length === 2 ? auth[1] : null;
+};
+
 /**********************
  * JSDoc stuff
  **********************/
 
 /**
  * @callback requestCallback
- * @param {{number statusCode, string message}|null} err
+ * @param {{number statusCode, string message}|HTTPError|null} err
  * @param {*} [response]
  */

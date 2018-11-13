@@ -72,7 +72,7 @@ class OrganizationService {
                 .populate({path: 'liaisons', select: 'name photo position'})
                 .then((organization) => {
                     if (!organization) {
-                        throw new HTTPError(404, 'organization not found');
+                        callback(new HTTPError(404, 'organization not found'));
                     }
                     callback(null, organization);
                 })
@@ -104,7 +104,7 @@ class OrganizationService {
 
         // Validate the request
         const errs = organization.validateSync();
-        if (errs) throw new HTTPError(400, 'Organization data invalid');
+        if (errs) callback(new HTTPError(400, 'Organization data invalid'));
 
         const db = this.dbService.connect();
         db.on('error', (err) => {
@@ -124,8 +124,7 @@ class OrganizationService {
                         })
                 })
                 .catch((err) => {
-                    console.error(err);
-                    throw new HTTPError(err.statusCode, err.message);
+                    callback(new HTTPError(err.statusCode, err.message));
                 })
                 .finally(() => {
                     db.close();
@@ -173,8 +172,8 @@ class OrganizationService {
 
 
     /**
-     * @param userId
-     * @param organizationId
+     * @param {string} userId
+     * @param {string} organizationId
      * @param {requestCallback} callback
      * @returns {requestCallback}
      */
@@ -189,9 +188,9 @@ class OrganizationService {
             Organization.findById(organizationId)
                 .then((organization) => {
                     if (!organization) {
-                        throw new HTTPError(404, 'Organization not found');
+                        callback(new HTTPError(404, 'Organization not found'));
                     } else if (organization.liaisons.indexOf(userId) !== -1) {
-                        throw new HTTPError(409, 'User is already associated with this organization');
+                        callback(new HTTPError(409, 'User is already associated with this organization'));
                     }
                     organization.liaisons.push(mongoose.Types.ObjectId(userId));
                     return organization.save();
@@ -211,6 +210,45 @@ class OrganizationService {
         });
     };
 
+
+    /**
+     * @param {string} userId
+     * @param {string} organizationId
+     * @param {requestCallback} callback
+     * @returns {requestCallback}
+     */
+    removeLiaisonFromOrganization(userId, organizationId, callback) {
+
+        const db = this.dbService.connect();
+        db.on('error', (err) => {
+            console.error(err);
+            callback(err);
+        });
+        db.once('open', () => {
+            Organization.findById(organizationId)
+                .then((organization) => {
+                    if (!organization) {
+                        callback(new HTTPError(404, 'Organization not found'));
+                    } else if (organization.liaisons.indexOf(userId) === -1) {
+                        callback(new HTTPError(409, 'User is not currently associated with this organization'));
+                    }
+                    organization.liaisons.pull(mongoose.Types.ObjectId(userId));
+                    return organization.save();
+                })
+                .then(() => {
+                    return User.findByIdAndUpdate(userId, {'organization': null}).exec();
+                })
+                .then((user) => {
+                    return callback(null, user);
+                })
+                .catch((err) => {
+                    throw err;
+                })
+                .finally(() => {
+                    db.close();
+                });
+        });
+    };
 
 
     /*****************
