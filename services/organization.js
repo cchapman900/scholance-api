@@ -1,3 +1,5 @@
+const mongoose = require('mongoose');
+
 const Organization = require('../models/organization');
 const User = require('../models/user');
 
@@ -169,6 +171,45 @@ class OrganizationService {
         });
     };
 
+
+    /**
+     * @param userId
+     * @param organizationId
+     * @param {requestCallback} callback
+     * @returns {requestCallback}
+     */
+    addLiaisonToOrganization(userId, organizationId, callback) {
+
+        const db = this.dbService.connect();
+        db.on('error', (err) => {
+            console.error(err);
+            callback(err);
+        });
+        db.once('open', () => {
+            Organization.findById(organizationId)
+                .then((organization) => {
+                    if (!organization) {
+                        throw new HTTPError(404, 'Organization not found');
+                    } else if (organization.liaisons.indexOf(userId) !== -1) {
+                        throw new HTTPError(409, 'User is already associated with this organization');
+                    }
+                    organization.liaisons.push(mongoose.Types.ObjectId(userId));
+                    return organization.save();
+                })
+                .then(() => {
+                    return User.findByIdAndUpdate(userId, {'organization': organizationId}).exec();
+                })
+                .then((user) => {
+                    return callback(null, user);
+                })
+                .catch((err) => {
+                    throw err;
+                })
+                .finally(() => {
+                    db.close();
+                });
+        });
+    };
 
 
 

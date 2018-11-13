@@ -139,12 +139,7 @@ class ProjectService {
                 .save()
                 .then(() => {
                     // Add the project to the user's projects
-                    User.findByIdAndUpdate(project.liaison, {$push: {'projects': project._id}})
-                        // .then(() => {})
-                        .catch((err) => {
-                            console.error(err);
-                            return callback(err);
-                        })
+                    return User.findByIdAndUpdate(project.liaison, {$push: {'projects': project._id}}).exec()
                 })
                 .then(() => {
                     const s3 = new S3Util();

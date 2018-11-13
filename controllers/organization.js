@@ -158,60 +158,92 @@ module.exports.updateOrganization = (event, context, callback) => {
  * @param callback
  */
 module.exports.addLiaisonToOrganization = (event, context, callback) => {
-    mongoose.connect(mongoString);
-    const db = mongoose.connection;
-    // TODO: Add authentication
 
-    const organization_id = mongoose.Types.ObjectId(event.pathParameters.organization_id);
-    const user_id = mongoose.Types.ObjectId(event.pathParameters.user_id);
+    try {
+        // Get the authenticated user id
+        const authId = helper.getAuthId(event);
+        if (!authId) {
+            return callback(null, helper.createErrorResponse(401, 'No authentication found'));
+        }
 
-    db.once('open', () => {
-        User.findById(user_id)
-            .then((user) => {
-                if (user.userType !== 'business') {
-                    db.close();
-                    callback(null, helper.createErrorResponse(403, 'Must be a Business user to add organization'));
-                }
-                Organization.findById(organization_id)
-                    .then((organization) => {
-                        if (!organization) {
-                            callback(null, helper.createErrorResponse(404, 'Organization not found'));
-                        } else if (organization.liaisons.indexOf(user_id) !== -1) {
-                            db.close();
-                            callback(null, helper.createErrorResponse(409, 'User is already associated with this organization'));
-                        } else {
-                            organization.liaisons.push(mongoose.Types.ObjectId(user_id));
-                            organization.save((err) => {
-                                if (err) {
-                                    db.close();
-                                    callback(err, helper.createErrorResponse(500, 'Error saving organization'));
-                                } else {
-                                    console.log('test');
-                                    user.update({'organization': organization_id})
-                                        .then(() => {
-                                            db.close();
-                                            callback(null, helper.createSuccessResponse(200, organization));
-                                        })
-                                        .catch((err) => {
-                                            db.close();
-                                            callback(null, helper.createErrorResponse(500, 'Error saving user'));
-                                        })
+        // Authorize the authenticated user's scopes
+        const scopes = helper.getScopes(event);
+        if (!helper.scopesContainScope(scopes, constants.SCOPES.MANAGE_ORGANIZATION)) {
+            return callback(null, helper.createErrorResponse(403, 'You must be a business sign up to an organization'));
+        }
 
-                                }
-                            });
+        const organizationId = event.pathParameters.organization_id;
+        const userId = event.pathParameters.user_id;
 
-                        }
-                    })
-                    .catch((err) => {
-                        db.close();
-                        callback(err, helper.createErrorResponse(err.statusCode, err.message));
-                    })
-            })
-            .catch((err) => {
-                db.close();
-                callback(err, helper.createErrorResponse(err.statusCode, err.message));
-            })
-    });
+        organizationService.addLiaisonToOrganization(userId, organizationId, (err, organization) => {
+            if (err) {
+                console.error(err);
+                callback(null, helper.createErrorResponse(err.statusCode, err.message));
+            }
+            callback(null, helper.createSuccessResponse(200, organization));
+        });
+    }
+    catch(err) {
+        console.error(err);
+        throw err;
+    }
+
+
+
+    // mongoose.connect(mongoString);
+    // const db = mongoose.connection;
+    // // TODO: Add authentication
+    //
+    // const organization_id = mongoose.Types.ObjectId(event.pathParameters.organization_id);
+    // const user_id = mongoose.Types.ObjectId(event.pathParameters.user_id);
+    //
+    // db.once('open', () => {
+    //     User.findById(user_id)
+    //         .then((user) => {
+    //             if (user.userType !== 'business') {
+    //                 db.close();
+    //                 callback(null, helper.createErrorResponse(403, 'Must be a Business user to add organization'));
+    //             }
+    //             Organization.findById(organization_id)
+    //                 .then((organization) => {
+    //                     if (!organization) {
+    //                         callback(null, helper.createErrorResponse(404, 'Organization not found'));
+    //                     } else if (organization.liaisons.indexOf(user_id) !== -1) {
+    //                         db.close();
+    //                         callback(null, helper.createErrorResponse(409, 'User is already associated with this organization'));
+    //                     } else {
+    //                         organization.liaisons.push(mongoose.Types.ObjectId(user_id));
+    //                         organization.save((err) => {
+    //                             if (err) {
+    //                                 db.close();
+    //                                 callback(err, helper.createErrorResponse(500, 'Error saving organization'));
+    //                             } else {
+    //                                 console.log('test');
+    //                                 user.update({'organization': organization_id})
+    //                                     .then(() => {
+    //                                         db.close();
+    //                                         callback(null, helper.createSuccessResponse(200, organization));
+    //                                     })
+    //                                     .catch((err) => {
+    //                                         db.close();
+    //                                         callback(null, helper.createErrorResponse(500, 'Error saving user'));
+    //                                     })
+    //
+    //                             }
+    //                         });
+    //
+    //                     }
+    //                 })
+    //                 .catch((err) => {
+    //                     db.close();
+    //                     callback(err, helper.createErrorResponse(err.statusCode, err.message));
+    //                 })
+    //         })
+    //         .catch((err) => {
+    //             db.close();
+    //             callback(err, helper.createErrorResponse(err.statusCode, err.message));
+    //         })
+    // });
 };
 
 

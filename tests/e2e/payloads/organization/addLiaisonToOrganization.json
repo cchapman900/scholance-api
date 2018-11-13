@@ -8,7 +8,8 @@
     "foo": "bar"
   },
   "pathParameters": {
-    "proxy": "/path/to/resource"
+    "user_id": "5be7c37166533134d79c58da",
+    "organization_id": "5be902197318f5d113498b4a"
   },
   "stageVariables": {
     "baz": "qux"
@@ -37,7 +38,7 @@
     "accountId": "123456789012",
     "authorizer": {
       "principalId": "auth0|5be7c37166533134d79c58da",
-      "scope": "manage:project"
+      "scope": "manage:project manage:organization"
     },
     "resourceId": "123456",
     "stage": "prod",
