@@ -285,11 +285,6 @@ class ProjectService {
                     }
                 })
                 .then(() => {
-                    // if (!project.entries.id(selectedEntryId)) {
-                    //     throw new HTTPError(404, 'Entry does not exist on project')
-                    // }
-                    // project.entries.id(selectedEntryId).selected = true;
-                    // project.save();
                     return Project.findByIdAndUpdate(projectId, {status: status}, {new: true});
                 })
                 .then((project) => {
@@ -351,6 +346,10 @@ class ProjectService {
     }
 
 
+    ///////////////////////////
+    // SUPPLEMENTAL RESOURCES
+    ///////////////////////////
+
     /**
      * CREATE SUPPLEMENTAL RESOURCE
      *
@@ -393,7 +392,10 @@ class ProjectService {
         });
     };
 
+
     /**
+     * CREATE SUPPLEMENTAL RESOURCE FROM FILE
+     *
      * @param projectId
      * @param request
      * @param {requestCallback} callback
@@ -409,9 +411,10 @@ class ProjectService {
 
         s3Util.uploadFile(process.env.S3_PROJECTS_BUCKET, assetPath, file, (err, fileUri) => {
             if (err) {
-                throw new HTTPError(500, 'Could not upload to S3');
+                callback(new HTTPError(500, 'Could not upload to S3'));
             }
 
+            request.mediaType = file.mediaType
             request.uri = fileUri;
             const asset = assetUtil.createAssetFromRequest(request);
 
@@ -441,6 +444,68 @@ class ProjectService {
                         db.close();
                     })
             });
+        });
+    };
+
+
+    /**
+     * DELETE SUPPLEMENTAL RESOURCE
+     *
+     * @param projectId
+     * @param assetId
+     * @param {requestCallback} callback
+     * @returns {requestCallback}
+     */
+    deleteSupplementalResource(projectId, assetId, callback) {
+
+        const s3Util = new S3Util();
+
+        const db = this.dbService.connect();
+        db.on('error', (err) => {
+            console.error(err);
+            callback(err);
+        });
+        db.once('open', () => {
+            Project
+                .findById(projectId)
+                .then((project) => {
+                    console.log(project);
+                    if (!project) {
+                        callback(new HTTPError(404, 'Project not found'));
+                    }
+
+                    const assetIndex = project.supplementalResources.findIndex( asset => asset._id.toString() === assetId);
+
+                    if (assetIndex === -1) {
+                        return callback(new HTTPError(404, 'Asset not found'));
+                    }
+
+                    const asset = project.supplementalResources.splice(assetIndex, 1);
+                    console.log(asset);
+                    project.save()
+                        .then(() => {
+                            if (asset.mediaType === 'image') {
+                                s3Util.deleteFile(process.env.S3_PROJECTS_BUCKET, asset.uri, (err) => {
+                                    if (err) {
+                                        return callback(new HTTPError(500, 'Could not delete file from S3'));
+                                    }
+                                    callback(null);
+                                });
+                            } else {
+                                callback(null);
+                            }
+                        })
+                        .catch((err) => {
+                            callback(err);
+                        })
+                        .finally(() => {
+                            db.close();
+                        })
+                })
+                .catch((err) => {
+                    db.close();
+                    callback(err);
+                })
         });
     };
 
