@@ -169,7 +169,7 @@ functions:
   #######################
 
   projectSignup:
-    handler: controllers/project.projectSignup
+    handler: controllers/entry.projectSignup
     events:
       - http:
           path: projects/{project_id}/entries
@@ -182,7 +182,7 @@ functions:
             identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
 
   projectSignoff:
-    handler: controllers/project.projectSignoff
+    handler: controllers/entry.projectSignoff
     events:
       - http:
           path: projects/{project_id}/entries/{user_id}
@@ -195,7 +195,7 @@ functions:
             identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
 
   getEntry:
-    handler: controllers/project.getEntryByStudentId
+    handler: controllers/entry.getEntryByStudentId
     events:
       - http:
           path: projects/{project_id}/entries/{user_id}
@@ -208,7 +208,7 @@ functions:
             identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
 
   updateEntry:
-    handler: controllers/project.updateEntry
+    handler: controllers/entry.updateEntry
     events:
       - http:
           path: projects/{project_id}/entries/{user_id}
@@ -221,7 +221,7 @@ functions:
             identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
 
   createEntryAsset:
-    handler: controllers/project.createEntryAsset
+    handler: controllers/entry.createEntryAsset
     events:
       - http:
           path: projects/{project_id}/entries/{user_id}/assets
@@ -234,7 +234,7 @@ functions:
             identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
 
   createEntryAssetFile:
-    handler: controllers/project.createEntryAssetFile
+    handler: controllers/entry.createEntryAssetFile
     events:
       - http:
           path: projects/{project_id}/entries/{user_id}/assets/file
@@ -247,7 +247,7 @@ functions:
             identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
 
   deleteEntryAsset:
-    handler: controllers/project.deleteEntryAsset
+    handler: controllers/entry.deleteEntryAsset
     events:
       - http:
           path: projects/{project_id}/entries/{user_id}/assets/{asset_id}
@@ -258,8 +258,9 @@ functions:
             resultTtlInSeconds: 0
             identitySource: method.request.header.Authorization
             identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
+
   createEntryComment:
-    handler: controllers/project.createEntryComment
+    handler: controllers/entry.createEntryComment
     events:
       - http:
           path: projects/{project_id}/entries/{user_id}/comments
@@ -272,7 +273,7 @@ functions:
             identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
 
   deleteEntryComment:
-    handler: controllers/project.deleteEntryComment
+    handler: controllers/entry.deleteEntryComment
     events:
       - http:
           path: projects/{project_id}/entries/{user_id}/comments/{comment_id}
