@@ -72,29 +72,6 @@ module.exports.getAuthId = (event) => {
 };
 
 
-/**
- * Create an Asset
- * @param request
- * @returns {{name, mediaType: ECR.MediaType | * | mediaType | {type, required} | {type} | string}}
- */
-module.exports.createAsset = (request) => {
-    let asset = {
-        name: request.name,
-        mediaType: request.mediaType
-    };
-
-    if (request.uri) {
-        asset.uri = request.uri;
-    }
-
-    if (request.text) {
-        asset.text = request.text;
-    }
-
-    return asset;
-};
-
-
 /**********************
  * JSDoc stuff
  **********************/

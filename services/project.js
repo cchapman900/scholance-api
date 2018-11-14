@@ -5,6 +5,7 @@ const HTTPError = require('../lib/errors');
 const Project = require('../models/project');
 const User = require('../models/user');
 
+const AssetUtil = require('../lib/asset');
 const S3Util = require('../lib/s3');
 
 class ProjectService {
@@ -133,7 +134,6 @@ class ProjectService {
             return callback(err)
         });
         db.once('open', () => {
-
             // Create the project
             project
                 .save()
@@ -142,8 +142,9 @@ class ProjectService {
                     return User.findByIdAndUpdate(project.liaison, {$push: {'projects': project._id}}).exec()
                 })
                 .then(() => {
+                    // Prepare a folder to put the project assets in
                     const s3 = new S3Util();
-                    s3.createProjectS3Bucket(project._id.toString(), (err) => {
+                    s3.createFolder(process.env.S3_PROJECTS_BUCKET, project._id.toString(), (err) => {
                         if (err) {
                             console.error(err);
                             return callback({
@@ -283,7 +284,7 @@ class ProjectService {
                         return project;
                     }
                 })
-                .then((project) => {
+                .then(() => {
                     // if (!project.entries.id(selectedEntryId)) {
                     //     throw new HTTPError(404, 'Entry does not exist on project')
                     // }
@@ -354,11 +355,15 @@ class ProjectService {
      * CREATE SUPPLEMENTAL RESOURCE
      *
      * @param projectId
-     * @param asset
+     * @param request
      * @param {requestCallback} callback
      * @returns {requestCallback}
      */
-    createSupplementalResource(projectId, asset, callback) {
+    createSupplementalResource(projectId, request, callback) {
+
+        const assetUtil = new AssetUtil();
+
+        const asset = assetUtil.createAssetFromRequest(request);
 
         const db = this.dbService.connect();
         db.on('error', (err) => {
@@ -385,6 +390,57 @@ class ProjectService {
                 .finally(() => {
                     db.close();
                 })
+        });
+    };
+
+    /**
+     * @param projectId
+     * @param request
+     * @param {requestCallback} callback
+     * @returns {requestCallback}
+     */
+    createSupplementalResourceFromFile(projectId, request, callback) {
+
+        const assetUtil = new AssetUtil();
+        const s3Util = new S3Util();
+
+        const file = assetUtil.getFileFromRequest(request);
+        const assetPath = projectId + '/supplemental-resources';
+
+        s3Util.uploadFile(process.env.S3_PROJECTS_BUCKET, assetPath, file, (err, fileUri) => {
+            if (err) {
+                throw new HTTPError(500, 'Could not upload to S3');
+            }
+
+            request.uri = fileUri;
+            const asset = assetUtil.createAssetFromRequest(request);
+
+            const db = this.dbService.connect();
+            db.on('error', (err) => {
+                console.error(err);
+                callback(err);
+            });
+            db.once('open', () => {
+                Project
+                    .findById(projectId)
+                    .then((project) => {
+                        if (!project) {
+                            callback(new HTTPError(404, 'Project not found'));
+                        }
+                        return project.update({
+                            $push: {'supplementalResources': asset}
+                        })
+                    })
+                    .then(() => {
+                        callback(null, asset);
+                    })
+                    .catch((err) => {
+                        callback(err);
+                    })
+                    .finally(() => {
+                        db.close();
+                    })
+            });
         });
     };
 
