@@ -311,6 +311,12 @@ class ProjectService {
     };
 
 
+    /**
+     * UPDATE PORTFOLIO ENTRY
+     *
+     * @param project
+     * @param callback
+     */
     addCompletedProjectToStudentPortfolios(project, callback) {
         let itemsProcessed = 0;
         project.entries.forEach((entry, index, array) => {
@@ -343,6 +349,44 @@ class ProjectService {
         });
     }
 
+
+    /**
+     * CREATE SUPPLEMENTAL RESOURCE
+     *
+     * @param projectId
+     * @param asset
+     * @param {requestCallback} callback
+     * @returns {requestCallback}
+     */
+    createSupplementalResource(projectId, asset, callback) {
+
+        const db = this.dbService.connect();
+        db.on('error', (err) => {
+            console.error(err);
+            callback(err);
+        });
+        db.once('open', () => {
+            Project
+                .findById(projectId)
+                .then((project) => {
+                    if (!project) {
+                        callback(new HTTPError(404, 'Project not found'));
+                    }
+                    return project.update({
+                        $push: {'supplementalResources': asset}
+                    })
+                })
+                .then(() => {
+                    callback(null, asset);
+                })
+                .catch((err) => {
+                    callback(err);
+                })
+                .finally(() => {
+                    db.close();
+                })
+        });
+    };
 
 
     /*****************

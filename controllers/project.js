@@ -114,7 +114,6 @@ module.exports.createProject = (event, context, callback) => {
  * @param {requestCallback} callback
  */
 module.exports.updateProject = (event, context, callback) => {
-
     try {
         // Get the authenticated user id
         const authId = helper.getAuthId(event);
@@ -375,83 +374,123 @@ module.exports.deleteProjectComment = (event, context, callback) => {
  * @param callback
  */
 module.exports.createSupplementalResource = (event, context, callback) => {
-    // Authenticated user information
-    const principalId = event.requestContext.authorizer.principalId;
-    const auth = principalId.split("|");
-    const authenticationProvider = auth[0];
-    let authenticatedUserId = auth[1];
-    if (authenticationProvider !== 'auth0') {
-        callback(null, helper.createErrorResponse(401, 'No Auth0 authentication found'));
-        db.close();
+    try {
+        // Get the authenticated user id
+        const authId = helper.getAuthId(event);
+        if (!authId) {
+            console.log('Update Project: No authentication found');
+            return callback(null, helper.createErrorResponse(401, 'No authentication found'));
+        }
+
+        const projectId = event.pathParameters.project_id;
+
+        // Authorize the authenticated user's scopes
+        const scopes = helper.getScopes(event);
+        if (!helper.scopesContainScope(scopes, constants.SCOPES.MANAGE_PROJECT)) {
+            console.log('Update Project: Non-business User ' + authId + ' tried to add resource to project ' + projectId);
+            return callback(null, helper.createErrorResponse(403, 'You must be a business user to add a resource to a project'));
+        }
+
+        const request = JSON.parse(event.body);
+
+        let asset = helper.createAsset(request);
+
+        // TODO: If it is a link, add "http" if needed
+
+        // Create the project
+        projectService.createSupplementalResource(projectId, asset, (err, project) => {
+            if (err) {
+                console.error(err);
+                return callback(null, helper.createErrorResponse(err.statusCode, err.message));
+            }
+            return callback(null, helper.createSuccessResponse(200, project));
+        });
+
+    }
+    catch(err) {
+        console.error(err);
+        throw err;
     }
 
-    // Authorize the authenticated user's scopes
-    const scope = event.requestContext.authorizer.scope;
-    const scopes = scope.split(" ");
-    if (!scopes.includes("manage:project")) {
-        callback(null, helper.createErrorResponse(403, 'You must be a business user to add resources to a project'));
-    }
 
-    let project_id = event.pathParameters.project_id;
-    if (!mongoose.Types.ObjectId.isValid(project_id)) {
-        db.close();
-        callback(null, helper.createErrorResponse(400, 'Invalid ObjectId'));
-        return;
-    }
 
-    let data = JSON.parse(event.body);
+    // // Authenticated user information
+    // const principalId = event.requestContext.authorizer.principalId;
+    // const auth = principalId.split("|");
+    // const authenticationProvider = auth[0];
+    // let authenticatedUserId = auth[1];
+    // if (authenticationProvider !== 'auth0') {
+    //     callback(null, helper.createErrorResponse(401, 'No Auth0 authentication found'));
+    //     db.close();
+    // }
+    //
+    // // Authorize the authenticated user's scopes
+    // const scope = event.requestContext.authorizer.scope;
+    // const scopes = scope.split(" ");
+    // if (!scopes.includes("manage:project")) {
+    //     callback(null, helper.createErrorResponse(403, 'You must be a business user to add resources to a project'));
+    // }
 
-    let newAsset = {
-        name: data.name,
-        mediaType: data.mediaType
-    };
-
-    if (data.uri) {
-        newAsset.uri = data.uri;
-    }
-
-    if (data.text) {
-        newAsset.text = data.text;
-    }
+    // let project_id = event.pathParameters.project_id;
+    // if (!mongoose.Types.ObjectId.isValid(project_id)) {
+    //     db.close();
+    //     callback(null, helper.createErrorResponse(400, 'Invalid ObjectId'));
+    //     return;
+    // }
+    //
+    // let data = JSON.parse(event.body);
+    //
+    // let newAsset = {
+    //     name: data.name,
+    //     mediaType: data.mediaType
+    // };
+    //
+    // if (data.uri) {
+    //     newAsset.uri = data.uri;
+    // }
+    //
+    // if (data.text) {
+    //     newAsset.text = data.text;
+    // }
 
     // TODO: If it is a link, add "http" if needed
 
-    DBService.connect(mongoString, mongooseOptions);
-    let db = mongoose.connection;
-    db.on('error', () => {
-        db.close();
-        callback(null, helper.createErrorResponse(503, 'There was an error connecting to the database'));
-    });
-
-    db.once('open', () => {
-        Project
-            .findById(project_id)
-            .then((project) => {
-                if (!project) {
-                    db.close();
-                    callback(null, helper.createErrorResponse(404, 'Project not found'));
-                } else if(authenticatedUserId != project.liaison) {
-                    callback(null, helper.createErrorResponse(403, 'You cannot add a resource to a project that is not your own'));
-                    db.close();
-                } else {
-                    project.update({
-                        $push: {'supplementalResources': newAsset}
-                    })
-                        .then(() => {
-                            db.close();
-                            callback(null, helper.createSuccessResponse(201, newAsset));
-                        })
-                        .catch((err) => {
-                            db.close();
-                            callback(null, helper.createErrorResponse(err.statusCode, err.message));
-                        })
-                }
-            })
-            .catch((err) => {
-                db.close();
-                callback(null, helper.createErrorResponse(err.statusCode, err.message));
-            })
-    });
+    // DBService.connect(mongoString, mongooseOptions);
+    // let db = mongoose.connection;
+    // db.on('error', () => {
+    //     db.close();
+    //     callback(null, helper.createErrorResponse(503, 'There was an error connecting to the database'));
+    // });
+    //
+    // db.once('open', () => {
+    //     Project
+    //         .findById(project_id)
+    //         .then((project) => {
+    //             if (!project) {
+    //                 db.close();
+    //                 callback(null, helper.createErrorResponse(404, 'Project not found'));
+    //             } else if(authenticatedUserId != project.liaison) {
+    //                 callback(null, helper.createErrorResponse(403, 'You cannot add a resource to a project that is not your own'));
+    //                 db.close();
+    //             } else {
+    //                 project.update({
+    //                     $push: {'supplementalResources': newAsset}
+    //                 })
+    //                     .then(() => {
+    //                         db.close();
+    //                         callback(null, helper.createSuccessResponse(201, newAsset));
+    //                     })
+    //                     .catch((err) => {
+    //                         db.close();
+    //                         callback(null, helper.createErrorResponse(err.statusCode, err.message));
+    //                     })
+    //             }
+    //         })
+    //         .catch((err) => {
+    //             db.close();
+    //             callback(null, helper.createErrorResponse(err.statusCode, err.message));
+    //         })
+    // });
 };
 
 
@@ -463,6 +502,9 @@ module.exports.createSupplementalResource = (event, context, callback) => {
  * @param callback
  */
 module.exports.createSupplementalResourceFile = (event, context, callback) => {
+
+
+
     // Authenticated user information
     const principalId = event.requestContext.authorizer.principalId;
     const auth = principalId.split("|");
@@ -507,7 +549,7 @@ module.exports.createSupplementalResourceFile = (event, context, callback) => {
     let fileExt = fileMime.ext;
     let mediaType = fileMime.mime.split('/')[0];
 
-    let bucketName = 'dev-scholance-projects';
+    let bucketName = 'dev-scholance-projects'; // TODO: make this an env
     let filePath = project_id + '/supplemental-resources/';
     let fileName = name + '.' + fileExt;
     let fileFullName = filePath + fileName;

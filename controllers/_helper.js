@@ -16,6 +16,7 @@ module.exports.createSuccessResponse = (statusCode, body) => {
     };
 };
 
+
 /**
  * Create an Error Response
  *
@@ -34,6 +35,7 @@ module.exports.createErrorResponse = (statusCode, message) => {
     };
 };
 
+
 /**
  * Parse the scopes from the event
  *
@@ -44,6 +46,7 @@ module.exports.getScopes = (event) => {
     const scope = (((event.requestContext || {}).authorizer || {}).scope || null);
     return scope ? scope.split(" ") : [];
 };
+
 
 /**
  * Check if a specified scope is within the scopes array
@@ -56,6 +59,7 @@ module.exports.scopesContainScope = (scopes, scope) => {
     return scopes.includes(scope);
 };
 
+
 /**
  * Get the authenticated user's id from the event
  * @param {{requestContext: {authorizer: {principalId: string}}}} event
@@ -67,16 +71,29 @@ module.exports.getAuthId = (event) => {
     return auth.length === 2 ? auth[1] : null;
 };
 
+
 /**
- * Get the authenticated user's id from the event
- * @param {{requestContext: {authorizer: {principalId: string}}}} event
- * @returns {string|null}
+ * Create an Asset
+ * @param request
+ * @returns {{name, mediaType: ECR.MediaType | * | mediaType | {type, required} | {type} | string}}
  */
-module.exports.authorize = (event, scope) => {
-    const principalId = (((event.requestContext || {}).authorizer || {}).principalId || null);
-    const auth = principalId ? principalId.split("|") : [];
-    return auth.length === 2 ? auth[1] : null;
+module.exports.createAsset = (request) => {
+    let asset = {
+        name: request.name,
+        mediaType: request.mediaType
+    };
+
+    if (request.uri) {
+        asset.uri = request.uri;
+    }
+
+    if (request.text) {
+        asset.text = request.text;
+    }
+
+    return asset;
 };
+
 
 /**********************
  * JSDoc stuff
