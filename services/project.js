@@ -234,6 +234,7 @@ class ProjectService {
                     } else if (authId !== project.liaison) {
                         return callback({statusCode: 403, message: 'You can only delete your own project'});
                     } else {
+                        // TODO: Figure out what to do about S3 bucket
                         project
                             .remove({_id: projectId})
                             .then(() => {
@@ -289,11 +290,12 @@ class ProjectService {
                 })
                 .then((project) => {
                     if (status === 'complete') {
-                        // TODO THis is broken
+                        // TODO This is broken
                         this.addCompletedProjectToStudentPortfolios(project, (err, project) => {
                             console.log(project);
                             return callback(null, project);
                         });
+                        // TODO: Transfer over entry assets from student folder to project folder
                     }
                 })
                 .catch((err) => {

@@ -9,6 +9,7 @@ provider:
     MONGO_URI: ${file(./.env.yml):${self:provider.stage}.MONGO_URI}
     AUTH_URI: ${file(./.env.yml):${self:provider.stage}.AUTH_URI}
     S3_PROJECTS_BUCKET: ${file(./.env.yml):${self:provider.stage}.S3_PROJECTS_BUCKET}
+    S3_USERS_BUCKET: ${file(./.env.yml):${self:provider.stage}.S3_USERS_BUCKET}
   iamRoleStatements:
     - Effect: Allow
       Action:
