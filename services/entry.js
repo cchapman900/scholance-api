@@ -219,6 +219,113 @@ class EntryService {
     };
 
 
+    /**
+     * CREATE ENTRY ASSET
+     *
+     * @param {string} projectId
+     * @param {string} studentId
+     * @param {{}} request
+     * @param {requestCallback} callback
+     * @returns {requestCallback}
+     */
+    createAsset(projectId, studentId, request, callback) {
+
+        const assetUtil = new AssetUtil();
+
+        let asset;
+        try {
+            asset = assetUtil.createAssetFromRequest(request);
+        }
+        catch (err) {
+            return callback(new HTTPError(400, 'Invalid request input'))
+        }
+
+        const db = this.dbService.connect();
+        db.on('error', (err) => {
+            console.error(err);
+            callback(err);
+        });
+        db.once('open', () => {
+            let entryIndex;
+            Project
+                .findById(projectId)
+                .then((project) => {
+                    if (!project) {
+                        callback(new HTTPError(404, 'Project not found'));
+                    } else if (!project.entries.some(entry => entry.student.toString() === studentId)) {
+                        return callback(new HTTPError(404, 'User is not signed up for this project'));
+                    }
+                    entryIndex = project.entries.findIndex(entry => entry.student.toString() === studentId);
+                    project.entries[entryIndex].assets.push(asset);
+                    return project.save();
+                })
+                .then(() => {
+                    callback(null, asset);
+                })
+                .catch((err) => {
+                    callback(err);
+                })
+                .finally(() => {
+                    db.close();
+                })
+        });
+    }
+
+
+    /**
+     * @param {string} projectId
+     * @param {string} studentId
+     * @param {{}} request
+     * @param {requestCallback} callback
+     * @returns {requestCallback}
+     */
+    createAssetFromFile(projectId, studentId, request, callback) {
+
+        const assetUtil = new AssetUtil();
+        const s3Util = new S3Util();
+
+        const file = assetUtil.getFileFromRequest(request);
+        const assetPath = projectId + '/supplemental-resources';
+
+        s3Util.uploadFile(process.env.S3_PROJECTS_BUCKET, assetPath, file, (err, fileUri) => {
+            if (err) {
+                return callback(new HTTPError(500, 'Could not upload to S3'));
+            }
+
+            request.mediaType = file.mediaType;
+            request.uri = fileUri;
+            const asset = assetUtil.createAssetFromRequest(request);
+
+            const db = this.dbService.connect();
+            db.on('error', (err) => {
+                console.error(err);
+                callback(err);
+            });
+            db.once('open', () => {
+                Project
+                    .findById(projectId)
+                    .then((project) => {
+                        if (!project) {
+                            callback(new HTTPError(404, 'Project not found'));
+                        }
+                        return project.update({
+                            $push: {'supplementalResources': asset}
+                        })
+                    })
+                    .then(() => {
+                        callback(null, asset);
+                    })
+                    .catch((err) => {
+                        callback(err);
+                    })
+                    .finally(() => {
+                        db.close();
+                    })
+            });
+        });
+    };
+
+
     /*****************
      * FUNCTION TEMPLATE
      *****************/

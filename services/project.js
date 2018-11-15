@@ -413,7 +413,7 @@ class ProjectService {
 
         s3Util.uploadFile(process.env.S3_PROJECTS_BUCKET, assetPath, file, (err, fileUri) => {
             if (err) {
-                callback(new HTTPError(500, 'Could not upload to S3'));
+                return callback(new HTTPError(500, 'Could not upload to S3'));
             }
 
             request.mediaType = file.mediaType;
