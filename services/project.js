@@ -416,7 +416,7 @@ class ProjectService {
                 callback(new HTTPError(500, 'Could not upload to S3'));
             }
 
-            request.mediaType = file.mediaType
+            request.mediaType = file.mediaType;
             request.uri = fileUri;
             const asset = assetUtil.createAssetFromRequest(request);
 
@@ -468,6 +468,8 @@ class ProjectService {
             callback(err);
         });
         db.once('open', () => {
+            let assetIndex;
+            let asset;
             Project
                 .findById(projectId)
                 .then((project) => {
@@ -476,37 +478,30 @@ class ProjectService {
                         callback(new HTTPError(404, 'Project not found'));
                     }
 
-                    const assetIndex = project.supplementalResources.findIndex( asset => asset._id.toString() === assetId);
-
+                    assetIndex = project.supplementalResources.findIndex(asset => asset._id.toString() === assetId);
                     if (assetIndex === -1) {
                         return callback(new HTTPError(404, 'Asset not found'));
                     }
-
-                    const asset = project.supplementalResources.splice(assetIndex, 1);
-                    console.log(asset);
-                    project.save()
-                        .then(() => {
-                            if (asset.mediaType === 'image') {
-                                s3Util.deleteFile(process.env.S3_PROJECTS_BUCKET, asset.uri, (err) => {
-                                    if (err) {
-                                        return callback(new HTTPError(500, 'Could not delete file from S3'));
-                                    }
-                                    callback(null);
-                                });
-                            } else {
-                                callback(null);
+                    asset = project.supplementalResources.splice(assetIndex, 1);
+                    return project.save()
+                })
+                .then(() => {
+                    if (asset.mediaType === 'image') {
+                        s3Util.deleteFile(process.env.S3_PROJECTS_BUCKET, asset.uri, (err) => {
+                            if (err) {
+                                return callback(new HTTPError(500, 'Could not delete file from S3'));
                             }
-                        })
-                        .catch((err) => {
-                            callback(err);
-                        })
-                        .finally(() => {
-                            db.close();
-                        })
+                            callback(null);
+                        });
+                    } else {
+                        callback(null);
+                    }
                 })
                 .catch((err) => {
-                    db.close();
                     callback(err);
+                })
+                .finally(() => {
+                    db.close();
                 })
         });
     };

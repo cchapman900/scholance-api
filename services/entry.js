@@ -168,6 +168,57 @@ class EntryService {
     };
 
 
+    /**
+     * UPDATE ENTRY
+     *
+     * @param {string} projectId
+     * @param {string} studentId
+     * @param {{commentary: string, submissionStatus: string}} request
+     * @param {requestCallback} callback
+     * @returns {requestCallback}
+     */
+    update(projectId, studentId, request, callback) {
+
+        const entryUpdateRequest = {
+            commentary: request.commentary,
+            submissionStatus: request.submissionStatus
+        };
+
+        const db = this.dbService.connect();
+        db.on('error', (err) => {
+            console.error(err);
+            callback(err);
+        });
+        db.once('open', () => {
+            let entryIndex;
+            Project
+                .findById(projectId)
+                .then((project) => {
+                    if (!project) {
+                        return callback(new HTTPError(404, 'Project not found'));
+                    } else if (!project.entries.some(entry => entry.student.toString() === studentId)) {
+                        return callback(new HTTPError(404, 'User is not signed up for this project'));
+                    }
+                    entryIndex = project.entries.findIndex(entry => entry.student.toString() === studentId);
+                    project.entries[entryIndex].submissionStatus = entryUpdateRequest.submissionStatus;
+                    if (entryUpdateRequest.commentary) {
+                        project.entries[entryIndex].commentary = entryUpdateRequest.commentary;
+                    }
+                    return project.save();
+                })
+                .then((updatedProject) => {
+                    callback(null, updatedProject.entries[entryIndex]);
+                })
+                .catch((err) => {
+                    callback(err);
+                })
+                .finally(() => {
+                    db.close();
+                })
+        });
+    };
+
+
     /*****************
      * FUNCTION TEMPLATE
      *****************/
