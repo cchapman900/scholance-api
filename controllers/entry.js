@@ -75,7 +75,7 @@ module.exports.projectSignup = (event, context, callback) => {
                 console.error(err);
                 callback(null, helper.createErrorResponse(err.statusCode, err.message));
             }
-            callback(null, helper.createSuccessResponse(200, project));
+            callback(null, helper.createSuccessResponse(201, project));
         });
     }
     catch(err) {
@@ -97,12 +97,14 @@ module.exports.projectSignoff = (event, context, callback) => {
         // Get the authenticated user id
         const authId = helper.getAuthId(event);
         if (!authId) {
+            console.error('No authentication found');
             return callback(null, helper.createErrorResponse(401, 'No authentication found'));
         }
 
         // Authorize the authenticated user's scopes
         const scopes = helper.getScopes(event);
         if (!helper.scopesContainScope(scopes, constants.SCOPES.MANAGE_ENTRY)) {
+            console.error('Insufficient permissions to sign off of project: ' + scopes);
             return callback(null, helper.createErrorResponse(403, 'You must be a student user to sign off of this project'));
         }
 
@@ -110,8 +112,8 @@ module.exports.projectSignoff = (event, context, callback) => {
         const studentId = event.pathParameters.user_id;
 
         if (authId !== studentId) {
-            console.log(authId + ' tried unsuccessfully to sign off of project ' + projectId);
-            callback(null, helper.createErrorResponse(403, 'You do not have access to this project entry'));
+            console.error(authId + ' tried unsuccessfully to sign off of project ' + projectId);
+            return callback(null, helper.createErrorResponse(403, 'You do not have access to this project entry'));
         }
 
 
@@ -120,7 +122,7 @@ module.exports.projectSignoff = (event, context, callback) => {
                 console.error(err);
                 callback(null, helper.createErrorResponse(err.statusCode, err.message));
             }
-            callback(null, helper.createSuccessResponse(200, project));
+            callback(null, helper.createSuccessResponse(204, project));
         });
     }
     catch(err) {
@@ -225,90 +227,6 @@ module.exports.createEntryAsset = (event, context, callback) => {
         console.error(err);
         throw err;
     }
-
-
-
-
-
-
-    // // Authenticated user information
-    // const principalId = event.requestContext.authorizer.principalId;
-    // const auth = principalId.split("|");
-    // const authenticationProvider = auth[0];
-    // let authenticatedUserId = auth[1];
-    // if (authenticationProvider !== 'auth0') {
-    //     callback(null, helper.createErrorResponse(401, 'No Auth0 authentication found'));
-    // } else if (authenticatedUserId != event.pathParameters.user_id) {
-    //     callback(null, helper.createErrorResponse(403, 'You do not have access to this project entry'));
-    // }
-    //
-    // // Authorize the authenticated user's scopes
-    // const scope = event.requestContext.authorizer.scope;
-    // const scopes = scope.split(" ");
-    // if (!scopes.includes("manage:entry")) {
-    //     callback(null, helper.createErrorResponse(403, 'You must be a student to manage a project entry'));
-    // }
-    //
-    // let project_id = event.pathParameters.project_id;
-    // let user_id = event.pathParameters.user_id;
-    //
-    // if (!mongoose.Types.ObjectId.isValid(project_id) || !mongoose.Types.ObjectId.isValid(user_id)) {
-    //     callback(null, helper.createErrorResponse(400, 'Invalid ObjectId'));
-    //     return;
-    // }
-
-    // let data = JSON.parse(event.body);
-    //
-    // let newAsset = {
-    //     name: data.name,
-    //     mediaType: data.mediaType
-    // };
-    //
-    // if (data.uri) {
-    //     newAsset.uri = data.uri;
-    // }
-    //
-    // if (data.text) {
-    //     newAsset.text = data.text;
-    // }
-    //
-    //
-    // DBService.connect(mongoString, mongooseOptions);
-    // let db = mongoose.connection;
-    // db.on('error', () => {
-    //     db.close();
-    //     callback(null, helper.createErrorResponse(503, 'There was an error connecting to the database'));
-    // });
-    //
-    // db.once('open', () => {
-    //     Project
-    //         .findById(project_id)
-    //         .then((project) => {
-    //             if (!project) {
-    //                 db.close();
-    //                 callback(null, helper.createErrorResponse(404, 'Project not found'));
-    //             } else if (!project.entries.some(entry => entry.student == authenticatedUserId)) {
-    //                 db.close();
-    //                 callback(null, helper.createErrorResponse(404, 'User is not signed up for this project'));
-    //             } else {
-    //                 let entryIndex = project.entries.findIndex( entry => entry.student == authenticatedUserId);
-    //                 project.entries[entryIndex].assets.push(newAsset);
-    //                 project.save()
-    //                     .then((newProject) => {
-    //                         db.close();
-    //                         callback(null, helper.createSuccessResponse(201, newProject.entries[entryIndex].assets.slice(-1)[0]));
-    //                     })
-    //                     .catch((err) => {
-    //                         db.close();
-    //                         callback(null, helper.createErrorResponse(err.statusCode, err.message));
-    //                     });
-    //             }
-    //         })
-    //         .catch((err) => {
-    //             db.close();
-    //             callback(null, helper.createErrorResponse(err.statusCode, err.message));
-    //         })
-    // });
 };
 
 
@@ -320,117 +238,39 @@ module.exports.createEntryAsset = (event, context, callback) => {
  * @param callback
  */
 module.exports.createEntryAssetFile = (event, context, callback) => {
-    // Authenticated user information
-    const principalId = event.requestContext.authorizer.principalId;
-    const auth = principalId.split("|");
-    const authenticationProvider = auth[0];
-    let authenticatedUserId = auth[1];
-    if (authenticationProvider !== 'auth0') {
-        callback(null, helper.createErrorResponse(401, 'No Auth0 authentication found'));
-    } else if (authenticatedUserId != event.pathParameters.user_id) {
-        callback(null, helper.createErrorResponse(403, 'You do not have access to this project entry'));
-    }
-
-    // Authorize the authenticated user's scopes
-    const scope = event.requestContext.authorizer.scope;
-    const scopes = scope.split(" ");
-    if (!scopes.includes("manage:entry")) {
-        callback(null, helper.createErrorResponse(403, 'You must be a student to manage a project entry'));
-    }
-
-    let user_id = event.pathParameters.user_id;
-    let project_id = event.pathParameters.project_id;
-
-    if (!mongoose.Types.ObjectId.isValid(project_id)) {
-        db.close();
-        callback(null, helper.createErrorResponse(400, 'Invalid ObjectId'));
-        return;
-    }
-
-    let data = JSON.parse(event.body);
-    //get the request
-    let name = data.name;
-    let text = data.text;
-    let file = data.file.split(';');
-    console.log(file);
-    let base64String = file[1].replace('base64,', ''); // TODO: Clean this up
-    if (!name || !base64String) {
-        callback(null, helper.createErrorResponse(400, 'Invalid input'));
-    }
-    //pass the base64 string into a buffer
-    let buffer = new Buffer(base64String, 'base64');
-    let fileMime = fileType(buffer);
-    // Check if the base64 encoded string is a file
-    if (fileMime === null) {
-        callback(null, helper.createErrorResponse(400, 'The string supplied is not a file type'));
-    }
-
-    let fileExt = fileMime.ext;
-    let mediaType = fileMime.mime.split('/')[0];
-
-    let bucketName = 'dev-scholance-projects';
-
-    let filePath = project_id + '/entries/' + user_id + '/assets/';
-    let fileName = name + '.' + fileExt;
-    let fileFullName = filePath + fileName;
-
-    let params = {
-        Bucket: bucketName,
-        Key: fileFullName,
-        Body: buffer
-    };
-
-    let fileLink = 'https://s3.amazonaws.com/' + bucketName + '/' + fileFullName.replace(' ', '+');
-
-    s3.putObject(params, function(err, data) {
-        if (err) {
-            callback(null, helper.createErrorResponse(500, 'Could not upload to S3'));
+    try {
+        // Get the authenticated user id
+        const authId = helper.getAuthId(event);
+        if (!authId) {
+            console.log('Update Project: No authentication found');
+            return callback(null, helper.createErrorResponse(401, 'No authentication found'));
         }
 
-        DBService.connect(mongoString, mongooseOptions);
-        let db = mongoose.connection;
-        db.on('error', () => {
-            db.close();
-            callback(null, helper.createErrorResponse(503, 'There was an error connecting to the database'));
+        const projectId = event.pathParameters.project_id;
+
+        // Authorize the authenticated user's scopes
+        const scopes = helper.getScopes(event);
+        if (!helper.scopesContainScope(scopes, constants.SCOPES.MANAGE_ENTRY)) {
+            console.log('Update Project: Non-student User ' + authId + ' tried to add entry asset to project ' + projectId);
+            return callback(null, helper.createErrorResponse(403, 'You must be a business user to add a resource to a project'));
+        }
+
+        const request = JSON.parse(event.body);
+
+        // Create the project
+        entryService.createAssetFromFile(projectId, authId, request, (err, project) => {
+            if (err) {
+                console.error(err);
+                return callback(null, helper.createErrorResponse(err.statusCode, err.message));
+            }
+            return callback(null, helper.createSuccessResponse(200, project));
         });
 
-        db.once('open', () => {
-            Project
-                .findById(project_id)
-                .then((project) => {
-                    if (!project) {
-                        db.close();
-                        callback(null, helper.createErrorResponse(404, 'Project not found'));
-                    } else if (!project.entries.some(entry => entry.student == authenticatedUserId)) {
-                        db.close();
-                        callback(null, helper.createErrorResponse(404, 'User is not signed up for this project'));
-                    } else {
-                        console.log(mediaType);
-                        let newAsset = {
-                            name: name,
-                            mediaType: mediaType,
-                            uri: fileLink,
-                            text: text
-                        };
-                        let entryIndex = project.entries.findIndex( entry => entry.student == authenticatedUserId);
-                        project.entries[entryIndex].assets.push(newAsset);
-                        project.save()
-                            .then((newProject) => {
-                                db.close();
-                                callback(null, helper.createSuccessResponse(201, newAsset));
-                            })
-                            .catch((err) => {
-                                db.close();
-                                callback(null, helper.createErrorResponse(err.statusCode, err.message));
-                            });
-                    }
-                })
-                .catch((err) => {
-                    db.close();
-                    callback(null, helper.createErrorResponse(err.statusCode, err.message));
-                })
-        });
-    })
+    }
+    catch(err) {
+        console.error(err);
+        throw err;
+    }
 };
 
 

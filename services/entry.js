@@ -1,5 +1,3 @@
-const mongoose = require('mongoose');
-
 const HTTPError = require('../lib/errors');
 
 const Project = require('../models/project');
@@ -275,7 +273,7 @@ class EntryService {
     /**
      * @param {string} projectId
      * @param {string} studentId
-     * @param {{}} request
+     * @param {{name: string, file: string}} request
      * @param {requestCallback} callback
      * @returns {requestCallback}
      */
@@ -285,9 +283,9 @@ class EntryService {
         const s3Util = new S3Util();
 
         const file = assetUtil.getFileFromRequest(request);
-        const assetPath = projectId + '/supplemental-resources';
+        const assetPath = studentId + '/projects/' + projectId;
 
-        s3Util.uploadFile(process.env.S3_PROJECTS_BUCKET, assetPath, file, (err, fileUri) => {
+        s3Util.uploadFile(process.env.S3_USERS_BUCKET, assetPath, file, (err, fileUri) => {
             if (err) {
                 return callback(new HTTPError(500, 'Could not upload to S3'));
             }
@@ -306,11 +304,16 @@ class EntryService {
                     .findById(projectId)
                     .then((project) => {
                         if (!project) {
+                            db.close();
                             callback(new HTTPError(404, 'Project not found'));
+                        } else if (!project.entries.some(entry => entry.student.toString() === studentId)) {
+                            db.close();
+                            callback(new HTTPError(404, 'User is not signed up for this project'));
+                        } else {
+                            let entryIndex = project.entries.findIndex( entry => entry.student.toString() === studentId);
+                            project.entries[entryIndex].assets.push(asset);
+                            return project.save()
                         }
-                        return project.update({
-                            $push: {'supplementalResources': asset}
-                        })
                     })
                     .then(() => {
                         callback(null, asset);
