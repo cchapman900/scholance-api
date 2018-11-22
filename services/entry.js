@@ -273,7 +273,7 @@ class EntryService {
     /**
      * @param {string} projectId
      * @param {string} studentId
-     * @param {{name: string, file: string}} request
+     * @param {{name: string, file: string, mediaType: string, uri: string}} request
      * @param {requestCallback} callback
      * @returns {requestCallback}
      */
@@ -325,6 +325,63 @@ class EntryService {
                         db.close();
                     })
             });
+        });
+    };
+
+
+    /**
+     * DELETE AN ASSET
+     *
+     * @param {string} projectId
+     * @param {string} userId
+     * @param {string} assetId
+     * @param {requestCallback} callback
+     * @returns {requestCallback}
+     */
+    deleteAsset(projectId, userId, assetId, callback) {
+
+        const s3Util = new S3Util();
+
+        const db = this.dbService.connect();
+        db.on('error', (err) => {
+            console.error(err);
+            callback(err);
+        });
+        db.once('open', () => {
+            let asset = {};
+            Project
+                .findById(projectId)
+                .then((project) => {
+                    if (!project) {
+                        return callback(new HTTPError(404, 'Project not found'));
+                    } else if (!project.entries.some(entry => entry.student.toString() === userId)) {
+                        return callback(new HTTPError(404, 'User is not signed up for this project'));
+                    } else {
+                        let entryIndex = project.entries.findIndex(entry => entry.student.toString() === userId);
+                        let entry = project.entries[entryIndex];
+                        let assetIndex = entry.assets.findIndex(asset => asset._id.toString() === assetId);
+                        asset = project.entries[entryIndex].assets.splice(assetIndex, 1);
+                        return project.save();
+                    }
+                })
+                .then(() => {
+                    if (asset.mediaType === 'image') {
+                        s3Util.deleteFile(process.env.S3_USERS_BUCKET, asset.uri, function(err, data) {
+                            if (err) {
+                                return callback(new HTTPError(500, 'Could not delete file from S3'));
+                            }
+                            return callback(null);
+                        });
+                    } else {
+                        return callback(null);
+                    }
+                })
+                .catch((err) => {
+                    return callback(err);
+                })
+                .finally(() => {
+                    db.close();
+                })
         });
     };
 

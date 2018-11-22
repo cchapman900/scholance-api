@@ -258,12 +258,12 @@ module.exports.createEntryAssetFile = (event, context, callback) => {
         const request = JSON.parse(event.body);
 
         // Create the project
-        entryService.createAssetFromFile(projectId, authId, request, (err, project) => {
+        entryService.createAssetFromFile(projectId, authId, request, (err, asset) => {
             if (err) {
                 console.error(err);
                 return callback(null, helper.createErrorResponse(err.statusCode, err.message));
             }
-            return callback(null, helper.createSuccessResponse(200, project));
+            return callback(null, helper.createSuccessResponse(200, asset));
         });
 
     }
@@ -282,94 +282,40 @@ module.exports.createEntryAssetFile = (event, context, callback) => {
  * @param callback
  */
 module.exports.deleteEntryAsset = (event, context, callback) => {
-    // Authenticated user information
-    const principalId = event.requestContext.authorizer.principalId;
-    const auth = principalId.split("|");
-    const authenticationProvider = auth[0];
-    let authenticatedUserId = auth[1];
-    if (authenticationProvider !== 'auth0') {
-        callback(null, helper.createErrorResponse(401, 'No Auth0 authentication found'));
-        db.close();
-    } else if (authenticatedUserId != event.pathParameters.user_id) {
-        callback(null, helper.createErrorResponse(403, 'You do not have access to this project entry'));
-        db.close();
+
+    try {
+        // Get the authenticated user id
+        const authId = helper.getAuthId(event);
+        if (!authId) {
+            console.log('Update Project: No authentication found');
+            return callback(null, helper.createErrorResponse(401, 'No authentication found'));
+        }
+
+        const projectId = event.pathParameters.project_id;
+        const userId = event.pathParameters.user_id;
+        const assetId = event.pathParameters.asset_id;
+
+        // Authorize the authenticated user's scopes
+        const scopes = helper.getScopes(event);
+        if (!helper.scopesContainScope(scopes, constants.SCOPES.MANAGE_ENTRY)) {
+            console.log('Update Project: Non-student User ' + authId + ' tried to add entry asset to project ' + projectId);
+            return callback(null, helper.createErrorResponse(403, 'You must be a student user to add a resource to a project entry'));
+        }
+
+        // Create the project
+        entryService.deleteAsset(projectId, userId, assetId, (err, project) => {
+            if (err) {
+                console.error(err);
+                return callback(null, helper.createErrorResponse(err.statusCode, err.message));
+            }
+            return callback(null, helper.createSuccessResponse(204, project));
+        });
+    }
+    catch(err) {
+        console.error(err);
+        throw err;
     }
 
-    // Authorize the authenticated user's scopes
-    const scope = event.requestContext.authorizer.scope;
-    const scopes = scope.split(" ");
-    if (!scopes.includes("manage:entry")) {
-        callback(null, helper.createErrorResponse(403, 'You must be a student to manage a project entry'));
-    }
-
-    let project_id = event.pathParameters.project_id;
-    let asset_id = event.pathParameters.asset_id;
-
-    if (!mongoose.Types.ObjectId.isValid(project_id)
-        || !mongoose.Types.ObjectId.isValid(authenticatedUserId)
-        || !mongoose.Types.ObjectId.isValid(asset_id)
-    ) {
-        db.close();
-        callback(null, helper.createErrorResponse(400, 'Invalid ObjectId'));
-        return;
-    }
-
-    DBService.connect(mongoString, mongooseOptions);
-    let db = mongoose.connection;
-    db.on('error', () => {
-        db.close();
-        callback(null, helper.createErrorResponse(503, 'There was an error connecting to the database'));
-    });
-
-    db.once('open', () => {
-        Project
-            .findById(project_id)
-            .then((project) => {
-                if (!project) {
-                    db.close();
-                    callback(null, helper.createErrorResponse(404, 'Project not found'));
-                } else if (!project.entries.some(entry => entry.student == authenticatedUserId)) {
-                    db.close();
-                    callback(null, helper.createErrorResponse(404, 'User is not signed up for this project'));
-                } else {
-                    let entryIndex = project.entries.findIndex( entry => entry.student == authenticatedUserId);
-                    let entry = project.entries[entryIndex];
-                    let assetIndex = entry.assets.findIndex( asset => asset._id == asset_id);
-                    let asset = project.entries[entryIndex].assets.splice(assetIndex, 1);
-                    project.save()
-                        .then(() => {
-                            if (asset.mediaType === 'image') {
-                                let bucketName = 'dev-scholance-projects';
-
-                                let params = {
-                                    Bucket: bucketName,
-                                    Key: asset.uri
-                                };
-
-                                console.log('738');
-
-                                s3.deleteObject(params, function(err, data) {
-                                    if (err) {
-                                        callback(null, helper.createErrorResponse(500, 'Could not delete file from S3'));
-                                    }
-                                    callback(null, helper.createSuccessResponse(204));
-                                });
-                            } else {
-                                callback(null, helper.createSuccessResponse(204));
-                            }
-                            db.close();
-                        })
-                        .catch((err) => {
-                            db.close();
-                            callback(null, helper.createErrorResponse(err.statusCode, err.message));
-                        });
-                }
-            })
-            .catch((err) => {
-                db.close();
-                callback(null, helper.createErrorResponse(err.statusCode, err.message));
-            })
-    });
 
 
     /*****************
