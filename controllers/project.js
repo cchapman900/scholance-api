@@ -233,133 +233,6 @@ module.exports.updateProjectStatus = (event, context, callback) => {
 };
 
 
-/**
- * CREATE PROJECT COMMENT
- *
- * @param event
- * @param context
- * @param callback
- */
-module.exports.createProjectComment = (event, context, callback) => {
-    // Authenticated user information
-    const principalId = event.requestContext.authorizer.principalId;
-    const auth = principalId.split("|");
-    const authenticationProvider = auth[0];
-    let authenticatedUserId = auth[1];
-    if (authenticationProvider !== 'auth0') {
-        callback(null, helper.createErrorResponse(401, 'No Auth0 authentication found'));
-    }
-
-    let project_id = event.pathParameters.project_id;
-
-    if (!mongoose.Types.ObjectId.isValid(project_id)) {
-        callback(null, helper.createErrorResponse(400, 'Invalid ObjectId'));
-        return;
-    }
-
-    let data = JSON.parse(event.body);
-
-    let newComment = {
-        author: authenticatedUserId,
-        text: data.text
-    };
-
-    DBService.connect(mongoString, mongooseOptions);
-    let db = mongoose.connection;
-    db.on('error', () => {
-        db.close();
-        callback(null, helper.createErrorResponse(503, 'There was an error connecting to the database'));
-    });
-
-    db.once('open', () => {
-        Project
-            .findById(project_id)
-            .then((project) => {
-                if (!project) {
-                    db.close();
-                    callback(null, helper.createErrorResponse(404, 'Project not found'));
-                } else {
-                    project.comments.push(newComment);
-                    project.save()
-                        .then((newProject) => {
-                            db.close();
-                            callback(null, helper.createSuccessResponse(201, newProject));
-                        })
-                        .catch((err) => {
-                            db.close();
-                            callback(null, helper.createErrorResponse(err.statusCode, err.message));
-                        });
-                }
-            })
-            .catch((err) => {
-                db.close();
-                callback(null, helper.createErrorResponse(err.statusCode, err.message));
-            })
-    });
-};
-
-
-/**
- * DELETE PROJECT COMMENT
- *
- * @param event
- * @param context
- * @param callback
- */
-module.exports.deleteProjectComment = (event, context, callback) => {
-    // Authenticated user information
-    const principalId = event.requestContext.authorizer.principalId;
-    const auth = principalId.split("|");
-    const authenticationProvider = auth[0];
-    let authenticatedUserId = auth[1];
-    if (authenticationProvider !== 'auth0') {
-        callback(null, helper.createErrorResponse(401, 'No Auth0 authentication found'));
-    }
-
-    let project_id = event.pathParameters.project_id;
-    let comment_id = event.pathParameters.comment_id;
-
-    if (!mongoose.Types.ObjectId.isValid(project_id) || !mongoose.Types.ObjectId.isValid(comment_id)) {
-        callback(null, helper.createErrorResponse(400, 'Invalid ObjectId'));
-        return;
-    }
-
-    DBService.connect(mongoString, mongooseOptions);
-    let db = mongoose.connection;
-    db.on('error', () => {
-        db.close();
-        callback(null, helper.createErrorResponse(503, 'There was an error connecting to the database'));
-    });
-
-    db.once('open', () => {
-        Project
-            .findById(project_id)
-            .then((project) => {
-                if (!project) {
-                    db.close();
-                    callback(null, helper.createErrorResponse(404, 'Project not found'));
-                } else {
-                    let commentIndex = project.comments.findIndex( comment => comment._id == comment_id);
-                    project.comments.splice(commentIndex, 1);
-                    project.save()
-                        .then((newProject) => {
-                            db.close();
-                            callback(null, helper.createSuccessResponse(204));
-                        })
-                        .catch((err) => {
-                            db.close();
-                            callback(null, helper.createErrorResponse(err.statusCode, err.message));
-                        });
-                }
-            })
-            .catch((err) => {
-                db.close();
-                callback(null, helper.createErrorResponse(err.statusCode, err.message));
-            })
-    });
-};
-
-
 
 /*************************
  * SUPPLEMENTAL RESOURCE
@@ -494,4 +367,172 @@ module.exports.deleteSupplementalResource = (event, context, callback) => {
         console.error(err);
         throw err;
     }
+};
+
+
+
+/*************************
+ * COMMENTS
+ *************************/
+
+
+/**
+ * CREATE PROJECT COMMENT
+ *
+ * @param event
+ * @param context
+ * @param callback
+ */
+module.exports.createProjectComment = (event, context, callback) => {
+
+    try {
+        // Get the authenticated user id
+        const authId = helper.getAuthId(event);
+        if (!authId) {
+            console.log('Update Project: No authentication found');
+            return callback(null, helper.createErrorResponse(401, 'No authentication found'));
+        }
+
+        const projectId = event.pathParameters.project_id;
+
+        let request = JSON.parse(event.body);
+        request.author = authId;
+
+        // Create the project
+        projectService.createProjectComment(projectId, request, (err, project) => {
+            if (err) {
+                console.error(err);
+                return callback(null, helper.createErrorResponse(err.statusCode, err.message));
+            }
+            return callback(null, helper.createSuccessResponse(201, project));
+        });
+
+    }
+    catch(err) {
+        console.error(err);
+        throw err;
+    }
+
+
+
+
+
+
+
+    // // Authenticated user information
+    // const principalId = event.requestContext.authorizer.principalId;
+    // const auth = principalId.split("|");
+    // const authenticationProvider = auth[0];
+    // let authenticatedUserId = auth[1];
+    // if (authenticationProvider !== 'auth0') {
+    //     callback(null, helper.createErrorResponse(401, 'No Auth0 authentication found'));
+    // }
+
+    // let project_id = event.pathParameters.project_id;
+    //
+    // if (!mongoose.Types.ObjectId.isValid(project_id)) {
+    //     callback(null, helper.createErrorResponse(400, 'Invalid ObjectId'));
+    //     return;
+    // }
+
+    // let data = JSON.parse(event.body);
+    //
+    // let newComment = {
+    //     author: authenticatedUserId,
+    //     text: data.text
+    // };
+
+    // DBService.connect(mongoString, mongooseOptions);
+    // let db = mongoose.connection;
+    // db.on('error', () => {
+    //     db.close();
+    //     callback(null, helper.createErrorResponse(503, 'There was an error connecting to the database'));
+    // });
+    //
+    // db.once('open', () => {
+    //     Project
+    //         .findById(project_id)
+    //         .then((project) => {
+    //             if (!project) {
+    //                 db.close();
+    //                 callback(null, helper.createErrorResponse(404, 'Project not found'));
+    //             } else {
+    //                 project.comments.push(newComment);
+    //                 project.save()
+    //                     .then((newProject) => {
+    //                         db.close();
+    //                         callback(null, helper.createSuccessResponse(201, newProject));
+    //                     })
+    //                     .catch((err) => {
+    //                         db.close();
+    //                         callback(null, helper.createErrorResponse(err.statusCode, err.message));
+    //                     });
+    //             }
+    //         })
+    //         .catch((err) => {
+    //             db.close();
+    //             callback(null, helper.createErrorResponse(err.statusCode, err.message));
+    //         })
+    // });
+};
+
+
+/**
+ * DELETE PROJECT COMMENT
+ *
+ * @param event
+ * @param context
+ * @param callback
+ */
+module.exports.deleteProjectComment = (event, context, callback) => {
+    // Authenticated user information
+    const principalId = event.requestContext.authorizer.principalId;
+    const auth = principalId.split("|");
+    const authenticationProvider = auth[0];
+    let authenticatedUserId = auth[1];
+    if (authenticationProvider !== 'auth0') {
+        callback(null, helper.createErrorResponse(401, 'No Auth0 authentication found'));
+    }
+
+    let project_id = event.pathParameters.project_id;
+    let comment_id = event.pathParameters.comment_id;
+
+    if (!mongoose.Types.ObjectId.isValid(project_id) || !mongoose.Types.ObjectId.isValid(comment_id)) {
+        callback(null, helper.createErrorResponse(400, 'Invalid ObjectId'));
+        return;
+    }
+
+    DBService.connect(mongoString, mongooseOptions);
+    let db = mongoose.connection;
+    db.on('error', () => {
+        db.close();
+        callback(null, helper.createErrorResponse(503, 'There was an error connecting to the database'));
+    });
+
+    db.once('open', () => {
+        Project
+            .findById(project_id)
+            .then((project) => {
+                if (!project) {
+                    db.close();
+                    callback(null, helper.createErrorResponse(404, 'Project not found'));
+                } else {
+                    let commentIndex = project.comments.findIndex( comment => comment._id == comment_id);
+                    project.comments.splice(commentIndex, 1);
+                    project.save()
+                        .then((newProject) => {
+                            db.close();
+                            callback(null, helper.createSuccessResponse(204));
+                        })
+                        .catch((err) => {
+                            db.close();
+                            callback(null, helper.createErrorResponse(err.statusCode, err.message));
+                        });
+                }
+            })
+            .catch((err) => {
+                db.close();
+                callback(null, helper.createErrorResponse(err.statusCode, err.message));
+            })
+    });
 };

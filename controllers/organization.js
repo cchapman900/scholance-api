@@ -3,8 +3,6 @@
 const helper = require('./_helper');
 const constants = require('../lib/constants');
 
-const Organization = require('../models/organization.js');
-
 const dbService = require('../lib/db');
 
 const OrganizationService = require('../services/organization');

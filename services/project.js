@@ -348,9 +348,9 @@ class ProjectService {
     }
 
 
-    ///////////////////////////
-    // SUPPLEMENTAL RESOURCES
-    ///////////////////////////
+    /*************************
+     * SUPPLEMENTAL RESOURCES
+     *************************/
 
     /**
      * CREATE SUPPLEMENTAL RESOURCE
@@ -505,6 +505,56 @@ class ProjectService {
                 })
         });
     };
+
+
+    /***********
+     * COMMENTS
+     ***********/
+
+    /**
+     * CREATE PROJECT COMMENT
+     *
+     * @param {string} projectId
+     * @param {{author: string, text: string}} request
+     * @param {requestCallback} callback
+     * @returns {requestCallback}
+     */
+    createProjectComment(projectId, request, callback) {
+
+        let newComment = {
+            author: request.author,
+            text: request.text
+        };
+
+        const db = this.dbService.connect();
+        db.on('error', (err) => {
+            console.error(err);
+            callback(err);
+        });
+        db.once('open', () => {
+            Project
+                .findById(projectId)
+                .then((project) => {
+                    if (!project) {
+                        return callback(new HTTPError(404, 'Project not found'));
+                    } else {
+                        project.comments.push(newComment);
+                        return project.save()
+                    }
+                })
+                .then((project) => {
+                    callback(null, project);
+                })
+                .catch((err) => {
+                    console.error(err);
+                    callback(err);
+                })
+                .finally(() => {
+                    db.close();
+                })
+        });
+    };
+
 
 
     /*****************

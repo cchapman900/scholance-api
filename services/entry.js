@@ -271,6 +271,8 @@ class EntryService {
 
 
     /**
+     * CREATE ENTRY ASSET FROM FILE
+     *
      * @param {string} projectId
      * @param {string} studentId
      * @param {{name: string, file: string, mediaType: string, uri: string}} request
