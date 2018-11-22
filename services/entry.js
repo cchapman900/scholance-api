@@ -60,6 +60,8 @@ class EntryService {
 
 
     /**
+     * SIGN UP FOR A PROJECT
+     *
      * @param {string} projectId
      * @param {string} studentId
      * @param {requestCallback} callback
@@ -113,6 +115,8 @@ class EntryService {
 
 
     /**
+     * SIGN OFF OF A PROJECT
+     *
      * @param {string} projectId
      * @param {string} studentId
      * @param {requestCallback} callback
@@ -215,6 +219,11 @@ class EntryService {
                 })
         });
     };
+
+
+    /*********
+     * ASSETS
+     *********/
 
 
     /**
@@ -368,7 +377,7 @@ class EntryService {
                 })
                 .then(() => {
                     if (asset.mediaType === 'image') {
-                        s3Util.deleteFile(process.env.S3_USERS_BUCKET, asset.uri, function(err, data) {
+                        s3Util.deleteFile(process.env.S3_USERS_BUCKET, asset.uri, function(err) {
                             if (err) {
                                 return callback(new HTTPError(500, 'Could not delete file from S3'));
                             }
@@ -386,6 +395,102 @@ class EntryService {
                 })
         });
     };
+
+
+    /***********
+     * COMMENTS
+     ***********/
+
+
+    /**
+     * CREATE ENTRY COMMENT
+     *
+     * @param {string} projectId
+     * @param {string} entryStudentId
+     * @param {{author: string, text: string}} request
+     * @param {requestCallback} callback
+     * @returns {requestCallback}
+     */
+    createEntryComment(projectId, entryStudentId, request, callback) {
+
+        const newComment = {
+            author: request.author,
+            text: request.text
+        };
+
+        const db = this.dbService.connect();
+        db.on('error', (err) => {
+            console.error(err);
+            callback(err);
+        });
+        db.once('open', () => {
+            Project
+                .findById(projectId)
+                .then((project) => {
+                    if (!project) {
+                        return callback(new HTTPError(404, 'Project not found'));
+                    } else {
+                        const entryIndex = project.entries.findIndex( entry => entry.student.toString() === entryStudentId);
+                        project.entries[entryIndex].comments.push(newComment);
+                        return project.save()
+                    }
+                })
+                .then((project) => {
+                    callback(null, project);
+                })
+                .catch((err) => {
+                    console.error(err);
+                    callback(err);
+                })
+                .finally(() => {
+                    db.close();
+                })
+        });
+    };
+
+
+    /**
+     * DELETE ENTRY COMMENT
+     *
+     * @param {string} projectId
+     * @param {string} entryStudentId
+     * @param {string} commentId
+     * @param {requestCallback} callback
+     * @returns {requestCallback}
+     */
+    deleteEntryComment(projectId, entryStudentId, commentId, callback) {
+
+        const db = this.dbService.connect();
+        db.on('error', (err) => {
+            console.error(err);
+            callback(err);
+        });
+        db.once('open', () => {
+            Project
+                .findById(projectId)
+                .then((project) => {
+                    if (!project) {
+                        return callback(new HTTPError(404, 'Project not found'));
+                    } else {
+                        const entryIndex = project.entries.findIndex( entry => entry.student.toString() === entryStudentId);
+                        const commentIndex = project.entries[entryIndex].comments.findIndex( comment => comment._id.toString() === commentId);
+                        project.entries[entryIndex].comments.splice(commentIndex, 1);
+                        return project.save()
+                    }
+                })
+                .then((project) => {
+                    callback(null, project);
+                })
+                .catch((err) => {
+                    console.error(err);
+                    callback(err);
+                })
+                .finally(() => {
+                    db.close();
+                })
+        });
+    };
+
 
 
     /*****************

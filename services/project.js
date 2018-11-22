@@ -352,6 +352,7 @@ class ProjectService {
      * SUPPLEMENTAL RESOURCES
      *************************/
 
+
     /**
      * CREATE SUPPLEMENTAL RESOURCE
      *
@@ -511,6 +512,7 @@ class ProjectService {
      * COMMENTS
      ***********/
 
+
     /**
      * CREATE PROJECT COMMENT
      *
@@ -521,7 +523,7 @@ class ProjectService {
      */
     createProjectComment(projectId, request, callback) {
 
-        let newComment = {
+        const newComment = {
             author: request.author,
             text: request.text
         };
