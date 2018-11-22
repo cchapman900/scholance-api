@@ -555,6 +555,46 @@ class ProjectService {
         });
     };
 
+    /**
+     * DELETE PROJECT COMMENT
+     *
+     * @param {string} projectId
+     * @param {string} commentId
+     * @param {requestCallback} callback
+     * @returns {requestCallback}
+     */
+    deleteProjectComment(projectId, commentId, callback) {
+
+        const db = this.dbService.connect();
+        db.on('error', (err) => {
+            console.error(err);
+            callback(err);
+        });
+        db.once('open', () => {
+            Project
+                .findById(projectId)
+                .then((project) => {
+                    if (!project) {
+                        return callback(new HTTPError(404, 'Project not found'));
+                    } else {
+                        let commentIndex = project.comments.findIndex( comment => comment._id.toString() === commentId);
+                        project.comments.splice(commentIndex, 1);
+                        return project.save()
+                    }
+                })
+                .then((project) => {
+                    callback(null, project);
+                })
+                .catch((err) => {
+                    console.error(err);
+                    callback(err);
+                })
+                .finally(() => {
+                    db.close();
+                })
+        });
+    };
+
 
 
     /*****************
