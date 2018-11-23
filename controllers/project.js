@@ -174,12 +174,12 @@ module.exports.deleteProject = (event, context, callback) => {
             return callback(null, helper.createErrorResponse(403, 'You must be a business user to delete a project'));
         }
 
-        projectService.delete(projectId, authId, (err, project) => {
+        projectService.delete(projectId, authId, (err) => {
             if (err) {
                 console.error(err);
                 return callback(null, helper.createErrorResponse(err.statusCode, err.message));
             }
-            return callback(null, helper.createSuccessResponse(200, project));
+            return callback(null, helper.createSuccessResponse(204));
         });
 
     }
@@ -270,7 +270,7 @@ module.exports.createSupplementalResource = (event, context, callback) => {
                 console.error(err);
                 return callback(null, helper.createErrorResponse(err.statusCode, err.message));
             }
-            return callback(null, helper.createSuccessResponse(200, project));
+            return callback(null, helper.createSuccessResponse(201, project));
         });
 
     }
@@ -314,7 +314,7 @@ module.exports.createSupplementalResourceFile = (event, context, callback) => {
                 console.error(err);
                 return callback(null, helper.createErrorResponse(err.statusCode, err.message));
             }
-            return callback(null, helper.createSuccessResponse(200, project));
+            return callback(null, helper.createSuccessResponse(201, project));
         });
 
     }

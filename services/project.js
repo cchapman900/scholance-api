@@ -194,7 +194,7 @@ class ProjectService {
             })
                 .then((project) => {
                     if (!project) {
-                        throw new HTTPError(404, 'could not find project');
+                        return callback(new HTTPError(404, 'could not find project'));
                     } else {
                         return callback(null, project);
                     }
@@ -230,20 +230,16 @@ class ProjectService {
                 .findById(projectId)
                 .then((project) => {
                     if (!project) {
-                        return callback({statusCode: 404, message: 'Project not found'});
-                    } else if (authId !== project.liaison) {
-                        return callback({statusCode: 403, message: 'You can only delete your own project'});
+                        return callback(new HTTPError(404, 'Project not found'));
+                    } else if (authId !== project.liaison.toString()) {
+                        return callback(new HTTPError(403, 'You can only delete your own project'));
                     } else {
                         // TODO: Figure out what to do about S3 bucket
-                        project
-                            .remove({_id: projectId})
-                            .then(() => {
-                                return callback(null, createSuccessResponse(204));
-                            })
-                            .catch((err) => {
-                                return callback(err);
-                            })
+                        return project.remove({_id: projectId})
                     }
+                })
+                .then(() => {
+                    return callback(null);
                 })
                 .catch((err) => {
                     console.error(err);
@@ -278,9 +274,9 @@ class ProjectService {
                 .findById(projectId)
                 .then((project) => {
                     if (!project) {
-                        throw new HTTPError(404, 'Project not found');
+                        return callback(new HTTPError(404, 'Project not found'));
                     } else if (authId !== project.liaison.toString()) {
-                        throw new HTTPError(403, 'You can only update your own project');
+                        return callback(new HTTPError(403, 'You can only update your own project'));
                     } else {
                         return project;
                     }
@@ -308,44 +304,6 @@ class ProjectService {
         });
     };
 
-
-    /**
-     * UPDATE PORTFOLIO ENTRY
-     *
-     * @param project
-     * @param callback
-     */
-    addCompletedProjectToStudentPortfolios(project, callback) {
-        let itemsProcessed = 0;
-        project.entries.forEach((entry, index, array) => {
-            User.findByIdAndUpdate(entry.student, {
-                $push: {
-                    portfolioEntries: {
-                        project: {
-                            title: project.title,
-                            organization: project.organization,
-                            liaison: project.liaison,
-                            summary: project.summary
-                        },
-                        submission: {
-                            assets: entry.assets,
-                            selected: entry.selected
-                        },
-                        visible: true
-                    }
-                }
-            })
-                .then(() => {
-                    itemsProcessed++;
-                    if (itemsProcessed === array.length) {
-                        return callback(null, project);
-                    }
-                })
-                .catch((err) => {
-                    throw err;
-                })
-        });
-    }
 
 
     /*************************
@@ -508,6 +466,7 @@ class ProjectService {
     };
 
 
+
     /***********
      * COMMENTS
      ***********/
@@ -641,6 +600,45 @@ class ProjectService {
         }
         return query;
     };
+
+
+    /**
+     * ADD COMPLETE PROJECT TO ALL STUDENT PORTFOLIOS
+     *
+     * @param project
+     * @param callback
+     */
+    addCompletedProjectToStudentPortfolios(project, callback) {
+        let itemsProcessed = 0;
+        project.entries.forEach((entry, index, array) => {
+            User.findByIdAndUpdate(entry.student, {
+                $push: {
+                    portfolioEntries: {
+                        project: {
+                            title: project.title,
+                            organization: project.organization,
+                            liaison: project.liaison,
+                            summary: project.summary
+                        },
+                        submission: {
+                            assets: entry.assets,
+                            selected: entry.selected
+                        },
+                        visible: true
+                    }
+                }
+            })
+                .then(() => {
+                    itemsProcessed++;
+                    if (itemsProcessed === array.length) {
+                        return callback(null, project);
+                    }
+                })
+                .catch((err) => {
+                    throw err;
+                })
+        });
+    }
 }
 
 

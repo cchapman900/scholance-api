@@ -16,7 +16,7 @@ const entryService = new EntryService(dbService);
 /**
  * GET ENTRY
  *
- * @param {{pathParameters: {project_id: string, student_id: string}, requestContext: {authorizer: {principalId: string}}}} event
+ * @param {{pathParameters: {project_id: string, user_id: string}, requestContext: {authorizer: {principalId: string}}}} event
  * @param context
  * @param callback
  */
@@ -29,7 +29,7 @@ module.exports.getEntryByStudentId = (event, context, callback) => {
         }
 
         const projectId = event.pathParameters.project_id;
-        const studentId = event.pathParameters.student_id;
+        const studentId = event.pathParameters.user_id;
 
 
         entryService.getByStudentId(projectId, studentId, (err, project) => {
@@ -154,7 +154,7 @@ module.exports.updateEntry = (event, context, callback) => {
         }
 
         const projectId = event.pathParameters.project_id;
-        const studentId = event.pathParameters.student_id;
+        const studentId = event.pathParameters.user_id;
 
         if (authId !== studentId) {
             console.log(authId + ' tried unsuccessfully to update entry for project ' + projectId);
@@ -206,11 +206,11 @@ module.exports.createEntryAsset = (event, context, callback) => {
         }
 
         const projectId = event.pathParameters.project_id;
-        const studentId = event.pathParameters.student_id;
+        const studentId = event.pathParameters.user_id;
 
         if (authId !== studentId) {
             console.log(authId + ' tried unsuccessfully to add entry asset for project ' + projectId);
-            callback(null, helper.createErrorResponse(403, 'You do not have access to this project entry'));
+            return callback(null, helper.createErrorResponse(403, 'You do not have access to this project entry'));
         }
 
         let request = JSON.parse(event.body);
@@ -220,7 +220,7 @@ module.exports.createEntryAsset = (event, context, callback) => {
                 console.error(err);
                 callback(null, helper.createErrorResponse(err.statusCode, err.message));
             }
-            callback(null, helper.createSuccessResponse(200, entry));
+            callback(null, helper.createSuccessResponse(201, entry));
         });
     }
     catch(err) {
@@ -263,7 +263,7 @@ module.exports.createEntryAssetFile = (event, context, callback) => {
                 console.error(err);
                 return callback(null, helper.createErrorResponse(err.statusCode, err.message));
             }
-            return callback(null, helper.createSuccessResponse(200, asset));
+            return callback(null, helper.createSuccessResponse(201, asset));
         });
 
     }
@@ -360,69 +360,6 @@ module.exports.createEntryComment = (event, context, callback) => {
         console.error(err);
         throw err;
     }
-
-
-
-
-    // // Authenticated user information
-    // const principalId = event.requestContext.authorizer.principalId;
-    // const auth = principalId.split("|");
-    // const authenticationProvider = auth[0];
-    // let authenticatedUserId = auth[1];
-    // if (authenticationProvider !== 'auth0') {
-    //     callback(null, helper.createErrorResponse(401, 'No Auth0 authentication found'));
-    // }
-    //
-    // let project_id = event.pathParameters.project_id;
-    // let user_id = event.pathParameters.user_id;
-    //
-    // if (!mongoose.Types.ObjectId.isValid(project_id) || !mongoose.Types.ObjectId.isValid(user_id)) {
-    //     db.close();
-    //     callback(null, helper.createErrorResponse(400, 'Invalid ObjectId'));
-    //     return;
-    // }
-    //
-    // let data = JSON.parse(event.body);
-    //
-    // let newComment = {
-    //     author: authenticatedUserId,
-    //     text: data.text
-    // };
-    //
-    // DBService.connect(mongoString, mongooseOptions);
-    // let db = mongoose.connection;
-    // db.on('error', () => {
-    //     db.close();
-    //     callback(null, helper.createErrorResponse(503, 'There was an error connecting to the database'));
-    // });
-    //
-    // db.once('open', () => {
-    //     Project
-    //         .findById(project_id)
-    //         .then((project) => {
-    //             if (!project) {
-    //                 db.close();
-    //                 callback(null, helper.createErrorResponse(404, 'Project not found'));
-    //             } else {
-    //                 let entryIndex = project.entries.findIndex( entry => entry.student == user_id);
-    //                 console.log(entryIndex);
-    //                 project.entries[entryIndex].comments.push(newComment);
-    //                 project.save()
-    //                     .then((newProject) => {
-    //                         db.close();
-    //                         callback(null, helper.createSuccessResponse(201, newProject.entries[entryIndex].comments.slice(-1)[0]));
-    //                     })
-    //                     .catch((err) => {
-    //                         db.close();
-    //                         callback(null, helper.createErrorResponse(err.statusCode, err.message));
-    //                     });
-    //             }
-    //         })
-    //         .catch((err) => {
-    //             db.close();
-    //             callback(null, helper.createErrorResponse(err.statusCode, err.message));
-    //         })
-    // });
 };
 
 
@@ -463,63 +400,4 @@ module.exports.deleteEntryComment = (event, context, callback) => {
         console.error(err);
         throw err;
     }
-
-
-
-
-
-    // // Authenticated user information
-    // const principalId = event.requestContext.authorizer.principalId;
-    // const auth = principalId.split("|");
-    // const authenticationProvider = auth[0];
-    // let authenticatedUserId = auth[1];
-    // if (authenticationProvider !== 'auth0') {
-    //     callback(null, helper.createErrorResponse(401, 'No Auth0 authentication found'));
-    // }
-    //
-    // let project_id = event.pathParameters.project_id;
-    // let user_id = event.pathParameters.user_id;
-    // let comment_id = event.pathParameters.comment_id;
-    //
-    // if (!mongoose.Types.ObjectId.isValid(project_id) || !mongoose.Types.ObjectId.isValid(user_id)) {
-    //     db.close();
-    //     callback(null, helper.createErrorResponse(400, 'Invalid ObjectId'));
-    //     return;
-    // }
-    //
-    // DBService.connect(mongoString, mongooseOptions);
-    // let db = mongoose.connection;
-    // db.on('error', () => {
-    //     db.close();
-    //     callback(null, helper.createErrorResponse(503, 'There was an error connecting to the database'));
-    // });
-    //
-    // db.once('open', () => {
-    //     Project
-    //         .findById(project_id)
-    //         .then((project) => {
-    //             if (!project) {
-    //                 db.close();
-    //                 callback(null, helper.createErrorResponse(404, 'Project not found'));
-    //             } else {
-    //                 let entryIndex = project.entries.findIndex( entry => entry.student == user_id);
-    //                 console.log(entryIndex);
-    //                 let commentIndex = project.entries[entryIndex].comments.findIndex( comment => comment._id == comment_id);
-    //                 project.entries[entryIndex].comments.splice(commentIndex, 1);
-    //                 project.save()
-    //                     .then((newProject) => {
-    //                         db.close();
-    //                         callback(null, helper.createSuccessResponse(204));
-    //                     })
-    //                     .catch((err) => {
-    //                         db.close();
-    //                         callback(null, helper.createErrorResponse(err.statusCode, err.message));
-    //                     });
-    //             }
-    //         })
-    //         .catch((err) => {
-    //             db.close();
-    //             callback(null, helper.createErrorResponse(err.statusCode, err.message));
-    //         })
-    // });
 };

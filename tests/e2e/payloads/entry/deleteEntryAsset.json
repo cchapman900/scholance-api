@@ -9,7 +9,8 @@
   },
   "pathParameters": {
     "project_id": "5bebad49ef91bd8629d30676",
-    "student_id": "5becdf7b734e847e73890e62"
+    "user_id": "5becdf7b734e847e73890e62",
+    "asset_id": "5bf7b77523ccc11698ce137e"
   },
   "stageVariables": {
     "baz": "qux"

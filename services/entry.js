@@ -39,8 +39,9 @@ class EntryService {
                 .populate({path: 'entries.comments.author', select: 'name'})
                 .then((project) => {
                     if (!project) {
-                        callback(new HTTPError(404, 'Project not found'));
+                        return callback(new HTTPError(404, 'Project not found'));
                     } else {
+                        console.log(project);
                         const entry = project.entries.find(entry => entry.student._id.toString() === studentId);
                         if (entry) {
                             callback(null, entry);
@@ -221,6 +222,7 @@ class EntryService {
     };
 
 
+
     /*********
      * ASSETS
      *********/
@@ -250,7 +252,7 @@ class EntryService {
         const db = this.dbService.connect();
         db.on('error', (err) => {
             console.error(err);
-            callback(err);
+            return callback(err);
         });
         db.once('open', () => {
             let entryIndex;
@@ -395,6 +397,7 @@ class EntryService {
                 })
         });
     };
+
 
 
     /***********

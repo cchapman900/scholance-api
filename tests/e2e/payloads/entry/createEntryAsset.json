@@ -1,5 +1,5 @@
 {
-  "body": "{\r\n\t\"name\": \"Test Image\",\r\n\t\"assetType\": \"text\",\r\n\t\"text\": \"Test text\"\r\n}",
+  "body": "{\r\n\t\"name\": \"Test Image\",\r\n\t\"mediaType\": \"text\",\r\n\t\"text\": \"Test text\"\r\n}",
   "resource": "/{proxy+}",
   "path": "/path/to/resource",
   "httpMethod": "POST",
@@ -9,7 +9,7 @@
   },
   "pathParameters": {
     "project_id": "5bebad49ef91bd8629d30676",
-    "student_id": "5becdf7b734e847e73890e62"
+    "user_id": "5becdf7b734e847e73890e62"
   },
   "stageVariables": {
     "baz": "qux"
