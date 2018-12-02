@@ -33,7 +33,7 @@ class UserService {
                 .findOne({_id: user_id})
                 .populate({
                     path: 'projects',
-                    select: '_id title organization liaison entries category status',
+                    select: '_id title organization liaison entries category status selectedStudentId',
                     populate: [
                         {
                             path: 'liaison',

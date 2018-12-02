@@ -59,7 +59,7 @@ class ProjectService {
      * @param {boolean} showFullEntries - Whether to show deeper information about a project's entries
      * @param {requestCallback} callback
      */
-    get(projectId, showFullEntries, callback) {
+    get(projectId, callback) {
 
         const db = this.dbService.connect();
         db.on('error', (err) => {
@@ -72,12 +72,8 @@ class ProjectService {
                 .populate({path: 'organization', select: 'name about'})
                 .populate({path: 'liaison', select: 'name'})
                 .populate({path: 'selectedEntry', select: 'name'})
-                .populate({path: 'comments.author', select: 'name'});
-
-            if (showFullEntries) {
-                query
-                    .populate({path: 'entries.student', select: 'name'})
-            }
+                .populate({path: 'comments.author', select: 'name'})
+                .populate({path: 'entries.student', select: 'name'});
 
             query
                 .then((project) => {
@@ -115,6 +111,7 @@ class ProjectService {
             liaison: request.liaison,
             organization: request.organization,
             fullDescription: request.fullDescription,
+            specs: request.specs,
             deliverables: request.deliverables,
             category: request.category,
             status: 'active'
@@ -258,11 +255,15 @@ class ProjectService {
      * @param {string} projectId
      * @param {string} authId
      * @param {string} status
-     * @param {string} selectedEntryId
+     * @param {string} selectedStudentId
      * @param {requestCallback} callback
      * @returns {requestCallback}
      */
-    updateProjectStatus(projectId, authId, status, selectedEntryId, callback) {
+    updateProjectStatus(projectId, authId, status, selectedStudentId, callback) {
+
+        if (!projectId || (!selectedStudentId && status==='complete')) {
+            return callback(new HTTPError(400, 'Invalid request'));
+        }
 
         const db = this.dbService.connect();
         db.on('error', (err) => {
@@ -281,17 +282,23 @@ class ProjectService {
                         return project;
                     }
                 })
-                .then(() => {
-                    return Project.findByIdAndUpdate(projectId, {status: status}, {new: true});
+                .then((project) => {
+                    project.status = status;
+                    project.selectedStudentId = selectedStudentId;
+                    return project.save();
                 })
                 .then((project) => {
+                    console.log(status);
                     if (status === 'complete') {
-                        // TODO This is broken
-                        this.addCompletedProjectToStudentPortfolios(project, (err, project) => {
-                            console.log(project);
+                        console.log('com');
+                        this.addCompletedProjectToStudentPortfolios(project, selectedStudentId, (err) => {
+                            if (err) {
+                                return callback(err);
+                            }
                             return callback(null, project);
                         });
-                        // TODO: Transfer over entry assets from student folder to project folder
+                    } else {
+                        return callback(null, project);
                     }
                 })
                 .catch((err) => {
@@ -499,7 +506,7 @@ class ProjectService {
                     if (!project) {
                         return callback(new HTTPError(404, 'Project not found'));
                     } else {
-                        project.comments.push(newComment);
+                        project.comments.unshift(newComment);
                         return project.save()
                     }
                 })
@@ -606,9 +613,10 @@ class ProjectService {
      * ADD COMPLETE PROJECT TO ALL STUDENT PORTFOLIOS
      *
      * @param project
+     * @param selectedStudentId
      * @param callback
      */
-    addCompletedProjectToStudentPortfolios(project, callback) {
+    addCompletedProjectToStudentPortfolios(project, selectedStudentId, callback) {
         let itemsProcessed = 0;
         project.entries.forEach((entry, index, array) => {
             User.findByIdAndUpdate(entry.student, {
@@ -624,7 +632,8 @@ class ProjectService {
                             assets: entry.assets,
                             selected: entry.selected
                         },
-                        visible: true
+                        visible: true,
+                        selected: entry.student.toString() === selectedStudentId
                     }
                 }
             })

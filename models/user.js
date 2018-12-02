@@ -42,6 +42,9 @@ const portfolioEntrySchema = new Schema({
     },
     visible: {
         type: Boolean
+    },
+    selected: {
+        type: Boolean
     }
 });
 

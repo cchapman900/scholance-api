@@ -86,14 +86,14 @@ const projectModel = mongoose.model('Project', {
     category: {
         type: String,
     },
-    deliverables: {
+    deliverables: [{
         name: {
             type: String
         },
-        type: {
+        mediaType: {
             type: String
         }
-    },
+    }],
     specs: [{
         type: String
     }],
@@ -103,6 +103,9 @@ const projectModel = mongoose.model('Project', {
     entries: [{
         type: entrySchema
     }],
+    selectedStudentId: {
+        type: Schema.Types.ObjectId
+    },
     comments: [{
         type: messageSchema
     }],

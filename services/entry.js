@@ -138,7 +138,7 @@ class EntryService {
                         return callback(new HTTPError(404, 'Project not found'));
                     } else if (!project.entries.some(element => element.student.toString() === studentId)) {
                         return callback(new HTTPError(409, 'You are not currently signed up for this project'));
-                    }
+                    } // TODO: Else if the entry was selected, block the user from signing off
                     return project.update({
                         $pull: {'entries': {student: studentId}}
                     });
@@ -147,11 +147,11 @@ class EntryService {
                     return User.findByIdAndUpdate(studentId, {$pull: {'projects': projectId}}).exec();
                 })
                 .then(() => {
-                    // Prepare a folder to put the project assets in
+                    // Delete the folder with the assets
                     const s3 = new S3Util();
                     const entryPath = studentId + '/projects/' + projectId;
                     s3.deleteFolder(process.env.S3_USERS_BUCKET, entryPath, (err) => {
-                        // TODO: What if the project is completed
+                        // TODO: Block this if the entry is selected
                         if (err) {
                             console.error(err);
                             return callback(new HTTPError(503, 'There was an error deleting the S3 bucket'));
@@ -434,7 +434,7 @@ class EntryService {
                         return callback(new HTTPError(404, 'Project not found'));
                     } else {
                         const entryIndex = project.entries.findIndex( entry => entry.student.toString() === entryStudentId);
-                        project.entries[entryIndex].comments.push(newComment);
+                        project.entries[entryIndex].comments.unshift(newComment);
                         return project.save()
                     }
                 })

@@ -8,7 +8,8 @@
     "foo": "bar"
   },
   "pathParameters": {
-    "project_id": "5bebad49ef91bd8629d30676"
+    "project_id": "5bfcaa5c94bc7a22e017e343",
+    "comment_id": "5c00bc09dfe223946d24759f"
   },
   "stageVariables": {
     "baz": "qux"
@@ -35,6 +36,10 @@
   },
   "requestContext": {
     "accountId": "123456789012",
+    "authorizer": {
+      "principalId": "auth0|5be7c37166533134d79c58da",
+      "scope": "manage:project"
+    },
     "resourceId": "123456",
     "stage": "prod",
     "requestId": "c6af9ac6-7b61-11e6-9a41-93e8deadbeef",

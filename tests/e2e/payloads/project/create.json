@@ -1,5 +1,5 @@
 {
-  "body": "eyJ0ZXN0IjoiYm9keSJ9",
+  "body": "{\r\n  \"title\": \"TEST PROJECT\",\r\n  \"summary\": \"We need a cutting-edge new logo for our new business\",\r\n  \"organization\": \"5b0f8a52d3bae4739f7757da\",\r\n  \"category\": \"Graphic Design\",\r\n  \"fullDescription\": \"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed pulvinar  euismod ipsum ut pharetra. Fusce non quam nec mi tincidunt ornare. In  gravida id ante in gravida. Nunc tempor dui tempus ultrices rutrum.  Curabitur ante dui, ultrices id condimentum ultricies, bibendum eget  erat. Morbi id condimentum ligula, in pulvinar neque. Curabitur lectus  diam, imperdiet ut neque eu, varius porta diam. Suspendisse id pellentesque  metus, sit amet ultricies risus. Nunc imperdiet volutpat lectus, ac viverra  magna tempus aliquam. Aliquam iaculis orci sed erat fringilla, et finibus  purus porta. Duis ultrices odio sit amet cursus blandit. Duis sit amet  purus ex. Ut auctor libero felis, eu tincidunt nisl finibus nec.\",\r\n  \"deliverables\": [{\r\n    \"name\": \"Test deliverable\",\r\n    \"mediaType\": \"Image\"\r\n    }],\r\n  \"specs\": [\r\n    \"test spec\"]\r\n}",
   "resource": "/{proxy+}",
   "path": "/path/to/resource",
   "httpMethod": "POST",
@@ -8,7 +8,6 @@
     "foo": "bar"
   },
   "pathParameters": {
-    "project_id": "5bebad49ef91bd8629d30676"
   },
   "stageVariables": {
     "baz": "qux"
@@ -35,6 +34,10 @@
   },
   "requestContext": {
     "accountId": "123456789012",
+    "authorizer": {
+      "principalId": "auth0|5bdbce810e9b7b163feea6dd",
+      "scope": "manage:project"
+    },
     "resourceId": "123456",
     "stage": "prod",
     "requestId": "c6af9ac6-7b61-11e6-9a41-93e8deadbeef",

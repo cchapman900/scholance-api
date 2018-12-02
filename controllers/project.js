@@ -43,10 +43,8 @@ module.exports.listProjects = (event, context, callback) => {
 module.exports.getProject = (event, context, callback) => {
     try {
         const projectId = event.pathParameters.project_id;
-        const scopes = helper.getScopes(event);
-        const showFullEntries = helper.scopesContainScope(scopes, 'manage:project');
 
-        projectService.get(projectId, showFullEntries, (err, project) => {
+        projectService.get(projectId, (err, project) => {
             if (err) {
                 console.error(err);
                 callback(null, helper.createErrorResponse(err.statusCode, err.message));
@@ -198,35 +196,41 @@ module.exports.deleteProject = (event, context, callback) => {
  * @param {requestCallback} callback
  */
 module.exports.updateProjectStatus = (event, context, callback) => {
-
-    // Get the authenticated user id
-    const authId = helper.getAuthId(event);
-    if (!authId) {
-        console.log('Update Project Status: No authentication found');
-        return callback(null, helper.createErrorResponse(401, 'No authentication found'));
-    }
-
-    const projectId = event.pathParameters.project_id;
-
-    // Authorize the authenticated user's scopes
-    const scopes = helper.getScopes(event);
-    if (!helper.scopesContainScope(scopes, "manage:project")) {
-        console.log('Delete Project: Non-business User ' + authId + ' tried to update project status for ' + projectId);
-        return callback(null, helper.createErrorResponse(403, 'You must be a business user to delete a project'));
-    }
-
-    let request = JSON.parse(event.body);
-
-    const status = request.status;
-    const selectedEntryId = request.selectedEntryId;
-
-    projectService.updateProjectStatus(projectId, authId, status, selectedEntryId, (err, project) => {
-        if (err) {
-            console.error(err);
-            return callback(null, helper.createErrorResponse(err.statusCode, err.message));
+    try {
+        // Get the authenticated user id
+        const authId = helper.getAuthId(event);
+        if (!authId) {
+            console.log('Update Project Status: No authentication found');
+            return callback(null, helper.createErrorResponse(401, 'No authentication found'));
         }
-        return callback(null, helper.createSuccessResponse(200, project));
-    });
+
+        const projectId = event.pathParameters.project_id;
+
+        // Authorize the authenticated user's scopes
+        const scopes = helper.getScopes(event);
+        if (!helper.scopesContainScope(scopes, "manage:project")) {
+            console.error('Delete Project: Non-business User ' + authId + ' tried to update project status for ' + projectId);
+            return callback(null, helper.createErrorResponse(403, 'You must be a business user to delete a project'));
+        }
+
+        let request = JSON.parse(event.body);
+
+        const status = request.status;
+        const selectedStudentId = request.selectedStudentId;
+
+        projectService.updateProjectStatus(projectId, authId, status, selectedStudentId, (err, project) => {
+            if (err) {
+                console.error(err);
+                return callback(null, helper.createErrorResponse(err.statusCode, err.message));
+            }
+            console.log(project);
+            return callback(null, helper.createSuccessResponse(200, project));
+        });
+    }
+    catch(err) {
+        console.error(err);
+        throw err;
+    }
 
 };
 
@@ -352,7 +356,7 @@ module.exports.deleteSupplementalResource = (event, context, callback) => {
         }
 
         // Create the project
-        projectService.deleteSupplementalResource(projectId, assetId, (err, project) => {
+        projectService.deleteSupplementalResource(projectId, assetId, (err) => {
             if (err) {
                 console.error(err);
                 return callback(null, helper.createErrorResponse(err.statusCode, err.message));
@@ -416,7 +420,7 @@ module.exports.createProjectComment = (event, context, callback) => {
 /**
  * DELETE PROJECT COMMENT
  *
- * @param event
+ * @param {{body: string, pathParameters: {project_id, comment_id}, requestContext: {authorizer: {principalId: string}}}} event
  * @param context
  * @param callback
  */
@@ -432,11 +436,8 @@ module.exports.deleteProjectComment = (event, context, callback) => {
         const projectId = event.pathParameters.project_id;
         let commentId = event.pathParameters.comment_id;
 
-        let request = JSON.parse(event.body);
-        request.author = authId;
-
         // Create the project
-        projectService.deleteProjectComment(projectId, request, (err, project) => {
+        projectService.deleteProjectComment(projectId, commentId, (err, project) => {
             if (err) {
                 console.error(err);
                 return callback(null, helper.createErrorResponse(err.statusCode, err.message));
