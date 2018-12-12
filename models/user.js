@@ -53,8 +53,7 @@ const model = mongoose.model('User', {
         type: String
     },
     userType: {
-        type: String,
-        required: true,
+        type: String
     },
     email: {
         type: String,

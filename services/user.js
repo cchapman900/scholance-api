@@ -110,7 +110,10 @@ class UserService {
 
         // Validate the request
         const errs = user.validateSync();
-        if (errs) throw new HTTPError(400, 'User data invalid');
+        if (errs) {
+            console.log(errs);
+            callback(new HTTPError(400, 'User data invalid: ' + errs));
+        }
 
         const db = this.dbService.connect();
         db.on('error', (err) => {
@@ -124,7 +127,7 @@ class UserService {
                 })
                 .catch((err) => {
                     console.error(err);
-                    throw new HTTPError(err.statusCode, err.message);
+                    callback(new HTTPError(err.statusCode, err.message));
                 })
                 .finally(() => {
                     db.close();
