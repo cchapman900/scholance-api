@@ -193,14 +193,6 @@ paths:
       tags:
         - Project
       operationId: deleteProject
-      requestBody:
-        description: >-
-          Student to be added to project. Should eventually Put this in a header object
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/User'
       responses:
         '204':
           description: Project deleted
@@ -737,6 +729,17 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Entry'
+        status:
+          type: string
+          example: active
+        selectedStudentId:
+          type: string
+          format: ObjectId
+          example: '507f1f77bcf86cd799439011'
+        comments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Message'
       required:
         - _id
 
@@ -768,6 +771,19 @@ components:
             magna tempus aliquam. Aliquam iaculis orci sed erat fringilla, et finibus
             purus porta. Duis ultrices odio sit amet cursus blandit. Duis sit amet
             purus ex. Ut auctor libero felis, eu tincidunt nisl finibus nec.
+        specs:
+          type: array
+          items:
+            type: string
+            example: Nunc imperdiet volutpat lectus
+        deliverables:
+          type: array
+          items:
+            properties:
+              name:
+                type: string
+              mediaType:
+                type: string
       required:
         - title
         - summary
@@ -787,6 +803,8 @@ components:
           enum:
             - student
             - business
+        linkedin:
+          type: string
       required:
         - _id
         - name
@@ -795,10 +813,30 @@ components:
     Student:
       allOf:
         - $ref: '#/components/schemas/User'
+      properties:
+        school:
+          type: string
+        academicFocus:
+          type: string
+        interests:
+          type: string
+        twitter:
+          type: string
+        instagram:
+          type: string
+        website:
+          type: string
+        portfolioEntries:
+          type: array
+          items:
+            $ref: '#/components/schemas/PortfolioEntry'
 
     Liaison:
       allOf:
         - $ref: '#/components/schemas/User'
+      properties:
+        position:
+          type: string
 
     Organization:
       properties:
@@ -809,6 +847,22 @@ components:
         name:
           type: string
           example: "Acme Inc."
+        domain:
+          type: string
+        industry:
+          type: string
+        twitter:
+          type: string
+        linkedin:
+          type: string
+        about:
+          type: string
+        logo:
+          $ref: '#/components/schemas/Asset'
+        liaisons:
+          type: array
+          items:
+            $ref: '#/components/schemas/Liaison'
       required:
         - _id
         - name
@@ -835,6 +889,17 @@ components:
           type: string
           example: 'submitted'
 
+    PortfolioEntry:
+      properties:
+        project:
+          $ref: '#/components/schemas/Project'
+        submission:
+          $ref: '#/components/schemas/Entry'
+        visible:
+          type: boolean
+        selected:
+          type: boolean
+
     NewAsset:
       description: >-
         A photo, video, link or text object as used in a project entry or supplemental resource
@@ -845,7 +910,7 @@ components:
         name:
           type: string
           example: "Our Logo"
-        assetType:
+        mediaType:
           type: string
           example: 'image'
           enum:
@@ -874,6 +939,10 @@ components:
           type: string
           format: ObjectId
           example: '507f1f77bcf86cd799439011'
+        comments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Message'
 
     AssetFileUpload:
       required:
@@ -886,6 +955,16 @@ components:
           type: string
           format: base64encoded
           example: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAFhAJ/wlseKgAAAABJRU5ErkJggg=="
+
+    Message:
+      required:
+        - author
+        - text
+      properties:
+        author:
+          $ref: '#/components/schemas/User'
+        text:
+          type: string
 
     Error:
       required:

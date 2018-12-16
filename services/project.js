@@ -187,7 +187,8 @@ class ProjectService {
                 fullDescription: request.fullDescription,
                 specs: request.specs,
                 deliverables: request.deliverables,
-                category: request.category
+                category: request.category,
+                deadline: request.deadline
             })
                 .then((project) => {
                     if (!project) {
