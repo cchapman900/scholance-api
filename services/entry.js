@@ -378,7 +378,7 @@ class EntryService {
                     }
                 })
                 .then(() => {
-                    if (asset.mediaType === 'image') {
+                    if (asset.mediaType === 'file') {
                         s3Util.deleteFile(process.env.S3_USERS_BUCKET, asset.uri, function(err) {
                             if (err) {
                                 return callback(new HTTPError(500, 'Could not delete file from S3'));

@@ -453,7 +453,7 @@ class ProjectService {
                     return project.save()
                 })
                 .then(() => {
-                    if (asset.mediaType === 'image') {
+                    if (asset.mediaType === 'file') {
                         s3Util.deleteFile(process.env.S3_PROJECTS_BUCKET, asset.uri, (err) => {
                             if (err) {
                                 return callback(new HTTPError(500, 'Could not delete file from S3'));
