@@ -122,7 +122,7 @@ module.exports.updateProject = (event, context, callback) => {
         // Authorize the authenticated user's scopes
         const scopes = helper.getScopes(event);
         if (!helper.scopesContainScope(scopes, "manage:project")) {
-            console.log('Update Project: Non-business User ' + authId + ' tried to update project ' + projectId);
+            console.error('Update Project: Non-business User ' + authId + ' tried to update project ' + projectId);
             return callback(null, helper.createErrorResponse(403, 'You must be a business user to update a project'));
         }
 
@@ -159,7 +159,7 @@ module.exports.deleteProject = (event, context, callback) => {
         // Get the authenticated user id
         const authId = helper.getAuthId(event);
         if (!authId) {
-            console.log('Delete Project: No authentication found');
+            console.error('Delete Project: No authentication found');
             return callback(null, helper.createErrorResponse(401, 'No authentication found'));
         }
 
@@ -168,7 +168,7 @@ module.exports.deleteProject = (event, context, callback) => {
         // Authorize the authenticated user's scopes
         const scopes = helper.getScopes(event);
         if (!helper.scopesContainScope(scopes, "manage:project")) {
-            console.log('Delete Project: Non-business User ' + authId + ' tried to delete project ' + projectId);
+            console.error('Delete Project: Non-business User ' + authId + ' tried to delete project ' + projectId);
             return callback(null, helper.createErrorResponse(403, 'You must be a business user to delete a project'));
         }
 
@@ -200,7 +200,7 @@ module.exports.updateProjectStatus = (event, context, callback) => {
         // Get the authenticated user id
         const authId = helper.getAuthId(event);
         if (!authId) {
-            console.log('Update Project Status: No authentication found');
+            console.error('Update Project Status: No authentication found');
             return callback(null, helper.createErrorResponse(401, 'No authentication found'));
         }
 
@@ -223,7 +223,7 @@ module.exports.updateProjectStatus = (event, context, callback) => {
                 console.error(err);
                 return callback(null, helper.createErrorResponse(err.statusCode, err.message));
             }
-            console.log(project);
+            console.error(project);
             return callback(null, helper.createSuccessResponse(200, project));
         });
     }
@@ -253,7 +253,7 @@ module.exports.createSupplementalResource = (event, context, callback) => {
         // Get the authenticated user id
         const authId = helper.getAuthId(event);
         if (!authId) {
-            console.log('Update Project: No authentication found');
+            console.error('Update Project: No authentication found');
             return callback(null, helper.createErrorResponse(401, 'No authentication found'));
         }
 
@@ -262,7 +262,7 @@ module.exports.createSupplementalResource = (event, context, callback) => {
         // Authorize the authenticated user's scopes
         const scopes = helper.getScopes(event);
         if (!helper.scopesContainScope(scopes, constants.SCOPES.MANAGE_PROJECT)) {
-            console.log('Update Project: Non-business User ' + authId + ' tried to add resource to project ' + projectId);
+            console.error('Update Project: Non-business User ' + authId + ' tried to add resource to project ' + projectId);
             return callback(null, helper.createErrorResponse(403, 'You must be a business user to add a resource to a project'));
         }
 
@@ -297,7 +297,7 @@ module.exports.createSupplementalResourceFile = (event, context, callback) => {
         // Get the authenticated user id
         const authId = helper.getAuthId(event);
         if (!authId) {
-            console.log('Update Project: No authentication found');
+            console.error('Update Project: No authentication found');
             return callback(null, helper.createErrorResponse(401, 'No authentication found'));
         }
 
@@ -306,7 +306,7 @@ module.exports.createSupplementalResourceFile = (event, context, callback) => {
         // Authorize the authenticated user's scopes
         const scopes = helper.getScopes(event);
         if (!helper.scopesContainScope(scopes, constants.SCOPES.MANAGE_PROJECT)) {
-            console.log('Update Project: Non-business User ' + authId + ' tried to add resource to project ' + projectId);
+            console.error('Update Project: Non-business User ' + authId + ' tried to add resource to project ' + projectId);
             return callback(null, helper.createErrorResponse(403, 'You must be a business user to add a resource to a project'));
         }
 
@@ -341,7 +341,7 @@ module.exports.deleteSupplementalResource = (event, context, callback) => {
         // Get the authenticated user id
         const authId = helper.getAuthId(event);
         if (!authId) {
-            console.log('Update Project: No authentication found');
+            console.error('Update Project: No authentication found');
             return callback(null, helper.createErrorResponse(401, 'No authentication found'));
         }
 
@@ -351,7 +351,7 @@ module.exports.deleteSupplementalResource = (event, context, callback) => {
         // Authorize the authenticated user's scopes
         const scopes = helper.getScopes(event);
         if (!helper.scopesContainScope(scopes, constants.SCOPES.MANAGE_PROJECT)) {
-            console.log('Update Project: Non-business User ' + authId + ' tried to add resource to project ' + projectId);
+            console.error('Update Project: Non-business User ' + authId + ' tried to add resource to project ' + projectId);
             return callback(null, helper.createErrorResponse(403, 'You must be a business user to add a resource to a project'));
         }
 
@@ -391,7 +391,7 @@ module.exports.createProjectComment = (event, context, callback) => {
         // Get the authenticated user id
         const authId = helper.getAuthId(event);
         if (!authId) {
-            console.log('Update Project: No authentication found');
+            console.error('Update Project: No authentication found');
             return callback(null, helper.createErrorResponse(401, 'No authentication found'));
         }
 
@@ -429,7 +429,7 @@ module.exports.deleteProjectComment = (event, context, callback) => {
         // Get the authenticated user id
         const authId = helper.getAuthId(event);
         if (!authId) {
-            console.log('Update Project: No authentication found');
+            console.error('Update Project: No authentication found');
             return callback(null, helper.createErrorResponse(401, 'No authentication found'));
         }
 
