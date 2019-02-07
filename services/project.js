@@ -289,9 +289,7 @@ class ProjectService {
                     return project.save();
                 })
                 .then((project) => {
-                    console.log(status);
                     if (status === 'complete') {
-                        console.log('com');
                         this.addCompletedProjectToStudentPortfolios(project, selectedStudentId, (err) => {
                             if (err) {
                                 return callback(err);
@@ -440,7 +438,6 @@ class ProjectService {
             Project
                 .findById(projectId)
                 .then((project) => {
-                    console.log(project);
                     if (!project) {
                         callback(new HTTPError(404, 'Project not found'));
                     }

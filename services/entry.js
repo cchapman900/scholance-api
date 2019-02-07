@@ -41,7 +41,6 @@ class EntryService {
                     if (!project) {
                         return callback(new HTTPError(404, 'Project not found'));
                     } else {
-                        console.log(project);
                         const entry = project.entries.find(entry => entry.student._id.toString() === studentId);
                         if (entry) {
                             callback(null, entry);

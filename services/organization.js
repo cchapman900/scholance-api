@@ -104,7 +104,7 @@ class OrganizationService {
 
         // Validate the request
         const errs = organization.validateSync();
-        if (errs) callback(new HTTPError(400, 'Organization data invalid'));
+        if (errs) callback(new HTTPError(400, 'Organization data invalid: ' + JSON.stringify(request)));
 
         const db = this.dbService.connect();
         db.on('error', (err) => {
