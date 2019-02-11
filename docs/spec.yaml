@@ -404,6 +404,104 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /projects/{project_id}/reward:
+    parameters:
+      - name: project_id
+        in: path
+        description: ID of project
+        required: true
+        schema:
+          type: string
+          format: ObjectId
+          example: "507f1f77bcf86cd799439011"
+    post:
+      summary: Add reward to project
+      description: Add a reward to a project for the selected entry
+      tags:
+        - Project
+      operationId: addProjectReward
+      requestBody:
+        description: Reward to be added to project
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MonetaryReward'
+      responses:
+        '201':
+          description: Reward added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '400':
+          description: Invalid content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Not logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Insufficient permisions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      summary: Update reward for project
+      description: Update a reward to a project for the selected entry
+      tags:
+        - Project
+      operationId: updateProjectReward
+      requestBody:
+        description: Reward to be updated
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MonetaryReward'
+      responses:
+        '200':
+          description: Reward updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '400':
+          description: Invalid content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Not logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Insufficient permisions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /projects/{project_id}/entries:
     parameters:
       - name: project_id
@@ -796,6 +894,7 @@ components:
       properties:
         type:
           type: string
+          example: MonetaryReward
 
     MonetaryReward:
       allOf:
@@ -803,6 +902,9 @@ components:
       properties:
         value:
           type: number
+        status:
+          type: string
+          example: paid
 
     OtherReward:
       allOf:

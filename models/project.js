@@ -16,6 +16,15 @@ const messageSchema = new Schema({
     }
 });
 
+const rewardSchema = new Schema({
+    amount: {
+        type: Number
+    },
+    status: {
+        type: String
+    }
+});
+
 const assetSchema = new Schema({
     name: {
         type: String,
@@ -105,6 +114,9 @@ const projectModel = mongoose.model('Project', {
     }],
     selectedStudentId: {
         type: Schema.Types.ObjectId
+    },
+    reward: {
+        type: rewardSchema
     },
     comments: [{
         type: messageSchema

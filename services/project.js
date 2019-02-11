@@ -311,6 +311,114 @@ class ProjectService {
     };
 
 
+    /**
+     * ADD PROJECT REWARD
+     *
+     * @param {string} projectId
+     * @param {string} authId
+     * @param {{amount: number}} reward
+     * @param {requestCallback} callback
+     * @returns {requestCallback}
+     */
+    addProjectReward(projectId, authId, reward, callback) {
+
+        const db = this.dbService.connect();
+        db.on('error', (err) => {
+            console.error(err);
+            callback(err);
+        });
+        db.once('open', () => {
+            Project
+                .findById(projectId)
+                .then((project) => {
+                    if (!project) {
+                        return callback(new HTTPError(404, 'Project not found'));
+                    } else if (authId !== project.liaison.toString()) {
+                        return callback(new HTTPError(403, 'You can only add a reward your own project'));
+                    } else {
+                        return project;
+                    }
+                })
+                .then((project) => {
+                    project.reward = reward;
+                    project.reward.status = 'pending';
+                    return project.save();
+                })
+                .then((project) => {
+                    return callback(null, project);
+                })
+                .catch((err) => {
+                    console.error(err);
+                    return callback(err);
+                })
+                .finally(() => {
+                    db.close();
+                })
+        });
+    };
+
+
+    /**
+     * UPDATE PROJECT STATUS
+     *
+     * @param {string} projectId
+     * @param {string} authId
+     * @param {string} status
+     * @param {string} selectedStudentId
+     * @param {requestCallback} callback
+     * @returns {requestCallback}
+     */
+    updateProjectStatus(projectId, authId, status, selectedStudentId, callback) {
+
+        if (!projectId || (!selectedStudentId && status==='complete')) {
+            return callback(new HTTPError(400, 'Invalid request'));
+        }
+
+        const db = this.dbService.connect();
+        db.on('error', (err) => {
+            console.error(err);
+            callback(err);
+        });
+        db.once('open', () => {
+            Project
+                .findById(projectId)
+                .then((project) => {
+                    if (!project) {
+                        return callback(new HTTPError(404, 'Project not found'));
+                    } else if (authId !== project.liaison.toString()) {
+                        return callback(new HTTPError(403, 'You can only update your own project'));
+                    } else {
+                        return project;
+                    }
+                })
+                .then((project) => {
+                    project.status = status;
+                    project.selectedStudentId = selectedStudentId;
+                    return project.save();
+                })
+                .then((project) => {
+                    if (status === 'complete') {
+                        this.addCompletedProjectToStudentPortfolios(project, selectedStudentId, (err) => {
+                            if (err) {
+                                return callback(err);
+                            }
+                            return callback(null, project);
+                        });
+                    } else {
+                        return callback(null, project);
+                    }
+                })
+                .catch((err) => {
+                    console.error(err);
+                    return callback(err);
+                })
+                .finally(() => {
+                    db.close();
+                })
+        });
+    };
+
+
 
     /*************************
      * SUPPLEMENTAL RESOURCES

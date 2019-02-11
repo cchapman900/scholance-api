@@ -96,6 +96,32 @@ functions:
             identitySource: method.request.header.Authorization
             identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
 
+  addProjectReward:
+    handler: controllers/project.addProjectReward
+    events:
+      - http:
+          path: projects/{project_id}/reward
+          method: post
+          cors: true
+          authorizer:
+            arn: ${file(./.env.yml):${self:provider.stage}.AUTH_URI}
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
+
+  updateProjectReward:
+    handler: controllers/project.updateProjectReward
+    events:
+      - http:
+          path: projects/{project_id}/reward
+          method: put
+          cors: true
+          authorizer:
+            arn: ${file(./.env.yml):${self:provider.stage}.AUTH_URI}
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
+
   createProjectComment:
     handler: controllers/project.createProjectComment
     events:

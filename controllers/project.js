@@ -235,6 +235,100 @@ module.exports.updateProjectStatus = (event, context, callback) => {
 };
 
 
+/**
+ * ADD PROJECT REWARD
+ *
+ * @param {{body: string, pathParameters: {project_id}, requestContext: {authorizer: {principalId: string}}}} event
+ * @param {{}} context
+ * @param {requestCallback} callback
+ */
+module.exports.addProjectReward = (event, context, callback) => {
+    try {
+        // Get the authenticated user id
+        const authId = helper.getAuthId(event);
+        if (!authId) {
+            console.error('Update Project Status: No authentication found');
+            return callback(null, helper.createErrorResponse(401, 'No authentication found'));
+        }
+
+        const projectId = event.pathParameters.project_id;
+
+        // Authorize the authenticated user's scopes
+        const scopes = helper.getScopes(event);
+        if (!helper.scopesContainScope(scopes, "manage:project")) {
+            console.error('Add project reward: Non-business User ' + authId + ' tried to add project reward for ' + projectId);
+            return callback(null, helper.createErrorResponse(403, 'You must be a business user to add reward to a project'));
+        }
+
+        let request = JSON.parse(event.body);
+
+        let reward = {};
+        reward.amount = request.amount;
+
+        projectService.addProjectReward(projectId, authId, reward, (err, project) => {
+            if (err) {
+                console.error(err);
+                return callback(null, helper.createErrorResponse(err.statusCode, err.message));
+            }
+            console.error(project);
+            return callback(null, helper.createSuccessResponse(201, project));
+        });
+    }
+    catch(err) {
+        console.error(err);
+        throw err;
+    }
+
+};
+
+
+/**
+ * UPDATE PROJECT STATUS
+ *
+ * @param {{body: string, pathParameters: {project_id}, requestContext: {authorizer: {principalId: string}}}} event
+ * @param {{}} context
+ * @param {requestCallback} callback
+ */
+module.exports.updateProjectStatus = (event, context, callback) => {
+    try {
+        // Get the authenticated user id
+        const authId = helper.getAuthId(event);
+        if (!authId) {
+            console.error('Update Project Status: No authentication found');
+            return callback(null, helper.createErrorResponse(401, 'No authentication found'));
+        }
+
+        const projectId = event.pathParameters.project_id;
+
+        // Authorize the authenticated user's scopes
+        const scopes = helper.getScopes(event);
+        if (!helper.scopesContainScope(scopes, "manage:project")) {
+            console.error('Delete Project: Non-business User ' + authId + ' tried to update project status for ' + projectId);
+            return callback(null, helper.createErrorResponse(403, 'You must be a business user to delete a project'));
+        }
+
+        let request = JSON.parse(event.body);
+
+        const status = request.status;
+        const selectedStudentId = request.selectedStudentId;
+
+        projectService.updateProjectStatus(projectId, authId, status, selectedStudentId, (err, project) => {
+            if (err) {
+                console.error(err);
+                return callback(null, helper.createErrorResponse(err.statusCode, err.message));
+            }
+            console.error(project);
+            return callback(null, helper.createSuccessResponse(200, project));
+        });
+    }
+    catch(err) {
+        console.error(err);
+        throw err;
+    }
+
+};
+
+
 
 /*************************
  * SUPPLEMENTAL RESOURCE
