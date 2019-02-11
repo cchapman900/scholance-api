@@ -1,6 +1,6 @@
 openapi: "3.0.0"
 info:
-  version: 0.1.0
+  version: 0.1.1
   title: Scholance Project Service API
   description: |
     The Scholance API which serves all aspects related to projects. This may include
@@ -784,11 +784,32 @@ components:
                 type: string
               mediaType:
                 type: string
+        reward:
+          $ref: '#/components/schemas/Reward'
       required:
         - title
         - summary
         - liaison
         - organization
+
+    Reward:
+      properties:
+        type:
+          type: string
+
+    MonetaryReward:
+      allOf:
+        - $ref: '#/components/schemas/Reward'
+      properties:
+        value:
+          type: number
+
+    OtherReward:
+      allOf:
+        - $ref: '#/components/schemas/Reward'
+      properties:
+        description:
+          type: string
 
     User:
       properties:
