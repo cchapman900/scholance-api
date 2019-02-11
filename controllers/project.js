@@ -247,7 +247,7 @@ module.exports.addProjectReward = (event, context, callback) => {
         // Get the authenticated user id
         const authId = helper.getAuthId(event);
         if (!authId) {
-            console.error('Update Project Status: No authentication found');
+            console.error('Add project reward: No authentication found');
             return callback(null, helper.createErrorResponse(401, 'No authentication found'));
         }
 
@@ -262,8 +262,14 @@ module.exports.addProjectReward = (event, context, callback) => {
 
         let request = JSON.parse(event.body);
 
+        const amount = request.amount;
+        if (!amount || amount <= 0) {
+            console.error('Add project reward: Invalid request: ' + event.body);
+            return callback(null, helper.createErrorResponse(400, 'Invalid amount ($'+ request.amount+') for reward'));
+        }
+
         let reward = {};
-        reward.amount = request.amount;
+        reward.amount = amount;
 
         projectService.addProjectReward(projectId, authId, reward, (err, project) => {
             if (err) {
@@ -283,13 +289,13 @@ module.exports.addProjectReward = (event, context, callback) => {
 
 
 /**
- * UPDATE PROJECT STATUS
+ * UPDATE PROJECT REWARD
  *
  * @param {{body: string, pathParameters: {project_id}, requestContext: {authorizer: {principalId: string}}}} event
  * @param {{}} context
  * @param {requestCallback} callback
  */
-module.exports.updateProjectStatus = (event, context, callback) => {
+module.exports.updateProjectReward = (event, context, callback) => {
     try {
         // Get the authenticated user id
         const authId = helper.getAuthId(event);
@@ -303,16 +309,17 @@ module.exports.updateProjectStatus = (event, context, callback) => {
         // Authorize the authenticated user's scopes
         const scopes = helper.getScopes(event);
         if (!helper.scopesContainScope(scopes, "manage:project")) {
-            console.error('Delete Project: Non-business User ' + authId + ' tried to update project status for ' + projectId);
-            return callback(null, helper.createErrorResponse(403, 'You must be a business user to delete a project'));
+            console.error('Add project reward: Non-business User ' + authId + ' tried to update project reward for ' + projectId);
+            return callback(null, helper.createErrorResponse(403, 'You must be a business user to update reward to a project'));
         }
 
         let request = JSON.parse(event.body);
 
-        const status = request.status;
-        const selectedStudentId = request.selectedStudentId;
+        let reward = {};
+        console.log('test');
+        reward.status = request.status;
 
-        projectService.updateProjectStatus(projectId, authId, status, selectedStudentId, (err, project) => {
+        projectService.updateProjectReward(projectId, authId, reward, (err, project) => {
             if (err) {
                 console.error(err);
                 return callback(null, helper.createErrorResponse(err.statusCode, err.message));

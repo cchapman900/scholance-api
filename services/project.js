@@ -359,20 +359,15 @@ class ProjectService {
 
 
     /**
-     * UPDATE PROJECT STATUS
+     * UPDATE PROJECT REWARD
      *
      * @param {string} projectId
      * @param {string} authId
-     * @param {string} status
-     * @param {string} selectedStudentId
+     * @param {{status: string}} reward
      * @param {requestCallback} callback
      * @returns {requestCallback}
      */
-    updateProjectStatus(projectId, authId, status, selectedStudentId, callback) {
-
-        if (!projectId || (!selectedStudentId && status==='complete')) {
-            return callback(new HTTPError(400, 'Invalid request'));
-        }
+    updateProjectReward(projectId, authId, reward, callback) {
 
         const db = this.dbService.connect();
         db.on('error', (err) => {
@@ -386,27 +381,17 @@ class ProjectService {
                     if (!project) {
                         return callback(new HTTPError(404, 'Project not found'));
                     } else if (authId !== project.liaison.toString()) {
-                        return callback(new HTTPError(403, 'You can only update your own project'));
+                        return callback(new HTTPError(403, 'You can only add a reward your own project'));
                     } else {
                         return project;
                     }
                 })
                 .then((project) => {
-                    project.status = status;
-                    project.selectedStudentId = selectedStudentId;
+                    project.reward.status = reward.status;
                     return project.save();
                 })
                 .then((project) => {
-                    if (status === 'complete') {
-                        this.addCompletedProjectToStudentPortfolios(project, selectedStudentId, (err) => {
-                            if (err) {
-                                return callback(err);
-                            }
-                            return callback(null, project);
-                        });
-                    } else {
-                        return callback(null, project);
-                    }
+                    return callback(null, project);
                 })
                 .catch((err) => {
                     console.error(err);

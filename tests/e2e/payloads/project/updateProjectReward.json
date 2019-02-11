@@ -1,5 +1,5 @@
 {
-  "body": "{\r\n \"amount\": 5\r\n}",
+  "body": "{\r\n    \"status\": \"paid\"\r\n}",
   "resource": "/{proxy+}",
   "path": "/path/to/resource",
   "httpMethod": "POST",
