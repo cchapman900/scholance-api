@@ -34,6 +34,7 @@ module.exports.getEntryByStudentId = (event, context, callback) => {
 
         entryService.getByStudentId(projectId, studentId, (err, project) => {
             if (err) {
+                console.error(event);
                 console.error(err);
                 callback(null, helper.createErrorResponse(err.statusCode, err.message));
             }
@@ -41,6 +42,7 @@ module.exports.getEntryByStudentId = (event, context, callback) => {
         });
     }
     catch(err) {
+        console.error(event);
         console.error(err);
         throw err;
     }
@@ -72,6 +74,7 @@ module.exports.projectSignup = (event, context, callback) => {
 
         entryService.projectSignup(projectId, authId, (err, project) => {
             if (err) {
+                console.error(event);
                 console.error(err);
                 callback(null, helper.createErrorResponse(err.statusCode, err.message));
             }
@@ -79,6 +82,7 @@ module.exports.projectSignup = (event, context, callback) => {
         });
     }
     catch(err) {
+        console.error(event);
         console.error(err);
         throw err;
     }
@@ -119,6 +123,7 @@ module.exports.projectSignoff = (event, context, callback) => {
 
         entryService.projectSignoff(projectId, studentId, (err, project) => {
             if (err) {
+                console.error(event);
                 console.error(err);
                 callback(null, helper.createErrorResponse(err.statusCode, err.message));
             }
@@ -126,6 +131,7 @@ module.exports.projectSignoff = (event, context, callback) => {
         });
     }
     catch(err) {
+        console.error(event);
         console.error(err);
         throw err;
     }
@@ -165,6 +171,7 @@ module.exports.updateEntry = (event, context, callback) => {
 
         entryService.update(projectId, studentId, request, (err, entry) => {
             if (err) {
+                console.error(event);
                 console.error(err);
                 callback(null, helper.createErrorResponse(err.statusCode, err.message));
             }
@@ -172,6 +179,7 @@ module.exports.updateEntry = (event, context, callback) => {
         });
     }
     catch(err) {
+        console.error(event);
         console.error(err);
         throw err;
     }
@@ -217,6 +225,7 @@ module.exports.createEntryAsset = (event, context, callback) => {
 
         entryService.createAsset(projectId, studentId, request, (err, entry) => {
             if (err) {
+                console.error(event);
                 console.error(err);
                 callback(null, helper.createErrorResponse(err.statusCode, err.message));
             }
@@ -224,6 +233,7 @@ module.exports.createEntryAsset = (event, context, callback) => {
         });
     }
     catch(err) {
+        console.error(event);
         console.error(err);
         throw err;
     }
@@ -260,6 +270,7 @@ module.exports.createEntryAssetFile = (event, context, callback) => {
         // Create the project
         entryService.createAssetFromFile(projectId, authId, request, (err, asset) => {
             if (err) {
+                console.error(event);
                 console.error(err);
                 return callback(null, helper.createErrorResponse(err.statusCode, err.message));
             }
@@ -268,6 +279,7 @@ module.exports.createEntryAssetFile = (event, context, callback) => {
 
     }
     catch(err) {
+        console.error(event);
         console.error(err);
         throw err;
     }
@@ -305,6 +317,7 @@ module.exports.deleteEntryAsset = (event, context, callback) => {
         // Create the project
         entryService.deleteAsset(projectId, userId, assetId, (err, project) => {
             if (err) {
+                console.error(event);
                 console.error(err);
                 return callback(null, helper.createErrorResponse(err.statusCode, err.message));
             }
@@ -312,6 +325,7 @@ module.exports.deleteEntryAsset = (event, context, callback) => {
         });
     }
     catch (err) {
+        console.error(event);
         console.error(err);
         throw err;
     }
@@ -349,6 +363,7 @@ module.exports.createEntryComment = (event, context, callback) => {
         // Create the project
         entryService.createEntryComment(projectId, entryStudentId, request, (err, project) => {
             if (err) {
+                console.error(event);
                 console.error(err);
                 return callback(null, helper.createErrorResponse(err.statusCode, err.message));
             }
@@ -357,6 +372,7 @@ module.exports.createEntryComment = (event, context, callback) => {
 
     }
     catch(err) {
+        console.error(event);
         console.error(err);
         throw err;
     }
@@ -389,6 +405,7 @@ module.exports.deleteEntryComment = (event, context, callback) => {
         // Create the project
         entryService.deleteEntryComment(projectId, entryStudentId, commentId, (err, project) => {
             if (err) {
+                console.error(event);
                 console.error(err);
                 return callback(null, helper.createErrorResponse(err.statusCode, err.message));
             }
@@ -397,6 +414,7 @@ module.exports.deleteEntryComment = (event, context, callback) => {
 
     }
     catch(err) {
+        console.error(event);
         console.error(err);
         throw err;
     }

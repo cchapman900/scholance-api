@@ -20,13 +20,15 @@ module.exports.listProjects = (event, context, callback) => {
     try {
         projectService.list(event.queryStringParameters, (err, projects) => {
             if (err) {
-                console.log(err);
+                console.error(event);
+                console.error(err);
                 callback(null, helper.createErrorResponse(err.statusCode, err.message));
             }
             callback(null, helper.createSuccessResponse(200, projects));
         });
     }
     catch(err) {
+        console.error(event);
         console.error(err);
         throw err;
     }
@@ -46,6 +48,7 @@ module.exports.getProject = (event, context, callback) => {
 
         projectService.get(projectId, (err, project) => {
             if (err) {
+                console.error(event);
                 console.error(err);
                 callback(null, helper.createErrorResponse(err.statusCode, err.message));
             }
@@ -53,6 +56,7 @@ module.exports.getProject = (event, context, callback) => {
         });
     }
     catch(err) {
+        console.error(event);
         console.error(err);
         throw err;
     }
@@ -87,13 +91,15 @@ module.exports.createProject = (event, context, callback) => {
         // Create the project
         projectService.create(request, (err, project) => {
             if (err) {
-                console.log(err);
+                console.error(event);
+                console.err(err);
                 return callback(null, helper.createErrorResponse(err.statusCode, err.message));
             }
             return callback(null, helper.createSuccessResponse(201, project));
         });
     }
     catch(err) {
+        console.error(event);
         console.error(err);
         throw err;
     }
@@ -113,7 +119,7 @@ module.exports.updateProject = (event, context, callback) => {
         // Get the authenticated user id
         const authId = helper.getAuthId(event);
         if (!authId) {
-            console.log('Update Project: No authentication found');
+            console.error('Update Project: No authentication found');
             return callback(null, helper.createErrorResponse(401, 'No authentication found'));
         }
 
@@ -132,6 +138,7 @@ module.exports.updateProject = (event, context, callback) => {
         // Create the project
         projectService.update(projectId, request, (err, project) => {
             if (err) {
+                console.error(event);
                 console.error(err);
                 return callback(null, helper.createErrorResponse(err.statusCode, err.message));
             }
@@ -140,6 +147,7 @@ module.exports.updateProject = (event, context, callback) => {
 
     }
     catch(err) {
+        console.error(event);
         console.error(err);
         throw err;
     }
@@ -182,6 +190,7 @@ module.exports.deleteProject = (event, context, callback) => {
 
     }
     catch(err) {
+        console.error(event);
         console.error(err);
         throw err;
     }
@@ -220,6 +229,7 @@ module.exports.updateProjectStatus = (event, context, callback) => {
 
         projectService.updateProjectStatus(projectId, authId, status, selectedStudentId, (err, project) => {
             if (err) {
+                console.error(event);
                 console.error(err);
                 return callback(null, helper.createErrorResponse(err.statusCode, err.message));
             }
@@ -228,6 +238,7 @@ module.exports.updateProjectStatus = (event, context, callback) => {
         });
     }
     catch(err) {
+        console.error(event);
         console.error(err);
         throw err;
     }
@@ -273,6 +284,7 @@ module.exports.addProjectReward = (event, context, callback) => {
 
         projectService.addProjectReward(projectId, authId, reward, (err, project) => {
             if (err) {
+                console.error(event);
                 console.error(err);
                 return callback(null, helper.createErrorResponse(err.statusCode, err.message));
             }
@@ -281,6 +293,7 @@ module.exports.addProjectReward = (event, context, callback) => {
         });
     }
     catch(err) {
+        console.error(event);
         console.error(err);
         throw err;
     }
@@ -316,7 +329,6 @@ module.exports.updateProjectReward = (event, context, callback) => {
         let request = JSON.parse(event.body);
 
         let reward = {};
-        console.log('test');
         reward.status = request.status;
 
         projectService.updateProjectReward(projectId, authId, reward, (err, project) => {

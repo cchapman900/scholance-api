@@ -24,6 +24,7 @@ module.exports.getUser = (event, context, callback) => {
 
         userService.get(userId, (err, user) => {
             if (err) {
+                console.error(event);
                 console.error(err);
                 callback(null, helper.createErrorResponse(err.statusCode, err.message));
             }
@@ -31,6 +32,7 @@ module.exports.getUser = (event, context, callback) => {
         });
     }
     catch(err) {
+        console.error(event);
         console.error(err);
         throw err;
     }
@@ -62,6 +64,7 @@ module.exports.createOrUpdateUser = (event, context, callback) => {
 
         userService.createOrUpdate(request, (err, user) => {
             if (err) {
+                console.error(event);
                 console.error(err);
                 callback(null, helper.createErrorResponse(err.statusCode, err.message));
             }
@@ -69,6 +72,7 @@ module.exports.createOrUpdateUser = (event, context, callback) => {
         });
     }
     catch(err) {
+        console.error(event);
         console.error(err);
         throw err;
     }
@@ -95,6 +99,7 @@ module.exports.deleteUser = (event, context, callback) => {
 
         userService.delete(userId, (err, user) => {
             if (err) {
+                console.error(event);
                 console.error(err);
                 callback(null, helper.createErrorResponse(err.statusCode, err.message));
             }
@@ -102,6 +107,7 @@ module.exports.deleteUser = (event, context, callback) => {
         });
     }
     catch(err) {
+        console.error(event);
         console.error(err);
         throw err;
     }
@@ -134,6 +140,7 @@ module.exports.updatePortfolioEntries = (event, context, callback) => {
 
         userService.updatePortfolioEntries(userId, portfolioEntries, (err, portfolioEntries) => {
             if (err) {
+                console.error(event);
                 console.error(err);
                 callback(null, helper.createErrorResponse(err.statusCode, err.message));
             }
@@ -142,6 +149,7 @@ module.exports.updatePortfolioEntries = (event, context, callback) => {
 
     }
     catch(err) {
+        console.error(event);
         console.error(err);
         throw err;
     }

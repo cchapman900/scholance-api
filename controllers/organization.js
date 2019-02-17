@@ -28,6 +28,7 @@ module.exports.listOrganizations = (event, context, callback) => {
 
         organizationService.list(query, (err, organizations) => {
             if (err) {
+                console.error(event);
                 console.error(err);
                 callback(null, helper.createErrorResponse(err.statusCode, err.message));
             }
@@ -53,6 +54,7 @@ module.exports.getOrganization = (event, context, callback) => {
 
         organizationService.get(organizationId, (err, organization) => {
             if (err) {
+                console.error(event);
                 console.error(err);
                 callback(null, helper.createErrorResponse(err.statusCode, err.message));
             }
@@ -60,6 +62,7 @@ module.exports.getOrganization = (event, context, callback) => {
         });
     }
     catch(err) {
+        console.error(event);
         console.error(err);
         throw err;
     }
@@ -93,6 +96,7 @@ module.exports.createOrganization = (event, context, callback) => {
 
         organizationService.create(request, (err, organization) => {
             if (err) {
+                console.error(event);
                 console.error(err);
                 callback(null, helper.createErrorResponse(err.statusCode, err.message));
             }
@@ -100,6 +104,7 @@ module.exports.createOrganization = (event, context, callback) => {
         });
     }
     catch(err) {
+        console.error(event);
         console.error(err);
         throw err;
     }
@@ -135,6 +140,7 @@ module.exports.updateOrganization = (event, context, callback) => {
 
         organizationService.update(organizationId, request, (err, organization) => {
             if (err) {
+                console.error(event);
                 console.error(err);
                 callback(null, helper.createErrorResponse(err.statusCode, err.message));
             }
@@ -142,6 +148,7 @@ module.exports.updateOrganization = (event, context, callback) => {
         });
     }
     catch(err) {
+        console.error(event);
         console.error(err);
         throw err;
     }
@@ -175,6 +182,7 @@ module.exports.addLiaisonToOrganization = (event, context, callback) => {
 
         organizationService.addLiaisonToOrganization(userId, organizationId, (err, organization) => {
             if (err) {
+                console.error(event);
                 console.error(err);
                 callback(null, helper.createErrorResponse(err.statusCode, err.message));
             }
@@ -182,6 +190,7 @@ module.exports.addLiaisonToOrganization = (event, context, callback) => {
         });
     }
     catch(err) {
+        console.error(event);
         console.error(err);
         throw err;
     }
@@ -214,6 +223,7 @@ module.exports.removeLiaisonFromOrganization = (event, context, callback) => {
 
         organizationService.removeLiaisonFromOrganization(userId, organizationId, (err, organization) => {
             if (err) {
+                console.error(event);
                 console.error(err);
                 callback(null, helper.createErrorResponse(err.statusCode, err.message));
             }
@@ -221,6 +231,7 @@ module.exports.removeLiaisonFromOrganization = (event, context, callback) => {
         });
     }
     catch(err) {
+        console.error(event);
         console.error(err);
         throw err;
     }
