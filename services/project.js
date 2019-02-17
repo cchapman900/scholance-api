@@ -114,7 +114,7 @@ class ProjectService {
             specs: request.specs,
             deliverables: request.deliverables,
             category: request.category,
-            status: 'active'
+            status: 'created'
         });
         if (request.deadline) {
             project.deadline = Date.parse(request.deadline)
@@ -188,7 +188,8 @@ class ProjectService {
                 specs: request.specs,
                 deliverables: request.deliverables,
                 category: request.category,
-                deadline: request.deadline
+                deadline: request.deadline,
+                status: request.status
             })
                 .then((project) => {
                     if (!project) {
