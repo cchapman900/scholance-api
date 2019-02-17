@@ -7,10 +7,10 @@
     "doc": "docs"
   },
   "dependencies": {
-    "aws-sdk": "^2.203.0",
+    "aws-sdk": "^2.404.0",
     "bluebird": "^3.5.0",
     "file-type": "^7.6.0",
-    "mongoose": "^5.0.6",
+    "mongoose": "^5.4.13",
     "validator": "^7.0.0"
   },
   "devDependencies": {
