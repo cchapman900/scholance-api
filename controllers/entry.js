@@ -1,12 +1,12 @@
 "use strict";
 
 const helper = require('./_helper');
+
 const constants = require('../lib/constants');
+const dbService = require('../lib/db');
 
 const Project = require('../models/project.js');
 const User = require('../models/user.js');
-
-const dbService = require('../lib/db');
 
 const EntryService = require('../services/entry');
 const entryService = new EntryService(dbService);
