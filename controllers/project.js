@@ -247,6 +247,59 @@ module.exports.updateProjectStatus = (event, context, callback) => {
 
 
 /**
+ * PAY PROJECT POSTING FEE
+ *
+ * @param {{body: string, pathParameters: {project_id}, requestContext: {authorizer: {principalId: string}}}} event
+ * @param {{}} context
+ * @param {requestCallback} callback
+ */
+module.exports.payProjectPostingFee = (event, context, callback) => {
+    try {
+        // Get the authenticated user id
+        const authId = helper.getAuthId(event);
+        if (!authId) {
+            console.error('Add project reward: No authentication found');
+            return callback(null, helper.createErrorResponse(401, 'No authentication found'));
+        }
+
+        const projectId = event.pathParameters.project_id;
+
+        // Authorize the authenticated user's scopes
+        const scopes = helper.getScopes(event);
+        if (!helper.scopesContainScope(scopes, "manage:project")) {
+            console.error('Add project reward: Non-business User ' + authId + ' tried to pay project posting fee for ' + projectId);
+            return callback(null, helper.createErrorResponse(403, 'You must be a business user to pay posting fee for a project'));
+        }
+
+        let request = JSON.parse(event.body);
+
+        const paymentToken = request.token;
+        if (!paymentToken) {
+            console.error('Pay Project Posting Fee: Invalid request: ' + event.body);
+            return callback(null, helper.createErrorResponse(400, 'Invalid token ($'+ paymentToken +') for posting fee'));
+        }
+        const token = request.token;
+
+        projectService.payProjectPostingFee(projectId, authId, token, (err, project) => {
+            if (err) {
+                console.error(event);
+                console.error(err);
+                return callback(null, helper.createErrorResponse(err.statusCode, err.message));
+            }
+            console.error(project);
+            return callback(null, helper.createSuccessResponse(201, project));
+        });
+    }
+    catch(err) {
+        console.error(event);
+        console.error(err);
+        throw err;
+    }
+
+};
+
+
+/**
  * ADD PROJECT REWARD
  *
  * @param {{body: string, pathParameters: {project_id}, requestContext: {authorizer: {principalId: string}}}} event
@@ -276,13 +329,14 @@ module.exports.addProjectReward = (event, context, callback) => {
         const amount = request.amount;
         if (!amount || amount <= 0) {
             console.error('Add project reward: Invalid request: ' + event.body);
-            return callback(null, helper.createErrorResponse(400, 'Invalid amount ($'+ request.amount+') for reward'));
+            return callback(null, helper.createErrorResponse(400, 'Invalid amount ($'+ amount +') for reward'));
         }
+        const token = request.token;
 
         let reward = {};
         reward.amount = amount;
 
-        projectService.addProjectReward(projectId, authId, reward, (err, project) => {
+        projectService.addProjectReward(projectId, authId, reward, token, (err, project) => {
             if (err) {
                 console.error(event);
                 console.error(err);

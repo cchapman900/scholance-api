@@ -7,6 +7,7 @@ const User = require('../models/user');
 
 const AssetUtil = require('../lib/asset');
 const S3Util = require('../lib/s3');
+const PaymentUtil = require('../lib/payment');
 
 class ProjectService {
 
@@ -313,15 +314,70 @@ class ProjectService {
 
 
     /**
+     * PAY PROJECT POSTING FEE
+     *
+     * @param {string} projectId
+     * @param {string} authId
+     * @param {string} token
+     * @param {requestCallback} callback
+     * @returns {requestCallback}
+     */
+    payProjectPostingFee(projectId, authId, token, callback) {
+
+        const paymentUtil = new PaymentUtil();
+        paymentUtil.charge(1500, token);
+
+
+        const db = this.dbService.connect();
+        db.on('error', (err) => {
+            console.error(err);
+            callback(err);
+        });
+        db.once('open', () => {
+            Project
+                .findById(projectId)
+                .then((project) => {
+                    if (!project) {
+                        return callback(new HTTPError(404, 'Project not found'));
+                    } else if (authId !== project.liaison.toString()) {
+                        return callback(new HTTPError(403, 'Pay a posting for your own project'));
+                    } else {
+                        return project;
+                    }
+                })
+                .then((project) => {
+                    project.status = 'active';
+                    return project.save();
+                })
+                .then((project) => {
+                    return callback(null, project);
+                })
+                .catch((err) => {
+                    console.error(err);
+                    return callback(err);
+                })
+                .finally(() => {
+                    db.close();
+                })
+        });
+    };
+
+
+    /**
      * ADD PROJECT REWARD
      *
      * @param {string} projectId
      * @param {string} authId
-     * @param {{amount: number}} reward
+     * @param {{amount: number}} amount
+     * @param {{}} token
      * @param {requestCallback} callback
      * @returns {requestCallback}
      */
-    addProjectReward(projectId, authId, reward, callback) {
+    addProjectReward(projectId, authId, amount, token, callback) {
+
+        const paymentUtil = new PaymentUtil();
+        paymentUtil.charge(token);
+
 
         const db = this.dbService.connect();
         db.on('error', (err) => {
@@ -341,7 +397,7 @@ class ProjectService {
                     }
                 })
                 .then((project) => {
-                    project.reward = reward;
+                    project.reward = amount;
                     project.reward.status = 'pending';
                     return project.save();
                 })

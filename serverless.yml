@@ -2,7 +2,7 @@ service: scholance-api
 
 provider:
   name: aws
-  runtime: nodejs6.10
+  runtime: nodejs8.10
   stage: ${opt:stage, 'dev'}
   versionFunctions: false
   environment:
@@ -89,6 +89,19 @@ functions:
       - http:
           path: projects/{project_id}/status
           method: put
+          cors: true
+          authorizer:
+            arn: ${file(./.env.yml):${self:provider.stage}.AUTH_URI}
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            identityValidationExpression: ^Bearer [-0-9a-zA-z\.]*$
+
+  payProjectPostingFee:
+    handler: controllers/project.payProjectPostingFee
+    events:
+      - http:
+          path: projects/{project_id}/posting-fee
+          method: post
           cors: true
           authorizer:
             arn: ${file(./.env.yml):${self:provider.stage}.AUTH_URI}

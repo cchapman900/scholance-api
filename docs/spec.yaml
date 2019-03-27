@@ -404,6 +404,60 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /projects/{project_id}/posting-fee:
+    parameters:
+      - name: project_id
+        in: path
+        description: ID of project
+        required: true
+        schema:
+          type: string
+          format: ObjectId
+          example: "507f1f77bcf86cd799439011"
+    post:
+      summary: Pay project posting fee
+      description: Pay the posting fee for a project
+      tags:
+        - Project
+      operationId: payProjectPostingFee
+      requestBody:
+        description: Payment token
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentToken'
+      responses:
+        '201':
+          description: Reward added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '400':
+          description: Invalid content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Not logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Insufficient permisions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /projects/{project_id}/reward:
     parameters:
       - name: project_id
@@ -827,9 +881,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Entry'
-        status:
-          type: string
-          example: active
         selectedStudentId:
           type: string
           format: ObjectId
@@ -882,6 +933,9 @@ components:
                 type: string
               mediaType:
                 type: string
+        status:
+          type: string
+          example: active
         reward:
           $ref: '#/components/schemas/Reward'
       required:
@@ -896,12 +950,20 @@ components:
           type: string
           example: MonetaryReward
 
+    PaymentToken:
+      properties:
+        token:
+          type: string
+          example: tok_4EA8VeXsPgcI5uRFO12Jf4O6
+
     MonetaryReward:
       allOf:
         - $ref: '#/components/schemas/Reward'
       properties:
-        value:
+        amount:
           type: number
+          example: 5
+          description: Value in USD
         status:
           type: string
           example: paid
@@ -960,6 +1022,8 @@ components:
       properties:
         position:
           type: string
+        organization:
+          $ref: '#/components/schemas/Organization'
 
     Organization:
       properties:
