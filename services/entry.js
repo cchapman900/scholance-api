@@ -12,9 +12,11 @@ class EntryService {
      * Constructor
      *
      * @param {DBService} dbService
+     * @param {EmailUtil} emailService
      */
-    constructor (dbService) {
+    constructor (dbService, emailService) {
         this.dbService = dbService;
+        this.emailService = emailService;
     }
 
 
@@ -69,28 +71,34 @@ class EntryService {
      */
     projectSignup(projectId, studentId, callback) {
 
+        let user = {};
+        let project = {};
+
         const db = this.dbService.connect();
         db.on('error', (err) => {
             console.error(err);
-            callback(err);
+            return callback(err);
         });
         db.once('open', () => {
             Project
                 .findById(projectId)
-                .then((project) => {
-                    if (!project) {
+                .populate({path: 'liaison', select: ['name', 'email']})
+                .then((foundProject) => {
+                    if (!foundProject) {
                         return callback(new HTTPError(404, 'Project not found'));
-                    } else if (project.entries.some(element => element.student.toString() === studentId)) {
+                    } else if (foundProject.entries.some(element => element.student.toString() === studentId)) {
                         return callback(new HTTPError(409, 'You are already signed up for this project'));
                     }
-                    return project.update({
+                    project = foundProject;
+                    return foundProject.updateOne({
                         $push: {'entries': {student: studentId, submissionStatus: 'active'}}
                     });
                 })
                 .then(() => {
                     return User.findByIdAndUpdate(studentId, {$push: {'projects': projectId}}).exec();
                 })
-                .then(() => {
+                .then((foundUser) => {
+                    user = foundUser;
                     // Prepare a folder to put the project assets in
                     const s3 = new S3Util();
                     const entryPath = studentId + '/projects/' + projectId;
@@ -101,6 +109,15 @@ class EntryService {
                         }
                         return callback(null);
                     });
+                })
+                .then(() => {
+                    return this.emailService.sendEmail(user.email, 'Project Registration Confirmation', `Hello ${user.name}! You have successfully signed up for ${project.title}.`);
+                })
+                .then(() => {
+                    return this.emailService.sendEmail(project.liaison.email, 'Project Registration Notification', `Hello ${project.liaison.name}! This is a notification to let you know that a new student has recently signed up for signed up for ${project.title}.`);
+                })
+                .then(() => {
+                    return this.emailService.sendEmail('chris@scholance.com', 'Project Registration Notification', `Hello! A student has recently signed up for signed up for ${project.title}.`);
                 })
                 .catch((err) => {
                     console.error(err);
@@ -186,6 +203,8 @@ class EntryService {
             submissionStatus: request.submissionStatus
         };
 
+        let project = {};
+
         const db = this.dbService.connect();
         db.on('error', (err) => {
             console.error(err);
@@ -195,18 +214,23 @@ class EntryService {
             let entryIndex;
             Project
                 .findById(projectId)
-                .then((project) => {
-                    if (!project) {
+                .populate({path: 'liaison', select: ['name', 'email']})
+                .then((foundProject) => {
+                    if (!foundProject) {
                         return callback(new HTTPError(404, 'Project not found'));
-                    } else if (!project.entries.some(entry => entry.student.toString() === studentId)) {
+                    } else if (!foundProject.entries.some(entry => entry.student.toString() === studentId)) {
                         return callback(new HTTPError(404, 'User is not signed up for this project'));
                     }
-                    entryIndex = project.entries.findIndex(entry => entry.student.toString() === studentId);
-                    project.entries[entryIndex].submissionStatus = entryUpdateRequest.submissionStatus;
+                    entryIndex = foundProject.entries.findIndex(entry => entry.student.toString() === studentId);
+                    foundProject.entries[entryIndex].submissionStatus = entryUpdateRequest.submissionStatus;
                     if (entryUpdateRequest.commentary) {
-                        project.entries[entryIndex].commentary = entryUpdateRequest.commentary;
+                        foundProject.entries[entryIndex].commentary = entryUpdateRequest.commentary;
                     }
-                    return project.save();
+                    project = foundProject;
+                    return foundProject.save();
+                })
+                .then(() => {
+                    return this.emailService.sendEmail(project.liaison.email, 'Project Submission Update', `Hello ${project.liaison.name}! This is a notification to let you know that an entry has been updated for ${project.title}.`);
                 })
                 .then((updatedProject) => {
                     callback(null, updatedProject.entries[entryIndex]);
