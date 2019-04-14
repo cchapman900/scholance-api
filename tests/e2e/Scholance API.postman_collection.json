@@ -1,0 +1,2301 @@
+{
+	"info": {
+		"_postman_id": "2a031a79-d4e1-1133-31d6-76391e36feba",
+		"name": "Scholance API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "_auth",
+			"item": [
+				{
+					"name": "Business",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "917ac37c-a425-4c96-a54e-373febb8ad31",
+								"exec": [
+									"pm.environment.set(\"access_token\", pm.response.json().access_token);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "grant_type",
+									"value": "password",
+									"type": "text"
+								},
+								{
+									"key": "client_id",
+									"value": "xIC1lXmLXBn1SPufKA7eSdiRSZXyytEm",
+									"type": "text"
+								},
+								{
+									"key": "client_secret",
+									"value": "",
+									"description": "Required for confidential clients.",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "audience",
+									"value": "https://auth.dev-scholance.com",
+									"type": "text"
+								},
+								{
+									"key": "username",
+									"value": "test_business@scholance.com",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "sFRmSDHXd0Tc57ao",
+									"type": "text"
+								},
+								{
+									"key": "scope",
+									"value": "openid profile manage:project manage:entry manage:organization",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://{{auth0_domain}}/oauth/token",
+							"protocol": "https",
+							"host": [
+								"{{auth0_domain}}"
+							],
+							"path": [
+								"oauth",
+								"token"
+							]
+						},
+						"description": "This is the OAuth 2.0 grant that highly trusted apps utilize in order to access an API. In this flow the end-user is asked to fill in credentials (username/password) typically using an interactive form. This information is later on sent to the Client and the Authorization Server. It is therefore imperative that the Client is absolutely trusted with this information."
+					},
+					"response": []
+				},
+				{
+					"name": "Student",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "917ac37c-a425-4c96-a54e-373febb8ad31",
+								"exec": [
+									"pm.environment.set(\"access_token\", pm.response.json().access_token);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "grant_type",
+									"value": "password",
+									"type": "text"
+								},
+								{
+									"key": "client_id",
+									"value": "xIC1lXmLXBn1SPufKA7eSdiRSZXyytEm",
+									"type": "text"
+								},
+								{
+									"key": "client_secret",
+									"value": "",
+									"description": "Required for confidential clients.",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "audience",
+									"value": "https://auth.dev-scholance.com",
+									"type": "text"
+								},
+								{
+									"key": "username",
+									"value": "test_student@scholance.com",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "ut&lZ%53ACRn",
+									"type": "text"
+								},
+								{
+									"key": "scope",
+									"value": "openid profile manage:project manage:entry manage:organization",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://{{auth0_domain}}/oauth/token",
+							"protocol": "https",
+							"host": [
+								"{{auth0_domain}}"
+							],
+							"path": [
+								"oauth",
+								"token"
+							]
+						},
+						"description": "This is the OAuth 2.0 grant that highly trusted apps utilize in order to access an API. In this flow the end-user is asked to fill in credentials (username/password) typically using an interactive form. This information is later on sent to the Client and the Authorization Server. It is therefore imperative that the Client is absolutely trusted with this information."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Create or Update User",
+					"item": [
+						{
+							"name": "User Signup",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"userType\": \"business\",\n  \"email\": \"chrischapman900@gmail.com\"\n}"
+								},
+								"url": {
+									"raw": "{{domain}}/users/{{business_user_id}}",
+									"host": [
+										"{{domain}}"
+									],
+									"path": [
+										"users",
+										"{{business_user_id}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create or Update User (success)",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Chris Chapman\",\n  \"userType\": \"business\",\n  \"email\": \"chrischapman900@gmail.com\"\n}"
+								},
+								"url": {
+									"raw": "{{domain}}/users/{{business_user_id}}",
+									"host": [
+										"{{domain}}"
+									],
+									"path": [
+										"users",
+										"{{business_user_id}}"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{access_token}}",
+								"type": "string"
+							}
+						]
+					},
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "24b0768b-53ec-406d-b064-153a1d2db31f",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "2c8b6e0b-ae15-4c14-8d06-873eb3bbc8f1",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Get User",
+					"item": [
+						{
+							"name": "Get User (success)",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{domain}}/users/{{business_user_id}}",
+									"host": [
+										"{{domain}}"
+									],
+									"path": [
+										"users",
+										"{{business_user_id}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Student User (success)",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{domain}}/users/{{student_user_id}}",
+									"host": [
+										"{{domain}}"
+									],
+									"path": [
+										"users",
+										"{{student_user_id}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Business User (success)",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{domain}}/users/{{user_id}}",
+									"host": [
+										"{{domain}}"
+									],
+									"path": [
+										"users",
+										"{{user_id}}"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Delete User",
+					"item": [],
+					"_postman_isSubFolder": true
+				}
+			]
+		},
+		{
+			"name": "Organizations",
+			"item": [
+				{
+					"name": "Create Organization",
+					"item": [
+						{
+							"name": "Create Organization (success)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"name\": \"Acme Inc.\",\n\t\"domain\": \"example.com\",\n\t\"liaisons\": {\n\t\t\"_id\": \"5aa73d01b85b082a2f3f284e\"\n\t}\n}"
+								},
+								"url": {
+									"raw": "{{domain}}/organizations",
+									"host": [
+										"{{domain}}"
+									],
+									"path": [
+										"organizations"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "List Organizations",
+					"item": [
+						{
+							"name": "List Organizations (success)",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{domain}}/organizations/?domain=acme.com",
+									"host": [
+										"{{domain}}"
+									],
+									"path": [
+										"organizations",
+										""
+									],
+									"query": [
+										{
+											"key": "domain",
+											"value": "acme.com"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "a3dbb09f-c750-47fd-bdef-945f87548104",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "1145b0ea-c5b3-4d81-b76d-36969a39073c",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Get Organization",
+					"item": [
+						{
+							"name": "Get Organization (success)",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{domain}}/organizations/{{organization_id}}",
+									"host": [
+										"{{domain}}"
+									],
+									"path": [
+										"organizations",
+										"{{organization_id}}"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Add Liaison To Organization",
+					"item": [
+						{
+							"name": "Add Liaison to Organization (success)",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{domain}}/organizations/{{organization_id}}/users/{{business_user_id}}",
+									"host": [
+										"{{domain}}"
+									],
+									"path": [
+										"organizations",
+										"{{organization_id}}",
+										"users",
+										"{{business_user_id}}"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Update Organization",
+					"item": [
+						{
+							"name": "Update Organization (success)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "73aa8ea0-17fa-451e-9923-a8d7dffc6a03",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"name\": \"Acme Inc.\",\n\t\"domain\": \"example.com\"\n}"
+								},
+								"url": {
+									"raw": "{{domain}}/organizations/{{organization_id}}",
+									"host": [
+										"{{domain}}"
+									],
+									"path": [
+										"organizations",
+										"{{organization_id}}"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "40abb084-1b5c-44bf-bcdd-0fd391040c07",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "782d0c49-3e1b-4f6a-8feb-2e67c7db7bf5",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					],
+					"_postman_isSubFolder": true
+				}
+			]
+		},
+		{
+			"name": "Projects",
+			"item": [
+				{
+					"name": "List Projects",
+					"item": [
+						{
+							"name": "List Projects (success)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "89ae439f-181c-4fd6-a649-bab229d16427",
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{domain}}/projects",
+									"host": [
+										"{{domain}}"
+									],
+									"path": [
+										"projects"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List Projects w/ query string (success)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "89ae439f-181c-4fd6-a649-bab229d16427",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{domain}}/projects?status=complete&category=Web%20Development",
+									"host": [
+										"{{domain}}"
+									],
+									"path": [
+										"projects"
+									],
+									"query": [
+										{
+											"key": "status",
+											"value": "complete"
+										},
+										{
+											"key": "category",
+											"value": "Web%20Development"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Get Project",
+					"item": [
+						{
+							"name": "Get Project (success)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "58a06eb5-cc6e-4410-8cc5-5ee07372263f",
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{domain}}/projects/{{permanent_project_id}}",
+									"host": [
+										"{{domain}}"
+									],
+									"path": [
+										"projects",
+										"{{permanent_project_id}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Project (success) Copy",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "58a06eb5-cc6e-4410-8cc5-5ee07372263f",
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{domain}}/projects/5b67c37f0d4eb141866ffd3f",
+									"host": [
+										"{{domain}}"
+									],
+									"path": [
+										"projects",
+										"5b67c37f0d4eb141866ffd3f"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Project (404)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "98917b0c-0fd4-4122-857b-6aaf59cff831",
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"Status code is 404\", function () {",
+											"    pm.response.to.have.status(404);",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{domain}}/projects/5a8cf88b111306000174c626",
+									"host": [
+										"{{domain}}"
+									],
+									"path": [
+										"projects",
+										"5a8cf88b111306000174c626"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Create Project",
+					"item": [
+						{
+							"name": "Create Project (success)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "27bacc82-e482-482f-965b-923e1338896d",
+										"exec": [
+											"pm.test(\"Status code is 201\", function () {",
+											"    pm.response.to.have.status(201);",
+											"});",
+											"",
+											"pm.environment.set(\"temp_project_id\", pm.response.json()._id);"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"title\": \"TEST PROJECT\",\n  \"summary\": \"We need a cutting-edge new logo for our new business\",\n  \"organization\": {\n    \"_id\": \"{{organization_id}}\",\n    \"name\": \"Acme Inc.\"\n  },\n  \"category\": \"Graphic Design\",\n  \"fullDescription\": \"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed pulvinar  euismod ipsum ut pharetra. Fusce non quam nec mi tincidunt ornare. In  gravida id ante in gravida. Nunc tempor dui tempus ultrices rutrum.  Curabitur ante dui, ultrices id condimentum ultricies, bibendum eget  erat. Morbi id condimentum ligula, in pulvinar neque. Curabitur lectus  diam, imperdiet ut neque eu, varius porta diam. Suspendisse id pellentesque  metus, sit amet ultricies risus. Nunc imperdiet volutpat lectus, ac viverra  magna tempus aliquam. Aliquam iaculis orci sed erat fringilla, et finibus  purus porta. Duis ultrices odio sit amet cursus blandit. Duis sit amet  purus ex. Ut auctor libero felis, eu tincidunt nisl finibus nec.\",\n  \"deliverables\": [{\n    \"name\": \"Test deliverable\",\n    \"mediaType\": \"Image\"\n    }],\n  \"specs\": [\n    \"test spec\"]\n}"
+								},
+								"url": {
+									"raw": "{{domain}}/projects",
+									"host": [
+										"{{domain}}"
+									],
+									"path": [
+										"projects"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{access_token}}",
+								"type": "string"
+							}
+						]
+					},
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "e5e7f285-c1e7-4b3e-86a9-96d651f310ee",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "d4168ccc-81cd-4ab5-a17a-6eca0e76ccca",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Update Project",
+					"item": [
+						{
+							"name": "Update Project (success)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "2a068452-ab8e-4448-9892-301098748ab1",
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"title\": \"TEST PROJECT\",\n  \"summary\": \"We need a cutting-edge new logo for our new business\",\n  \"organization\": \"5b0f8a52d3bae4739f7757da\",\n  \"category\": \"Graphic Design\",\n  \"fullDescription\": \"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed pulvinar  euismod ipsum ut pharetra. Fusce non quam nec mi tincidunt ornare. In  gravida id ante in gravida. Nunc tempor dui tempus ultrices rutrum.  Curabitur ante dui, ultrices id condimentum ultricies, bibendum eget  erat. Morbi id condimentum ligula, in pulvinar neque. Curabitur lectus  diam, imperdiet ut neque eu, varius porta diam. Suspendisse id pellentesque  metus, sit amet ultricies risus. Nunc imperdiet volutpat lectus, ac viverra  magna tempus aliquam. Aliquam iaculis orci sed erat fringilla, et finibus  purus porta. Duis ultrices odio sit amet cursus blandit. Duis sit amet  purus ex. Ut auctor libero felis, eu tincidunt nisl finibus nec.\",\n  \"deliverables\": [{\n    \"name\": \"Test deliverable\",\n    \"mediaType\": \"Image\"\n    }],\n  \"specs\": [\n    \"test spec\"]\n}"
+								},
+								"url": {
+									"raw": "{{domain}}/projects/{{permanent_project_id}}",
+									"host": [
+										"{{domain}}"
+									],
+									"path": [
+										"projects",
+										"{{permanent_project_id}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Project (different userId)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "845f313b-9862-49ae-8de6-35ae421b4d70",
+										"type": "text/javascript",
+										"exec": [
+											"pm.test(\"Status code is 403\", function () {",
+											"    pm.response.to.have.status(403);",
+											"});"
+										]
+									}
+								}
+							],
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"title\": \"TEST PROJECT\",\n  \"summary\": \"We need a cutting-edge new logo for our new business\",\n  \"liaison\": {\n    \"_id\": \"59e5852830b8f53496f8e8eb\",\n    \"name\": \"John Doe\",\n    \"userType\": \"business\"\n  },\n  \"organization\": {\n    \"_id\": \"507f1f77bcf86cd799439011\",\n    \"name\": \"Acme Inc.\"\n  },\n  \"category\": \"Graphic Design\",\n  \"fullDescription\": \"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed pulvinar  euismod ipsum ut pharetra. Fusce non quam nec mi tincidunt ornare. In  gravida id ante in gravida. Nunc tempor dui tempus ultrices rutrum.  Curabitur ante dui, ultrices id condimentum ultricies, bibendum eget  erat. Morbi id condimentum ligula, in pulvinar neque. Curabitur lectus  diam, imperdiet ut neque eu, varius porta diam. Suspendisse id pellentesque  metus, sit amet ultricies risus. Nunc imperdiet volutpat lectus, ac viverra  magna tempus aliquam. Aliquam iaculis orci sed erat fringilla, et finibus  purus porta. Duis ultrices odio sit amet cursus blandit. Duis sit amet  purus ex. Ut auctor libero felis, eu tincidunt nisl finibus nec.\"\n}"
+								},
+								"url": {
+									"raw": "{{domain}}/projects/{{permanent_project_id}}",
+									"host": [
+										"{{domain}}"
+									],
+									"path": [
+										"projects",
+										"{{permanent_project_id}}"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Update Project Status",
+					"item": [
+						{
+							"name": "Update Project (success)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "2a068452-ab8e-4448-9892-301098748ab1",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"status\": \"complete\",\n  \"selectedStudentId\": \"{{student_user_id}}\"\n}"
+								},
+								"url": {
+									"raw": "{{domain}}/projects/{{permanent_project_id}}/status",
+									"host": [
+										"{{domain}}"
+									],
+									"path": [
+										"projects",
+										"{{permanent_project_id}}",
+										"status"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "8c32cc47-906b-4c3a-b872-45869e2ebd57",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "26781867-4ed0-407e-8848-e626e6135d7d",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Pay Project Posting Fee",
+					"item": [
+						{
+							"name": "Pay Project Posting Fee (success)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "2a068452-ab8e-4448-9892-301098748ab1",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"token\": \"tok_1EA8qMCsPgcI5uDFUPAPIG0X\"\n}"
+								},
+								"url": {
+									"raw": "{{domain}}/projects/{{permanent_project_id}}/posting-fee",
+									"host": [
+										"{{domain}}"
+									],
+									"path": [
+										"projects",
+										"{{permanent_project_id}}",
+										"posting-fee"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Pay Project Posting Fee (400)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "2a068452-ab8e-4448-9892-301098748ab1",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n}"
+								},
+								"url": {
+									"raw": "{{domain}}/projects/{{permanent_project_id}}/posting-fee",
+									"host": [
+										"{{domain}}"
+									],
+									"path": [
+										"projects",
+										"{{permanent_project_id}}",
+										"posting-fee"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "8c32cc47-906b-4c3a-b872-45869e2ebd57",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "26781867-4ed0-407e-8848-e626e6135d7d",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Add Project Reward",
+					"item": [
+						{
+							"name": "Add Project Reward (success)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "2a068452-ab8e-4448-9892-301098748ab1",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"amount\": 5\n}"
+								},
+								"url": {
+									"raw": "{{domain}}/projects/{{permanent_project_id}}/reward",
+									"host": [
+										"{{domain}}"
+									],
+									"path": [
+										"projects",
+										"{{permanent_project_id}}",
+										"reward"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Add Project Reward (400)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "2a068452-ab8e-4448-9892-301098748ab1",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"amount\": 0\n}"
+								},
+								"url": {
+									"raw": "{{domain}}/projects/{{permanent_project_id}}/reward",
+									"host": [
+										"{{domain}}"
+									],
+									"path": [
+										"projects",
+										"{{permanent_project_id}}",
+										"reward"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "8c32cc47-906b-4c3a-b872-45869e2ebd57",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "26781867-4ed0-407e-8848-e626e6135d7d",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Update Project Reward",
+					"item": [
+						{
+							"name": "Update Project Reward (success)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "2a068452-ab8e-4448-9892-301098748ab1",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"status\": \"paid\"\n}"
+								},
+								"url": {
+									"raw": "{{domain}}/projects/{{permanent_project_id}}/reward",
+									"host": [
+										"{{domain}}"
+									],
+									"path": [
+										"projects",
+										"{{permanent_project_id}}",
+										"reward"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "8c32cc47-906b-4c3a-b872-45869e2ebd57",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "26781867-4ed0-407e-8848-e626e6135d7d",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Create Supplemental Resource",
+					"item": [
+						{
+							"name": "Create Supplemental Resource (success)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "01fe9db6-4e61-4e1a-8a04-5af2ae82c8cb",
+										"exec": [
+											"pm.test(\"Status code is 201\", function () {",
+											"    pm.response.to.have.status(201);",
+											"});",
+											"",
+											"pm.environment.set(\"temp_asset_id\", pm.response.json()._id);"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Test Link\",\n  \"mediaType\": \"link\",\n  \"uri\": \"www.google.com\"\n}"
+								},
+								"url": {
+									"raw": "{{domain}}/projects/{{permanent_project_id}}/supplemental-resources",
+									"host": [
+										"{{domain}}"
+									],
+									"path": [
+										"projects",
+										"{{permanent_project_id}}",
+										"supplemental-resources"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "c186baad-5bdf-4f05-8e50-7dc318f0008d",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "2ad33789-d25e-4414-a17d-cbb7a189e9c4",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Create Supplemental Resource File",
+					"item": [
+						{
+							"name": "Create Supplemental Resource File (success)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "01fe9db6-4e61-4e1a-8a04-5af2ae82c8cb",
+										"exec": [
+											"pm.test(\"Status code is 201\", function () {",
+											"    pm.response.to.have.status(201);",
+											"});",
+											"",
+											"pm.environment.set(\"temp_asset_id\", pm.response.json()._id);"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Test Image\",\n  \"text\": \"test text\",\n  \"file\": \"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAFhAJ/wlseKgAAAABJRU5ErkJggg==\"\n}"
+								},
+								"url": {
+									"raw": "{{domain}}/projects/{{permanent_project_id}}/supplemental-resources/file",
+									"host": [
+										"{{domain}}"
+									],
+									"path": [
+										"projects",
+										"{{permanent_project_id}}",
+										"supplemental-resources",
+										"file"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Delete Supplemental Resource",
+					"item": [
+						{
+							"name": "Delete Supplemental Resource (success)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "01fe9db6-4e61-4e1a-8a04-5af2ae82c8cb",
+										"exec": [
+											"pm.test(\"Status code is 204\", function () {",
+											"    pm.response.to.have.status(204);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{domain}}/projects/{{permanent_project_id}}/supplemental-resources/{{temp_asset_id}}",
+									"host": [
+										"{{domain}}"
+									],
+									"path": [
+										"projects",
+										"{{permanent_project_id}}",
+										"supplemental-resources",
+										"{{temp_asset_id}}"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "1ae54c79-3901-45e0-b929-48d4dff8890a",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "cada75c1-872a-4f5c-a682-1ca879ae6469",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Delete Project",
+					"item": [
+						{
+							"name": "Delete Project (success)",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "2dc87b4a-81f0-467b-a066-6345b71ad1ee",
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"id": "16213e4a-d067-4556-bd8a-6315fe5925f9",
+										"exec": [
+											"pm.test(\"Status code is 204\", function () {",
+											"    pm.response.to.have.status(204);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{domain}}/projects/{{temp_project_id}}",
+									"host": [
+										"{{domain}}"
+									],
+									"path": [
+										"projects",
+										"{{temp_project_id}}"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Comment on Project",
+					"item": [
+						{
+							"name": "Comment on Project (Success)",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"text\": \"test comment\"\n}"
+								},
+								"url": {
+									"raw": "{{domain}}/projects/{{permanent_project_id}}/comments",
+									"host": [
+										"{{domain}}"
+									],
+									"path": [
+										"projects",
+										"{{permanent_project_id}}",
+										"comments"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Delete Comment on Project",
+					"item": [
+						{
+							"name": "Delete Comment on Project (Success)",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{domain}}/projects/{{permanent_project_id}}/comments/5bf68ce96b2fe41464d26073",
+									"host": [
+										"{{domain}}"
+									],
+									"path": [
+										"projects",
+										"{{permanent_project_id}}",
+										"comments",
+										"5bf68ce96b2fe41464d26073"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "453443da-24c5-4ac7-aa4a-773645b12943",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "e2763180-7bd6-4f55-91cf-88e5476e7066",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					],
+					"_postman_isSubFolder": true
+				}
+			]
+		},
+		{
+			"name": "Entries",
+			"item": [
+				{
+					"name": "Project Registration",
+					"item": [
+						{
+							"name": "Project Signup (success)",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "2dc87b4a-81f0-467b-a066-6345b71ad1ee",
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"id": "16213e4a-d067-4556-bd8a-6315fe5925f9",
+										"exec": [
+											"pm.test(\"Status code is 201\", function () {",
+											"    pm.response.to.have.status(201);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{domain}}/projects/{{permanent_project_id}}/entries",
+									"host": [
+										"{{domain}}"
+									],
+									"path": [
+										"projects",
+										"{{permanent_project_id}}",
+										"entries"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Project Signup (not a student)",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "2dc87b4a-81f0-467b-a066-6345b71ad1ee",
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"id": "ca27fe73-4440-4426-9e3d-e6e8bfc48dd4",
+										"exec": [
+											"pm.test(\"Status code is 403\", function () {",
+											"    pm.response.to.have.status(403);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{domain}}/projects/{{temp_project_id}}/entries",
+									"host": [
+										"{{domain}}"
+									],
+									"path": [
+										"projects",
+										"{{temp_project_id}}",
+										"entries"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Project Signoff (success)",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"id": "2dc87b4a-81f0-467b-a066-6345b71ad1ee",
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 204\", function () {",
+											"    pm.response.to.have.status(204);",
+											"});"
+										],
+										"id": "16213e4a-d067-4556-bd8a-6315fe5925f9",
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{domain}}/projects/{{permanent_project_id}}/entries/{{student_user_id}}",
+									"host": [
+										"{{domain}}"
+									],
+									"path": [
+										"projects",
+										"{{permanent_project_id}}",
+										"entries",
+										"{{student_user_id}}"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "58d4ca24-b339-49d2-aa19-ee2612111b27",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "6f0f5633-6ab6-40e4-ad3e-628895f20337",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Get Entry",
+					"item": [
+						{
+							"name": "Get Entry (success)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "20e0b667-1568-450e-bf87-dcb9a6724e21",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{domain}}/projects/{{permanent_project_id}}/entries/{{student_user_id}}",
+									"host": [
+										"{{domain}}"
+									],
+									"path": [
+										"projects",
+										"{{permanent_project_id}}",
+										"entries",
+										"{{student_user_id}}"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Update Entry",
+					"item": [
+						{
+							"name": "Update Entry (success)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "20e0b667-1568-450e-bf87-dcb9a6724e21",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"commentary\": \"Test commentary\",\n    \"submissionStatus\": \"draft\"\n}"
+								},
+								"url": {
+									"raw": "{{domain}}/projects/{{permanent_project_id}}/entries/{{student_user_id}}",
+									"host": [
+										"{{domain}}"
+									],
+									"path": [
+										"projects",
+										"{{permanent_project_id}}",
+										"entries",
+										"{{student_user_id}}"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "d5446c3e-9f9c-40aa-8899-28ae4d5daed4",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "e161de20-6866-4257-8368-ad0debce6e4f",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Create Entry Asset",
+					"item": [
+						{
+							"name": "Create Entry Asset (success)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "7be4c149-63e7-4f4d-b339-c12bb9b427a7",
+										"exec": [
+											"pm.test(\"Status code is 201\", function () {",
+											"    pm.response.to.have.status(201);",
+											"});",
+											"",
+											"pm.environment.set(\"temp_asset_id\", pm.response.json()._id);"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"name\": \"Test Text\",\n\t\"mediaType\": \"text\",\n\t\"text\": \"Test text\"\n}"
+								},
+								"url": {
+									"raw": "{{domain}}/projects/{{permanent_project_id}}/entries/{{student_user_id}}/assets",
+									"host": [
+										"{{domain}}"
+									],
+									"path": [
+										"projects",
+										"{{permanent_project_id}}",
+										"entries",
+										"{{student_user_id}}",
+										"assets"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Create Entry Asset File",
+					"item": [
+						{
+							"name": "Create Entry Asset File (success)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "7be4c149-63e7-4f4d-b339-c12bb9b427a7",
+										"exec": [
+											"pm.test(\"Status code is 201\", function () {",
+											"    pm.response.to.have.status(201);",
+											"});",
+											"",
+											"pm.environment.set(\"temp_asset_id\", pm.response.json()._id);"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"file\": \"data:image/png;base64,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…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\", \n\t\"name\": \"New Test\"\n}\n"
+								},
+								"url": {
+									"raw": "{{domain}}/projects/{{permanent_project_id}}/entries/{{student_user_id}}/assets/file",
+									"host": [
+										"{{domain}}"
+									],
+									"path": [
+										"projects",
+										"{{permanent_project_id}}",
+										"entries",
+										"{{student_user_id}}",
+										"assets",
+										"file"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Delete Entry Asset",
+					"item": [
+						{
+							"name": "Delete Entry Asset (success)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "b3dabccc-545c-4eea-9dcb-4cf31f61493c",
+										"exec": [
+											"pm.test(\"Status code is 204\", function () {",
+											"    pm.response.to.have.status(204);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{domain}}/projects/{{permanent_project_id}}/entries/{{student_user_id}}/assets/{{temp_asset_id}}",
+									"host": [
+										"{{domain}}"
+									],
+									"path": [
+										"projects",
+										"{{permanent_project_id}}",
+										"entries",
+										"{{student_user_id}}",
+										"assets",
+										"{{temp_asset_id}}"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Comment on Entry",
+					"item": [
+						{
+							"name": "Create Entry Comment (success)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "7be4c149-63e7-4f4d-b339-c12bb9b427a7",
+										"exec": [
+											"pm.test(\"Status code is 201\", function () {",
+											"    pm.response.to.have.status(201);",
+											"});",
+											"",
+											"pm.environment.set(\"temp_asset_id\", pm.response.json()._id);"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"text\": \"Test text\"\n}"
+								},
+								"url": {
+									"raw": "{{domain}}/projects/{{permanent_project_id}}/entries/{{student_user_id}}/comments",
+									"host": [
+										"{{domain}}"
+									],
+									"path": [
+										"projects",
+										"{{permanent_project_id}}",
+										"entries",
+										"{{student_user_id}}",
+										"comments"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "6267bc2e-1625-48f1-886d-5fa7ab7cdffc",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "87b0b82c-e9dc-4ebc-8986-fbda87da7bcf",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Delete Comment on Entry",
+					"item": [
+						{
+							"name": "Create Entry Comment (success)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "7be4c149-63e7-4f4d-b339-c12bb9b427a7",
+										"exec": [
+											"pm.test(\"Status code is 201\", function () {",
+											"    pm.response.to.have.status(201);",
+											"});",
+											"",
+											"pm.environment.set(\"temp_asset_id\", pm.response.json()._id);"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"text\": \"Test text\"\n}"
+								},
+								"url": {
+									"raw": "{{domain}}/projects/{{permanent_project_id}}/entries/{{student_user_id}}/comments/5bf6933923a6d65cc492cb88",
+									"host": [
+										"{{domain}}"
+									],
+									"path": [
+										"projects",
+										"{{permanent_project_id}}",
+										"entries",
+										"{{student_user_id}}",
+										"comments",
+										"5bf6933923a6d65cc492cb88"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "6267bc2e-1625-48f1-886d-5fa7ab7cdffc",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "87b0b82c-e9dc-4ebc-8986-fbda87da7bcf",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					],
+					"_postman_isSubFolder": true
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{access_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "c5a13a56-b80d-4cec-bc5f-af465c55d19a",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "64b011b5-6e9e-46f8-ad6a-09313b4a92ff",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
