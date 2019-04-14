@@ -115,13 +115,10 @@ class OrganizationService {
             Organization.create(organization)
                 // TODO: Break this out
                 .then((organization) => {
-                    User.findByIdAndUpdate(organization.liaisons[0], {organization: organization._id})
-                        .then(() => {
-                            callback(null, organization);
-                        })
-                        .catch((err) => {
-                            callback(err);
-                        })
+                    return User.findByIdAndUpdate(organization.liaisons[0], {organization: organization._id}).exec();
+                })
+                .then(() => {
+                    callback(null, organization);
                 })
                 .catch((err) => {
                     callback(new HTTPError(err.statusCode, err.message));
