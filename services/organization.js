@@ -99,7 +99,11 @@ class OrganizationService {
         const organization = new Organization({
             name: request.name,
             domain: request.domain,
-            liaisons: request.liaisons
+            about: request.about,
+            logo: request.position,
+            industry: request.industry,
+            linkedin: request.linkedin,
+            twitter: request.twitter
         });
 
         // Validate the request

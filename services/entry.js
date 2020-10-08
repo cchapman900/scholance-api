@@ -229,11 +229,11 @@ class EntryService {
                     project = foundProject;
                     return foundProject.save();
                 })
-                .then(() => {
-                    return this.emailService.sendEmail(project.liaison.email, 'Project Submission Update', `Hello ${project.liaison.name}! This is a notification to let you know that an entry has been updated for ${project.title}.`);
-                })
                 .then((updatedProject) => {
                     callback(null, updatedProject.entries[entryIndex]);
+                })
+                .then(() => {
+                    return this.emailService.sendEmail(project.liaison.email, 'Project Submission Update', `Hello ${project.liaison.name}! This is a notification to let you know that an entry has been updated for ${project.title}.`);
                 })
                 .catch((err) => {
                     callback(err);
